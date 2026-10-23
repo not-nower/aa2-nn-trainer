@@ -1,0 +1,401 @@
+# AA2 NN's Trainer name data
+# enum<TAB>id<TAB>name
+ACTION_KEY	0	Encourage
+ACTION_KEY	1	Calm
+ACTION_KEY	2	Praise
+ACTION_KEY	3	Complain
+ACTION_KEY	4	Apologise
+ACTION_KEY	5	Encourage Studies
+ACTION_KEY	6	Encourage Training
+ACTION_KEY	7	Encourage Club Stuff
+ACTION_KEY	8	Encourage Socializing
+ACTION_KEY	9	Reflect on Ero
+ACTION_KEY	10	Spread Good Rumor
+ACTION_KEY	11	Get Along With...
+ACTION_KEY	12	Help Me Befriend...
+ACTION_KEY	13	Spread Bad Rumor
+ACTION_KEY	14	Do you like...?
+ACTION_KEY	15	Talk About Life
+ACTION_KEY	16	Talk About Hobbies
+ACTION_KEY	17	Talk About Food
+ACTION_KEY	18	Talk About Love
+ACTION_KEY	19	Talk About Sex
+ACTION_KEY	20	Study Together
+ACTION_KEY	21	Train Together
+ACTION_KEY	22	Do Club Stuff Together
+ACTION_KEY	23	Offer Massage
+ACTION_KEY	24	Go To Class Together
+ACTION_KEY	25	Have Lunch Together
+ACTION_KEY	26	Take a Break Together
+ACTION_KEY	27	Go Home Together
+ACTION_KEY	28	Go Have Fun Together
+ACTION_KEY	29	Go Eat Out together
+ACTION_KEY	30	Go Sing Together
+ACTION_KEY	31	Study at Home Together
+ACTION_KEY	32	Study at Home Together (Sex?)
+ACTION_KEY	33	Insult
+ACTION_KEY	34	Pick a Fight
+ACTION_KEY	35	Tell to Ignore...
+ACTION_KEY	36	Show 'That' to Me
+ACTION_KEY	37	Put 'This' On
+ACTION_KEY	38	Coerce into Sex
+ACTION_KEY	39	Ask to Join Club
+ACTION_KEY	40	Ask on a Date
+ACTION_KEY	41	Express Love
+ACTION_KEY	42	Ask to be Lovers
+ACTION_KEY	43	Ask to Break Up
+ACTION_KEY	44	Pet
+ACTION_KEY	45	Hug
+ACTION_KEY	46	Kiss
+ACTION_KEY	47	Grope
+ACTION_KEY	48	Have Sex
+ACTION_KEY	49	Come With Me
+ACTION_KEY	50	Go Away
+ACTION_KEY	51	Meet me At...
+ACTION_KEY	52	It's Nothing
+ACTION_KEY	53	Let's All Study
+ACTION_KEY	54	Let's All Train
+ACTION_KEY	55	Let's All Do Club Stuff
+ACTION_KEY	56	Let's All Have Lunch
+ACTION_KEY	57	Let's All Take a Break
+ACTION_KEY	58	Let's All Go Play
+ACTION_KEY	59	Let's All Go Eat Out
+ACTION_KEY	60	Let's All Go Sing
+ACTION_KEY	61	Let's All Befriend...
+ACTION_KEY	62	Everyone Come Here
+ACTION_KEY	63	Compete
+ACTION_KEY	64	What are you Doing?
+ACTION_KEY	65	Break up the Fight
+ACTION_KEY	66	Interrupt Sex
+ACTION_KEY	67	Warn about Sex
+ACTION_KEY	68	Have a Threesome
+ACTION_KEY	69	Massage me, Please
+ACTION_KEY	70	Kiss me, Please
+ACTION_KEY	71	Hug me, Please
+ACTION_KEY	72	Suggest to skip out (Without Sex)
+ACTION_KEY	73	Suggest to skip out (With Sex)
+ACTION_KEY	74	Suggest to skip out (Wake-up Sex)
+ACTION_KEY	75	Did you have sex with...?
+ACTION_KEY	76	Want to see my Panties?
+ACTION_KEY	77	Ever had sex?
+ACTION_KEY	78	Let's Trade
+ACTION_KEY	79	Offer Lewd Promise
+ACTION_KEY	80	Reward Lewd Promise
+ACTION_KEY	81	TogEtHeR FOrEVeR
+ACTION_KEY	82	We're having sex (forcibly?)
+ACTION_KEY	83	Slap
+ACTION_KEY	84	Good Morning Kiss
+ACTION_KEY	85	Goodbye Kiss
+ACTION_KEY	86	Surprise Kiss
+ACTION_KEY	87	Stop being Lovers
+ACTION_KEY	88	Got Pregnant
+ACTION_KEY	89	Admit to Cheating
+ACTION_KEY	90	Keep this a Secret
+ACTION_KEY	91	Stop following me
+ACTION_KEY	92	Notice of impending Murder
+ACTION_KEY	93	Apparently someone likes you
+ACTION_KEY	94	Someone was confessed to
+ACTION_KEY	95	Someone went on a date
+ACTION_KEY	96	Someonw had sex
+ACTION_KEY	97	I don't want you to get near...
+ACTION_KEY	98	Serves you right (Won fight?)
+ACTION_KEY	99	Daily sex
+ACTION_KEY	102	Follow me (Sex)
+ACTION_KEY	103	Date Greeting
+ACTION_KEY	114	Wind blows Skirt up
+BREASTFIRMNESS	0	Soft
+BREASTFIRMNESS	1	Medium
+BREASTFIRMNESS	2	Hard
+BREASTSHAPE	0	Shape 1
+BREASTSHAPE	1	Shape 2
+BREASTSHAPE	2	Shape 3
+BREASTSHAPE	3	Shape 4
+BREASTSIZE	0	Small
+BREASTSIZE	1	Medium
+BREASTSIZE	2	Big
+CLOTHES_F	0	Uniform
+CLOTHES_F	1	Sports
+CLOTHES_F	2	Swimsuit
+CLOTHES_F	3	Formal
+CLOTHES_F	4	Blazer
+CLOTHES_F	5	Naked
+CLOTHES_F	6	Underwear
+CLOTHES_F	7	Uniform 2
+CLOTHES_M	0	Uniform
+CLOTHES_M	1	Sports
+CLOTHES_M	2	Swimsuit
+CLOTHES_M	3	Naked
+CLUB	0	Club 1
+CLUB	1	Club 2
+CLUB	2	Club 3
+CLUB	3	Club 4
+CLUB	4	Club 5
+CLUB	5	Club 6
+CLUB	6	Club 7
+CLUB	7	Club 8
+CLUB_TYPE	0	Track
+CLUB_TYPE	1	Swimming
+CLUB_TYPE	2	Baseball
+CLUB_TYPE	3	Ball Games
+CLUB_TYPE	4	Martial
+CLUB_TYPE	5	Arts
+CLUB_TYPE	6	Culture
+CLUB_TYPE	7	Other
+EVALUATION_RANK	0	Love
+EVALUATION_RANK	1	Like
+EVALUATION_RANK	2	Dislike
+EVALUATION_RANK	3	Hate
+EVALUATION_STATUS	0	Lots
+EVALUATION_STATUS	1	Some
+EVALUATION_STATUS	2	Very Little
+EYEBROWSHAPE	0	Shape 1
+EYEBROWSHAPE	1	Shape 2
+EYEBROWSHAPE	2	Shape 3
+EYEBROWSHAPE	3	Shape 4
+EYEBROWSHAPE	4	Shape 5
+EYEBROWSHAPE	5	Shape 6
+EYEBROWSHAPE	6	Shape 7
+EYEBROWSHAPE	7	Shape 8
+EYEBROWSHAPE	8	Shape 9
+EYEBROWSHAPE	9	Shape 10
+EYEBROWSHAPE	10	Shape 11
+EYEBROWSHAPE	11	Shape 12
+EYEBROWSHAPE	12	Shape 13
+EYEBROWSHAPE	13	Shape 14
+EYEBROWSHAPE	14	Shape 15
+EYEBROWSHAPE	15	Shape 16
+EYEBROWSHAPE	16	Shape 17
+EYEBROWSHAPE	17	Shape 18
+EYEBROWSHAPE	18	Shape 19
+EYEBROWSHAPE	19	Shape 20
+EYELIDTYPE	0	Type 1
+EYELIDTYPE	1	Type 2
+EYELIDTYPE	2	Type 3
+EYELIDTYPE	3	Type 4
+EYELIDTYPE	4	Type 5
+EYELIDTYPE	5	Type 6
+EYELIDTYPE	6	Type 7
+EYELIDTYPE	7	Type 8
+EYELIDTYPEL	0	Type 1
+EYELIDTYPEL	1	Type 2
+EYELIDTYPEL	2	Type 3
+EYELIDTYPEL	3	Type 4
+EYELIDTYPEL	4	Type 5
+EYELIDTYPEL	5	Type 6
+EYELIDTYPEL	6	Type 7
+EYELIDTYPEL	7	Type 8
+EYELIDTYPEU	0	Type 1
+EYELIDTYPEU	1	Type 2
+EYELIDTYPEU	2	Type 3
+EYELIDTYPEU	3	Type 4
+EYELIDTYPEU	4	Type 5
+EYELIDTYPEU	5	Type 6
+EYELIDTYPEU	6	Type 7
+EYELIDTYPEU	7	Type 8
+FACETYPE_F	0	Face 1
+FACETYPE_F	1	Face 2
+FACETYPE_F	2	Face 3
+FACETYPE_F	3	Face 4
+FACETYPE_F	4	Face 5
+FACETYPE_F	5	Face 6
+FACETYPE_F	6	Face 7
+FACETYPE_M	0	Face 1
+FACETYPE_M	1	Face 2
+FACETYPE_M	2	Face 3
+FACETYPE_M	3	Face 4
+FEMALEFIGURE	0	Slim
+FEMALEFIGURE	1	Normal
+FEMALEFIGURE	2	Fat
+FIGHTSTYLE	0	No Restraint
+FIGHTSTYLE	1	One Blow
+FIGHTSTYLE	2	Irregular
+GENDER	0	Male
+GENDER	1	Female
+GLASSESTYPE	0	None
+GLASSESTYPE	1	Type 1
+GLASSESTYPE	2	Type 2
+GLASSESTYPE	3	Type 3
+GLASSESTYPE	4	Type 4
+HEIGHT	0	Short
+HEIGHT	1	Normal
+HEIGHT	2	Tall
+HIGHLIGHTTYPE	0	Highlight 1
+HIGHLIGHTTYPE	1	Highlight 2
+HIGHLIGHTTYPE	2	Highlight 3
+HIGHLIGHTTYPE	3	Highlight 4
+HIGHLIGHTTYPE	4	Highlight 5
+HIGHLIGHTTYPE	5	Highlight 6
+HIGHLIGHTTYPE	6	Highlight 7
+IMPREGNATION	0	Normal
+IMPREGNATION	1	Safe
+IMPREGNATION	2	Dangerous
+IRISSHAPE	0	Shape 1
+IRISSHAPE	1	Shape 2
+IRISSHAPE	2	Shape 3
+IRISSHAPE	3	Shape 4
+IRISTYPE	0	Type 1
+IRISTYPE	1	Type 2
+IRISTYPE	2	Type 3
+IRISTYPE	3	Type 4
+IRISTYPE	4	Type 5
+IRISTYPE	5	Type 6
+IRISTYPE	6	Type 7
+LIPSTICKCOLOR	0	Color 1
+LIPSTICKCOLOR	1	Color 2
+LIPSTICKCOLOR	2	Color 3
+LIPSTICKCOLOR	3	Color 4
+LIPSTICKCOLOR	4	Color 5
+LIPSTICKCOLOR	5	Color 6
+LIPSTICKCOLOR	6	Color 7
+LIPSTICKCOLOR	7	Color 8
+LOCATION	0	School Gates
+LOCATION	1	Back Street
+LOCATION	2	Outside Gymnasium
+LOCATION	3	School Route
+LOCATION	4	Boys' Changing Room
+LOCATION	5	Girls' Changing Room
+LOCATION	6	Boys' Showers
+LOCATION	7	Girls' Showers
+LOCATION	8	Lockers
+LOCATION	9	Outside Teachers' Lounge
+LOCATION	10	Outside Toilets
+LOCATION	11	Outside Classroom
+LOCATION	12	Rooftop Access
+LOCATION	13	Old Building 1st Floor
+LOCATION	14	Old Building 2nd Floor
+LOCATION	15	Old Building 3rd Floor
+LOCATION	16	Teachers' lounge
+LOCATION	17	Infirmary
+LOCATION	18	Library
+LOCATION	19	Classroom
+LOCATION	20	Boys' Toilets
+LOCATION	21	Girls' Toilets
+LOCATION	22	Rooftop
+LOCATION	23	Outside Student Council Room
+LOCATION	24	Outside Cafeteria
+LOCATION	25	Courtyard
+LOCATION	26	2nd Floor Hallway
+LOCATION	27	3rd Floor Passage
+LOCATION	28	Swimming Pool
+LOCATION	29	Track
+LOCATION	30	Sports Facilities
+LOCATION	31	Dojo
+LOCATION	32	Gymnasium
+LOCATION	33	Arts Room
+LOCATION	34	Multipurpose Room
+LOCATION	35	Japanese Room
+LOCATION	36	Behind Dojo
+LOCATION	37	Outside Dojo
+LOCATION	38	Cafeteria
+LOCATION	39	Outside Station
+LOW_HIGH	0	Lowest
+LOW_HIGH	1	Low
+LOW_HIGH	2	Normal
+LOW_HIGH	3	High
+LOW_HIGH	4	Highest
+LOW_HIGHPLUS	0	Lowest
+LOW_HIGHPLUS	1	Low
+LOW_HIGHPLUS	2	Normal
+LOW_HIGHPLUS	3	High
+LOW_HIGHPLUS	4	Highest
+LOW_HIGHPLUS	5	Maximum
+MALEFIGURE	0	Delicate
+MALEFIGURE	1	Normal
+MALEFIGURE	2	Tall
+MALEFIGURE	3	Fat
+MOSAICCOLOR	0	Color 1
+MOSAICCOLOR	1	Color 2
+MOSAICCOLOR	2	Color 3
+MOSAICCOLOR	3	Color 4
+MOSAICCOLOR	4	Color 5
+NIPPLECOLOR	0	Color 1
+NIPPLECOLOR	1	Color 2
+NIPPLECOLOR	2	Color 3
+NIPPLECOLOR	3	Color 4
+NIPPLECOLOR	4	Color 5
+NIPPLECOLOR	5	Color 6
+NIPPLECOLOR	6	Color 7
+NIPPLECOLOR	7	Color 8
+NIPPLETYPE	0	Type 1
+NIPPLETYPE	1	Type 2
+NIPPLETYPE	2	Type 3
+NIPPLETYPE	3	Type 4
+PERSONALITY	0	Lively
+PERSONALITY	1	Delicate
+PERSONALITY	2	Cheerful
+PERSONALITY	3	Stoic
+PERSONALITY	4	Playful
+PERSONALITY	5	Energetic
+PERSONALITY	6	Kind
+PERSONALITY	7	Upbeat
+PERSONALITY	8	Normal
+PERSONALITY	9	Irritable
+PERSONALITY	10	Uptight
+PERSONALITY	11	Friendly
+PERSONALITY	12	Creepy
+PERSONALITY	13	Reserved
+PERSONALITY	14	Dignified
+PERSONALITY	15	Assertive
+PERSONALITY	16	Sensitive
+PERSONALITY	17	Virtuous
+PERSONALITY	18	Mature
+PERSONALITY	19	Lazy
+PERSONALITY	20	Manly
+PERSONALITY	21	Affectionate (M)
+PERSONALITY	22	Positive (M)
+PERSONALITY	23	Otaku (M)
+PERSONALITY	24	Rough (M)
+PERSONALITY	25	Cadet
+PERSONALITY	26	Caring
+PERSONALITY	27	Schemer (M)
+PERSONALITY	28	Carefree
+PERSONALITY	29	Warm
+PUBICHAIR	0	Shape 1
+PUBICHAIR	1	Shape 2
+PUBICHAIR	2	Shape 3
+PUBICHAIR	3	Shape 4
+SEXUALITY	0	Heterosexual
+SEXUALITY	1	Leans Hetero
+SEXUALITY	2	Bisexual
+SEXUALITY	3	Leans Homo
+SEXUALITY	4	Homosexual
+SHOES_F	0	Barefoot
+SHOES_F	1	Indoor
+SHOES_F	2	Leather
+SHOES_F	3	Sports
+SHOES_F	4	Heeled
+SHOES_M	0	Barefoot
+SHOES_M	1	Indoor
+SHOES_M	2	Leather
+SHOES_M	3	Sports
+SOCKS_F	0	Barefoot
+SOCKS_F	1	Over Knee
+SOCKS_F	2	High
+SOCKS_F	3	Loose
+SOCKS_F	4	Wrapping
+SOCKS_F	5	Stockings
+SOCKS_M	0	Barefoot
+SOCKS_M	1	Anklet
+TANMARKS	0	Tan 1
+TANMARKS	1	Tan 2
+TANMARKS	2	Tan 3
+TANMARKS	3	Tan 4
+TANMARKS	4	Tan 5
+TANMARKS	5	Tan 6
+TEST_SCORE	-1	Unranked
+TEST_SCORE	0	Grade F
+TEST_SCORE	1	Grade E
+TEST_SCORE	2	Grade D
+TEST_SCORE	3	Grade C
+TEST_SCORE	4	Grade B
+TEST_SCORE	5	Grade A
+TEST_TYPE	0	Academics
+TEST_TYPE	1	Physical
+TEST_TYPE	2	Club
+WEEKDAY	0	Sunday
+WEEKDAY	1	Monday
+WEEKDAY	2	Tueday
+WEEKDAY	3	Wednesday
+WEEKDAY	4	Thursday
+WEEKDAY	5	Friday
+WEEKDAY	6	Saturday

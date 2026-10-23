@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Text;
 using System.Xml;
 using Microsoft.Win32;
 
@@ -13,6 +15,7 @@ namespace AA2Trainer
 
         private readonly List<string> loadedFiles = new List<string>();
         private readonly List<string> errors = new List<string>();
+        private bool embeddedLoaded;
 
         public string StatusText { get; private set; }
         public int EntryCount { get; private set; }
@@ -44,61 +47,96 @@ namespace AA2Trainer
             maps.Clear();
             loadedFiles.Clear();
             errors.Clear();
+            embeddedLoaded = false;
             EntryCount = 0;
             GameRoot = gameRoot;
 
-            if (string.IsNullOrEmpty(gameRoot) || !Directory.Exists(gameRoot))
-            {
-                StatusText = "game path not found";
-                return false;
-            }
+            embeddedLoaded = LoadEmbedded();
 
-            string baseFile = Path.Combine(new string[]
+            if (!string.IsNullOrEmpty(gameRoot) && Directory.Exists(gameRoot))
             {
-                gameRoot, "ReiEdit", "XML", "DataBlocks", "chardata.xml"
-            });
-            LoadFile(baseFile);
-
-            try
-            {
-                string[] rootFiles = Directory.GetFiles(gameRoot, "*.xml", SearchOption.TopDirectoryOnly);
-                Array.Sort(rootFiles, StringComparer.OrdinalIgnoreCase);
-                foreach (string file in rootFiles)
+                try
                 {
-                    if (string.Equals(Path.GetFileName(file), "chardata.xml", StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    LoadFile(file);
-                }
-            }
-            catch (Exception ex)
-            {
-                errors.Add("root XML: " + ex.Message);
-            }
-
-            try
-            {
-                string overrideDir = Path.Combine(new string[]
-                {
-                    gameRoot, "ReiEdit", "XML", "Overrides"
-                });
-                if (Directory.Exists(overrideDir))
-                {
-                    string[] overrideFiles = Directory.GetFiles(overrideDir, "*.xml", SearchOption.TopDirectoryOnly);
-                    Array.Sort(overrideFiles, StringComparer.OrdinalIgnoreCase);
-                    foreach (string file in overrideFiles)
+                    string[] rootFiles = Directory.GetFiles(gameRoot, "*.xml", SearchOption.TopDirectoryOnly);
+                    Array.Sort(rootFiles, StringComparer.OrdinalIgnoreCase);
+                    foreach (string file in rootFiles)
+                    {
+                        if (string.Equals(Path.GetFileName(file), "chardata.xml", StringComparison.OrdinalIgnoreCase))
+                            continue;
                         LoadFile(file);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add("root XML: " + ex.Message);
                 }
             }
-            catch (Exception ex)
-            {
-                errors.Add("overrides: " + ex.Message);
-            }
 
-            StatusText = FileCount.ToString() + " file" + (FileCount == 1 ? "" : "s") +
-                         " / " + EntryCount.ToString() + " names";
+            EntryCount = CountEntries();
+
+            string source = embeddedLoaded ? "embedded" : "no baseline";
+            if (FileCount > 0)
+                source += " + " + FileCount.ToString() + " root file" + (FileCount == 1 ? "" : "s");
+            StatusText = source + " / " + EntryCount.ToString() + " names";
             if (errors.Count > 0) StatusText += " / " + errors.Count.ToString() + " error" +
                                                  (errors.Count == 1 ? "" : "s");
-            return FileCount > 0;
+            return EntryCount > 0;
+        }
+
+        private bool LoadEmbedded()
+        {
+            try
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                using (Stream stream = assembly.GetManifestResourceStream("AA2Trainer.NameData.tsv"))
+                {
+                    if (stream == null)
+                    {
+                        errors.Add("NameData.tsv resource missing");
+                        return false;
+                    }
+
+                    using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            if (line.Length == 0 || line[0] == '#') continue;
+                            string[] parts = line.Split('\t');
+                            if (parts.Length < 3) continue;
+
+                            string key = parts[0].Trim();
+                            int id;
+                            if (key.Length == 0 || !int.TryParse(parts[1].Trim(), out id))
+                                continue;
+                            string value = CleanName(parts[2]);
+                            if (value.Length == 0) continue;
+
+                            SortedDictionary<int, string> map;
+                            if (!maps.TryGetValue(key, out map))
+                            {
+                                map = new SortedDictionary<int, string>();
+                                maps[key] = map;
+                            }
+                            map[id] = value;
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errors.Add("embedded: " + ex.Message);
+                return false;
+            }
+        }
+
+        private int CountEntries()
+        {
+            int count = 0;
+            foreach (SortedDictionary<int, string> map in maps.Values)
+                count += map.Count;
+            return count;
         }
 
         private void LoadFile(string path)
@@ -136,7 +174,6 @@ namespace AA2Trainer
                         if (value.Length == 0) continue;
                         map[id] = value;
                         added++;
-                        EntryCount++;
                     }
                 }
                 if (added > 0) loadedFiles.Add(Path.GetFileName(path));
@@ -238,6 +275,8 @@ namespace AA2Trainer
             Dictionary<string, string> d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             d["Personality"] = "PERSONALITY";
             d["Gender"] = "GENDER";
+            d["Action"] = "ACTION_KEY";
+            d["Location"] = "LOCATION";
             d["FightingStyle"] = "FIGHTSTYLE";
             d["Oriented"] = "SEXUALITY";
             d["Heights"] = "HEIGHT";

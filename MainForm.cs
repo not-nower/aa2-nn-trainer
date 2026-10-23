@@ -22,7 +22,23 @@ namespace AA2Trainer
         private Timer refreshTimer;
         private Timer healthTimer;
         private Timer filterTimer;
+        private Timer hoverTimer;
+        private Timer hoverWatchTimer;
+        private Timer hoverHideTimer;
         private string pendingFilter;
+
+        private ListViewItem hoverItem;
+        private CharacterInfo hoverCharacter;
+        private Control hoverControl;
+        private Rectangle hoverAnchorScreen;
+        private ToolStripDropDown hoverPopup;
+        private PictureBox hoverPicture;
+        private Label hoverPlaceholder;
+        private Label hoverName;
+        private Label hoverMeta;
+        private PortraitImage hoverPortrait;
+        private uint hoverPortraitPointer;
+        private bool hoverPopupVisible;
 
         private Label gameStatusLabel;
         private Label classLabel;
@@ -38,6 +54,7 @@ namespace AA2Trainer
         private Dictionary<string, Label> sessionKv;
 
         private ClassRosterControl roster;
+        private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
         private FieldGridControl activityGrid;
@@ -67,6 +84,7 @@ namespace AA2Trainer
         private string namesRoot;
         private int selectedGender;
         private string lastSeatSignature;
+        private int lastSaveViewerSeat = -1;
         private uint lastPortraitAddr;
         private uint lastPortraitSize;
 
@@ -115,15 +133,51 @@ namespace AA2Trainer
                 ApplyPendingFilter();
             };
 
+            hoverTimer = new Timer();
+            hoverTimer.Interval = 50;
+            hoverTimer.Tick += delegate
+            {
+                hoverTimer.Stop();
+                ShowHoverPortrait();
+            };
+
+            hoverWatchTimer = new Timer();
+            hoverWatchTimer.Interval = 200;
+            hoverWatchTimer.Tick += delegate { CheckHoverStillValid(); };
+
+            hoverHideTimer = new Timer();
+            hoverHideTimer.Interval = 300;
+            hoverHideTimer.Tick += delegate
+            {
+                hoverHideTimer.Stop();
+
+                // The cursor may have returned without a fresh MouseMove
+                // reaching the list. Keep the preview if it is back on the
+                // same row or portrait.
+                if (hoverPopupVisible && IsHoverStillValid())
+                {
+                    if (hoverWatchTimer != null) hoverWatchTimer.Start();
+                    return;
+                }
+
+                HideHoverPortrait();
+            };
+
             Load += delegate { SetInitialLayout(); AttachAndRefresh(); };
             FormClosing += delegate
             {
                 refreshTimer.Stop();
                 healthTimer.Stop();
                 filterTimer.Stop();
+                hoverTimer.Stop();
+                hoverWatchTimer.Stop();
+                hoverHideTimer.Stop();
+                HideHoverPortrait();
+                DisposeHoverPopup();
                 if (roster != null) roster.DisposePortraits();
                 mem.Dispose();
             };
+            Deactivate += delegate { HideHoverPortrait(); };
         }
 
         #region UI construction
@@ -163,9 +217,9 @@ namespace AA2Trainer
         {
             if (!e.Alt) return;
             int index = -1;
-            if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D8)
+            if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
                 index = e.KeyCode - Keys.D1;
-            else if (e.KeyCode >= Keys.NumPad1 && e.KeyCode <= Keys.NumPad8)
+            else if (e.KeyCode >= Keys.NumPad1 && e.KeyCode <= Keys.NumPad9)
                 index = e.KeyCode - Keys.NumPad1;
             if (index >= 0 && tabs != null && index < tabs.TabPages.Count)
             {
@@ -298,6 +352,11 @@ namespace AA2Trainer
             seatList.Columns.Add("Sex", 32);
             seatList.Columns.Add("PC", 28);
             seatList.SelectedIndexChanged += SeatList_SelectedIndexChanged;
+            seatList.MouseMove += SeatList_MouseMove;
+            seatList.MouseLeave += delegate { ScheduleHideHoverPortrait(); };
+            seatList.MouseWheel += delegate { HideHoverPortrait(); };
+            seatList.MouseDown += delegate { HideHoverPortrait(); };
+            seatList.KeyDown += delegate { HideHoverPortrait(); };
             left.Controls.Add(seatList);
 
             split.Panel1.Controls.Add(left);
@@ -318,8 +377,12 @@ namespace AA2Trainer
             tabs.TabPages.Add(BuildRelationsTab());
             tabs.TabPages.Add(BuildActivityTab());
             tabs.TabPages.Add(BuildClassTab());
+            tabs.TabPages.Add(BuildSaveViewerTab());
             tabs.TabPages.Add(BuildConfigTab());
             tabs.TabPages.Add(BuildPointersTab());
+
+            // The roster is the landing page; the other tabs remain one click away.
+            tabs.SelectedIndex = 1;
             return tabs;
         }
 
@@ -400,6 +463,17 @@ namespace AA2Trainer
             roster.Dock = DockStyle.Fill;
             roster.CharacterClicked += Roster_CharacterClicked;
             page.Controls.Add(roster);
+            return page;
+        }
+
+        private TabPage BuildSaveViewerTab()
+        {
+            TabPage page = new TabPage("Save Viewer");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            saveViewer = new SaveViewerControl(names);
+            saveViewer.Dock = DockStyle.Fill;
+            page.Controls.Add(saveViewer);
             return page;
         }
 
@@ -705,16 +779,9 @@ namespace AA2Trainer
         private void EnsureNamesLoaded()
         {
             string root = GetGameRoot();
-            if (string.IsNullOrEmpty(root))
-            {
-                if (namesRoot == null)
-                {
-                    namesRoot = "";
-                    UpdateNamesLabel();
-                }
-                return;
-            }
-            if (string.Equals(root, namesRoot, StringComparison.OrdinalIgnoreCase))
+            if (root == null) root = "";
+            if (namesRoot != null &&
+                string.Equals(root, namesRoot, StringComparison.OrdinalIgnoreCase))
                 return;
             namesRoot = root;
             names.Load(root);
@@ -724,12 +791,8 @@ namespace AA2Trainer
         private void ReloadNames()
         {
             string root = GetGameRoot();
-            if (string.IsNullOrEmpty(root)) root = namesRoot;
-            if (string.IsNullOrEmpty(root))
-            {
-                if (namesLabel != null) namesLabel.Text = "Names: game path not found";
-                return;
-            }
+            if (root == null) root = namesRoot;
+            if (root == null) root = "";
             namesRoot = root;
             names.Load(root);
             UpdateNamesLabel();
@@ -739,6 +802,27 @@ namespace AA2Trainer
                 UpdateOverview();
                 RefreshCurrentTabValues();
                 SetSummary();
+                RefreshSaveViewer();
+            }
+        }
+
+        private void RefreshSaveViewer()
+        {
+            if (saveViewer == null) return;
+            saveViewer.SetGameRoot(GetGameRoot());
+            saveViewer.RefreshIfChanged();
+            if (mem.IsAttached && ctx.Selected != null)
+            {
+                saveViewer.SetLiveCharacters(ctx.Characters);
+                if (ctx.Selected.Seat != lastSaveViewerSeat)
+                {
+                    saveViewer.SetSelectedSeat(ctx.Selected.Seat);
+                    lastSaveViewerSeat = ctx.Selected.Seat;
+                }
+            }
+            else
+            {
+                saveViewer.SetLiveCharacters(null);
             }
         }
 
@@ -965,6 +1049,7 @@ namespace AA2Trainer
 
             EnsureNamesLoaded();
             UpdateSelectedGender();
+            RefreshSaveViewer();
             RunHealthCheck();
             PopulateSeats();
             BuildAllDefinitions();
@@ -1005,6 +1090,7 @@ namespace AA2Trainer
                 }
                 EnsureNamesLoaded();
                 UpdateSelectedGender();
+                RefreshSaveViewer();
                 MaybeRunHealthCheck();
                 PopulateSeats();
                 BuildAllDefinitions();
@@ -1022,6 +1108,7 @@ namespace AA2Trainer
             }
             EnsureNamesLoaded();
             UpdateSelectedGender();
+            RefreshSaveViewer();
             MaybeRunHealthCheck();
             PopulateSeats();
             UpdateOverview();
@@ -1043,11 +1130,17 @@ namespace AA2Trainer
             ClearOverview();
             UpdateHealthUi();
             SetSummaryText("Not attached.");
+            lastSaveViewerSeat = -1;
+            RefreshSaveViewer();
         }
 
         private void PopulateSeats()
         {
-            if (!mem.IsAttached || ctx.Selected == null) return;
+            if (!mem.IsAttached || ctx.Selected == null)
+            {
+                HideHoverPortrait();
+                return;
+            }
             uint selectedPointer = ctx.Selected.Pointer;
 
             string signature = "";
@@ -1076,6 +1169,7 @@ namespace AA2Trainer
                 finally { suppressSeatEvent = false; }
                 return;
             }
+            HideHoverPortrait();
             lastSeatSignature = signature;
 
             suppressSeatEvent = true;
@@ -1100,7 +1194,6 @@ namespace AA2Trainer
                     item.SubItems.Add(personality);
                     item.SubItems.Add(sex);
                     item.SubItems.Add(info.IsPlayer ? "*" : "");
-                    item.ToolTipText = info.Name + "  |  " + personality;
                     item.Tag = info;
                     if (info.IsPlayer) item.Font = new Font(seatList.Font, FontStyle.Bold);
                     seatList.Items.Add(item);
@@ -1171,12 +1264,310 @@ namespace AA2Trainer
         private void ApplySelection(CharacterInfo info)
         {
             if (info == null) return;
+            HideHoverPortrait();
             ctx.Select(mem, info);
             UpdateSelectedGender();
             MaybeRunHealthCheck();
             UpdateOverview();
             RefreshCurrentTabValues();
             SetSummary();
+            RefreshSaveViewer();
+        }
+
+        private void SeatList_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!mem.IsAttached || ctx.Selected == null)
+            {
+                ScheduleHideHoverPortrait();
+                return;
+            }
+
+            ListViewItem item = seatList.GetItemAt(e.X, e.Y);
+            if (item == null)
+            {
+                ScheduleHideHoverPortrait();
+                return;
+            }
+
+            if (item == hoverItem)
+            {
+                if (hoverHideTimer != null) hoverHideTimer.Stop();
+                if (hoverPopupVisible)
+                {
+                    if (hoverWatchTimer != null) hoverWatchTimer.Start();
+                }
+                else
+                {
+                    hoverTimer.Stop();
+                    hoverTimer.Start();
+                }
+                return;
+            }
+
+            HideHoverPortrait();
+            hoverItem = item;
+            hoverCharacter = item.Tag as CharacterInfo;
+            hoverControl = seatList;
+            hoverAnchorScreen = seatList.RectangleToScreen(item.Bounds);
+            hoverTimer.Stop();
+            hoverTimer.Start();
+        }
+
+        private void ShowHoverPortrait()
+        {
+            if (hoverCharacter == null || hoverItem == null) return;
+            if (!mem.IsAttached || ctx.Selected == null)
+            {
+                HideHoverPortrait();
+                return;
+            }
+
+            Point listClient = seatList.PointToClient(Cursor.Position);
+            if (!seatList.ClientRectangle.Contains(listClient) ||
+                seatList.GetItemAt(listClient.X, listClient.Y) != hoverItem)
+            {
+                HideHoverPortrait();
+                return;
+            }
+
+            CharacterInfo info = hoverCharacter;
+            EnsureHoverPopup();
+            LoadHoverPortrait(info);
+
+            hoverName.Text = string.IsNullOrEmpty(info.Name) ? "(unnamed)" : info.Name;
+            string seat = info.Seat >= 0 ? info.Seat.ToString() : "?";
+            hoverMeta.Text = "Seat " + seat + "  -  " + PersonalityFor(info);
+
+            ShowHoverPopupAtAnchor();
+        }
+
+        private string PersonalityFor(CharacterInfo info)
+        {
+            GameContext view = ctx.CreateCharacterView(mem, info);
+            EvalResult r = DashboardData.Eval(mem, view, "Personality", 0);
+            if (r == null || r.Bytes == null || r.Bytes.Length < 1) return "?";
+            int id = r.Bytes[0];
+            string name = names == null ? null : names.Get("PERSONALITY", id);
+            if (string.IsNullOrEmpty(name)) return "P" + id.ToString();
+            return id.ToString("D2") + "  " + name;
+        }
+
+        private void EnsureHoverPopup()
+        {
+            if (hoverPopup != null) return;
+
+            TableLayoutPanel panel = new TableLayoutPanel();
+            panel.ColumnCount = 1;
+            panel.RowCount = 3;
+            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200F));
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 300F));
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            panel.Size = new Size(200, 346);
+            panel.BackColor = Color.White;
+            panel.Margin = new Padding(0);
+            panel.Padding = new Padding(0);
+
+            Panel picturePanel = new Panel();
+            picturePanel.Dock = DockStyle.Fill;
+            picturePanel.BackColor = Color.FromArgb(236, 238, 242);
+
+            hoverPicture = new PictureBox();
+            hoverPicture.Dock = DockStyle.Fill;
+            hoverPicture.SizeMode = PictureBoxSizeMode.Zoom;
+            hoverPicture.BackColor = Color.FromArgb(236, 238, 242);
+            picturePanel.Controls.Add(hoverPicture);
+
+            hoverPlaceholder = new Label();
+            hoverPlaceholder.Dock = DockStyle.Fill;
+            hoverPlaceholder.TextAlign = ContentAlignment.MiddleCenter;
+            hoverPlaceholder.Text = "No portrait";
+            hoverPlaceholder.ForeColor = Color.DimGray;
+            hoverPlaceholder.BackColor = Color.FromArgb(236, 238, 242);
+            hoverPlaceholder.Visible = false;
+            picturePanel.Controls.Add(hoverPlaceholder);
+
+            panel.Controls.Add(picturePanel, 0, 0);
+
+            hoverName = new Label();
+            hoverName.Dock = DockStyle.Fill;
+            hoverName.TextAlign = ContentAlignment.MiddleCenter;
+            hoverName.AutoEllipsis = true;
+            hoverName.Font = new Font(Font, FontStyle.Bold);
+            panel.Controls.Add(hoverName, 0, 1);
+
+            hoverMeta = new Label();
+            hoverMeta.Dock = DockStyle.Fill;
+            hoverMeta.TextAlign = ContentAlignment.MiddleCenter;
+            hoverMeta.AutoEllipsis = true;
+            hoverMeta.Font = new Font("Segoe UI", 8F);
+            hoverMeta.ForeColor = Color.DimGray;
+            panel.Controls.Add(hoverMeta, 0, 2);
+
+            ToolStripControlHost host = new ToolStripControlHost(panel);
+            host.AutoSize = false;
+            host.Size = panel.Size;
+            host.Margin = new Padding(0);
+            host.Padding = new Padding(0);
+
+            hoverPopup = new ToolStripDropDown();
+            hoverPopup.AutoSize = false;
+            hoverPopup.AutoClose = false;
+            hoverPopup.DropShadowEnabled = true;
+            hoverPopup.Padding = new Padding(1);
+            hoverPopup.BackColor = Color.FromArgb(190, 195, 205);
+            hoverPopup.Items.Add(host);
+            hoverPopup.Size = new Size(202, 348);
+            hoverPopup.Closed += delegate
+            {
+                hoverPopupVisible = false;
+                ClearHoverSource();
+                if (hoverWatchTimer != null) hoverWatchTimer.Stop();
+                if (hoverHideTimer != null) hoverHideTimer.Stop();
+            };
+        }
+
+        private void LoadHoverPortrait(CharacterInfo info)
+        {
+            GameContext view = ctx.CreateCharacterView(mem, info);
+            uint addr;
+            uint size;
+            PortraitLoader.ReadFullInfo(mem, view, out addr, out size);
+
+            if (hoverPortrait != null && hoverPortraitPointer == info.Pointer &&
+                hoverPortrait.Address == addr && hoverPortrait.Size == size)
+                return;
+
+            if (hoverPicture != null) hoverPicture.Image = null;
+            if (hoverPortrait != null)
+            {
+                hoverPortrait.Dispose();
+                hoverPortrait = null;
+            }
+
+            hoverPortrait = PortraitLoader.Load(mem, addr, size);
+            hoverPortraitPointer = info.Pointer;
+
+            bool hasImage = hoverPortrait.Bitmap != null;
+            if (hoverPicture != null)
+            {
+                hoverPicture.Image = hasImage ? hoverPortrait.Bitmap : null;
+                hoverPicture.Visible = hasImage;
+            }
+            if (hoverPlaceholder != null) hoverPlaceholder.Visible = !hasImage;
+        }
+
+        private void ShowHoverPopupAtAnchor()
+        {
+            if (hoverPopup == null || hoverCharacter == null) return;
+            if (hoverHideTimer != null) hoverHideTimer.Stop();
+
+            int width = hoverPopup.Width > 0 ? hoverPopup.Width : 202;
+            int height = hoverPopup.Height > 0 ? hoverPopup.Height : 348;
+            Rectangle area = Screen.FromPoint(Cursor.Position).WorkingArea;
+            Rectangle anchor = hoverAnchorScreen;
+            if (anchor.Width <= 0 || anchor.Height <= 0)
+                anchor = new Rectangle(Cursor.Position, new Size(1, 1));
+
+            // Keep the preview beside the hovered row or portrait so it
+            // never covers the thing being pointed at.
+            int x = anchor.Right + 8;
+            int y = anchor.Top;
+            if (x + width > area.Right) x = anchor.Left - width - 8;
+            if (y + height > area.Bottom) y = area.Bottom - height;
+            if (x < area.Left) x = area.Left;
+            if (y < area.Top) y = area.Top;
+
+            if (hoverPopupVisible) hoverPopup.Location = new Point(x, y);
+            else hoverPopup.Show(new Point(x, y));
+            hoverPopupVisible = true;
+            if (hoverWatchTimer != null) hoverWatchTimer.Start();
+        }
+
+        private bool IsHoverStillValid()
+        {
+            if (hoverCharacter == null || hoverControl == null || hoverItem == null)
+                return false;
+
+            Point client = hoverControl.PointToClient(Cursor.Position);
+            if (!hoverControl.ClientRectangle.Contains(client)) return false;
+            return seatList.GetItemAt(client.X, client.Y) == hoverItem;
+        }
+
+        private void CheckHoverStillValid()
+        {
+            if (!hoverPopupVisible)
+            {
+                if (hoverWatchTimer != null) hoverWatchTimer.Stop();
+                return;
+            }
+            if (!IsHoverStillValid())
+                ScheduleHideHoverPortrait();
+        }
+
+        private void ScheduleHideHoverPortrait()
+        {
+            if (!hoverPopupVisible || hoverPopup == null)
+            {
+                HideHoverPortrait();
+                return;
+            }
+
+            // A leave event from the previous row/portrait can arrive after
+            // the new source has already taken over.
+            if (IsHoverStillValid())
+            {
+                if (hoverWatchTimer != null) hoverWatchTimer.Start();
+                return;
+            }
+
+            if (hoverWatchTimer != null) hoverWatchTimer.Stop();
+            if (hoverHideTimer != null)
+            {
+                hoverHideTimer.Stop();
+                hoverHideTimer.Start();
+            }
+        }
+
+        private void ClearHoverSource()
+        {
+            hoverItem = null;
+            hoverCharacter = null;
+            hoverControl = null;
+            hoverAnchorScreen = Rectangle.Empty;
+        }
+
+        private void HideHoverPortrait()
+        {
+            if (hoverTimer != null) hoverTimer.Stop();
+            if (hoverWatchTimer != null) hoverWatchTimer.Stop();
+            if (hoverHideTimer != null) hoverHideTimer.Stop();
+            ClearHoverSource();
+            if (hoverPopup != null && (hoverPopupVisible || hoverPopup.Visible))
+                hoverPopup.Close();
+            hoverPopupVisible = false;
+        }
+
+        private void DisposeHoverPopup()
+        {
+            if (hoverPicture != null) hoverPicture.Image = null;
+            if (hoverPortrait != null)
+            {
+                hoverPortrait.Dispose();
+                hoverPortrait = null;
+            }
+            if (hoverPopup != null)
+            {
+                hoverPopup.Dispose();
+                hoverPopup = null;
+            }
+            hoverPicture = null;
+            hoverPlaceholder = null;
+            hoverName = null;
+            hoverMeta = null;
+            hoverPortraitPointer = 0;
+            hoverPopupVisible = false;
+            ClearHoverSource();
         }
 
         private void UpdateOverview()
@@ -1206,8 +1597,8 @@ namespace AA2Trainer
             SetKV(charKv, "Traits", TraitSummary(), true);
 
             SetKV(statusKv, "Status", DashboardData.Value(mem, ctx, "Status", 0), true);
-            SetKV(statusKv, "Action", DisplayText.ActionText(DashboardData.Value(mem, ctx, "Action", 0)), true);
-            SetKV(statusKv, "Location", DashboardData.Value(mem, ctx, "Location", 0), true);
+            SetKV(statusKv, "Action", NamedValue("Action", DashboardData.Value(mem, ctx, "Action", 0)), true);
+            SetKV(statusKv, "Location", NamedValue("Location", DashboardData.Value(mem, ctx, "Location", 0)), true);
             SetKV(statusKv, "Response", ResponseText(DashboardData.Value(mem, ctx, "Response", 0)), true);
             SetKV(statusKv, "Mood action", DashboardData.Value(mem, ctx, "MoodAction", 0), true);
             SetKV(statusKv, "PC interact", DashboardData.Value(mem, ctx, "PCInteract", 0), true);
@@ -1261,9 +1652,9 @@ namespace AA2Trainer
             {
                 uint addr;
                 uint size;
-                byte[] data = ReadPortraitBytes("ThumbSize", "ThumbAddr", out addr, out size);
+                byte[] data = ReadPortraitBytes("PotraitSize", "PotraitAddr", out addr, out size);
                 if (data == null)
-                    data = ReadPortraitBytes("PotraitSize", "PotraitAddr", out addr, out size);
+                    data = ReadPortraitBytes("ThumbSize", "ThumbAddr", out addr, out size);
                 if (data == null || data.Length < 8)
                 {
                     DisposePortrait();
@@ -1587,7 +1978,8 @@ namespace AA2Trainer
                     UpdateOverview();
                     break;
                 case 1:
-                    if (roster != null) roster.RefreshRoster(mem, ctx, ctx.Selected);
+                    if (roster != null)
+                        roster.RefreshRoster(mem, ctx, ctx.Selected, names);
                     break;
                 case 2:
                     personalGrid.RefreshValues(mem, ctx, 0);
@@ -1602,9 +1994,17 @@ namespace AA2Trainer
                     classGrid.RefreshValues(mem, ctx, 0);
                     break;
                 case 6:
-                    configGrid.RefreshValues(mem, ctx, 0);
+                    if (saveViewer != null)
+                    {
+                        saveViewer.SetGameRoot(GetGameRoot());
+                        saveViewer.SetLiveCharacters(ctx.Characters);
+                        if (ctx.Selected != null) saveViewer.SetSelectedSeat(ctx.Selected.Seat);
+                    }
                     break;
                 case 7:
+                    configGrid.RefreshValues(mem, ctx, 0);
+                    break;
+                case 8:
                     pointerGrid.RefreshValues(mem, ctx, 0);
                     RefreshPointerDetails();
                     break;

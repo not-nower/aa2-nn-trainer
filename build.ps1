@@ -13,11 +13,15 @@ $sources = @(
     "FieldGridControl.cs",
     "DisplayText.cs",
     "ClassRosterControl.cs",
+    "SaveViewerControl.cs",
+    "PortraitLoader.cs",
     "NameMap.cs",
     "GameProfile.cs",
     "PointerHealth.cs",
     "Core\GameMemory.cs",
     "Core\GameContext.cs",
+    "Core\SaveData.cs",
+    "Core\RelationshipData.cs",
     "Core\Evaluator.cs",
     "Core\Definitions.cs"
 ) | ForEach-Object { Join-Path $root $_ }
@@ -25,6 +29,7 @@ $sources = @(
 Write-Host "Building AA2Trainer.exe ..."
 & $csc /nologo /target:winexe /platform:x86 `
     /out:"$root\AA2Trainer.exe" `
+    "/resource:$root\NameData.tsv,AA2Trainer.NameData.tsv" `
     /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Core.dll /r:System.Xml.dll `
     $sources
 
