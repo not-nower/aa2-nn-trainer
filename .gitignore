@@ -1,0 +1,17 @@
+# Build output
+*.exe
+*.pdb
+bin/
+obj/
+
+# Runtime logs
+crash.log
+*.log
+
+# IDE / OS
+.vs/
+.idea/
+*.user
+*.suo
+Thumbs.db
+desktop.ini
