@@ -137,6 +137,18 @@ namespace AA2Trainer
             UpdateDerivedPointers(mem);
         }
 
+        // Read-only view of one character without changing the global selection.
+        public GameContext CreateCharacterView(GameMemory mem, CharacterInfo info)
+        {
+            GameContext view = new GameContext();
+            view.ModuleBase = ModuleBase;
+            view.GlobalRoot = GlobalRoot;
+            view.Selected = info;
+            view.SelectedChar = info == null ? 0 : info.Pointer;
+            if (view.SelectedChar != 0) view.UpdateDerivedPointers(mem);
+            return view;
+        }
+
         private void UpdateDerivedPointers(GameMemory mem)
         {
             uint? cd = mem.ReadU32(SelectedChar + 0x28);
