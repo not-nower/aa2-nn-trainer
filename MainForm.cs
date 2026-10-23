@@ -83,7 +83,7 @@ namespace AA2Trainer
 
         public MainForm()
         {
-            Text = "AA2 Trainer - Dashboard";
+            Text = "AA2 NN's Trainer";
             Width = 1440;
             Height = 900;
             MinimumSize = new Size(1100, 650);
