@@ -11,6 +11,8 @@ $sources = @(
     "MainForm.cs",
     "DashboardData.cs",
     "FieldGridControl.cs",
+    "DisplayText.cs",
+    "ClassRosterControl.cs",
     "NameMap.cs",
     "GameProfile.cs",
     "PointerHealth.cs",

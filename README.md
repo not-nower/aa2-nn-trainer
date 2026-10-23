@@ -33,6 +33,8 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
   personality and sex.
 - **Overview**: portrait, character identity, live status/action/location,
   class/time and session pointers.
+- **Class Roster**: a 5×5 classroom layout with every seat, portrait, name,
+  action, location and mood.
 - **Personal**: identity, traits, body, face, hair, outfits, study/club and
   media fields.
 - **Relations**: relationship values, moods, behavior levels, feeling levels
@@ -43,6 +45,35 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
   movement speeds and colours.
 - **All Pointers**: the full 882-entry diagnostic map with chain trace and
   `Only problems` filter.
+
+## Class Roster
+
+The **Class Roster** tab mirrors the game's classroom. Seats are read
+right-to-left by column, top-to-bottom. The teacher is seat 24 in the top
+center; seats 0 and 19 are the top-right and top-left student seats.
+
+|        | col 0 | col 1 | col 2 | col 3 | col 4 |
+|--------|-------|-------|-------|-------|-------|
+| row 0  | 19    | 14    | 24 (T) | 5    | 0 |
+| row 1  | 20    | 15    | 10    | 6     | 1 |
+| row 2  | 21    | 16    | 11    | 7     | 2 |
+| row 3  | 22    | 17    | 12    | 8     | 3 |
+| row 4  | 23    | 18    | 13    | 9     | 4 |
+
+Each card shows:
+
+- portrait
+- name
+- current action
+- location
+- mood action
+- seat number
+- `PC` or `TEACHER` badge
+
+Empty seats still show their seat number. Clicking an occupied card selects
+that character in the left-hand list and keeps the other tabs in sync.
+Portraits are cached; they are only re-read when the character or portrait
+address changes. The page is read-only and does not affect the write gate.
 
 ## Mod names from XML
 
@@ -106,12 +137,13 @@ and expected module size. Until that is done the new build stays read-only.
 - **Details** opens the fail-safe report.
 - **Auto 1s** refreshes the current view once per second.
 - **Character list** selects whose data is shown.
+- **Class Roster** cards select the clicked character and update every tab.
 - **Personal → Group** narrows the field list.
 - **Relations → Target index** selects the target seat/array element
   (`0..24`); this is what the `^58`, `^4`, `^10` and `^C` strides use.
 - **Filter** searches name, raw expression, category and context.
 - **All Pointers → Only problems** hides resolved `OK` rows.
-- **Alt+1 … Alt+7** switches tabs.
+- **Alt+1 … Alt+8** switches tabs.
 
 ## Pointer model
 
@@ -157,6 +189,8 @@ move the static roots.
 - `MainForm.cs` — dashboard UI
 - `DashboardData.cs` — field grouping/evaluation helpers
 - `FieldGridControl.cs` — reusable field grid
+- `ClassRosterControl.cs` — 5×5 classroom roster and portrait cards
+- `DisplayText.cs` — shared action-name formatting
 - `NameMap.cs` — XML name/enum loader
 - `GameProfile.cs` — build fingerprint and expected offsets profile
 - `PointerHealth.cs` — all-pointer self-test and failure list

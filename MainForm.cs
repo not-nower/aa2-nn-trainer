@@ -37,6 +37,7 @@ namespace AA2Trainer
         private Dictionary<string, Label> classKv;
         private Dictionary<string, Label> sessionKv;
 
+        private ClassRosterControl roster;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
         private FieldGridControl activityGrid;
@@ -78,7 +79,6 @@ namespace AA2Trainer
             "Schemer [M]", "Carefree", "Warm [M]"
         };
 
-        private static readonly Dictionary<int, string> ActionNames = BuildActionNames();
         private static readonly Dictionary<int, string> ResponseNames = BuildResponseNames();
 
         public MainForm()
@@ -121,6 +121,7 @@ namespace AA2Trainer
                 refreshTimer.Stop();
                 healthTimer.Stop();
                 filterTimer.Stop();
+                if (roster != null) roster.DisposePortraits();
                 mem.Dispose();
             };
         }
@@ -162,9 +163,9 @@ namespace AA2Trainer
         {
             if (!e.Alt) return;
             int index = -1;
-            if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D7)
+            if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D8)
                 index = e.KeyCode - Keys.D1;
-            else if (e.KeyCode >= Keys.NumPad1 && e.KeyCode <= Keys.NumPad7)
+            else if (e.KeyCode >= Keys.NumPad1 && e.KeyCode <= Keys.NumPad8)
                 index = e.KeyCode - Keys.NumPad1;
             if (index >= 0 && tabs != null && index < tabs.TabPages.Count)
             {
@@ -312,6 +313,7 @@ namespace AA2Trainer
             tabs.SelectedIndexChanged += delegate { RefreshCurrentTabValues(); };
 
             tabs.TabPages.Add(BuildOverviewTab());
+            tabs.TabPages.Add(BuildRosterTab());
             tabs.TabPages.Add(BuildPersonalTab());
             tabs.TabPages.Add(BuildRelationsTab());
             tabs.TabPages.Add(BuildActivityTab());
@@ -386,6 +388,18 @@ namespace AA2Trainer
             sessionKv = sev;
 
             page.Controls.Add(root);
+            return page;
+        }
+
+        private TabPage BuildRosterTab()
+        {
+            TabPage page = new TabPage("Class Roster");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            roster = new ClassRosterControl();
+            roster.Dock = DockStyle.Fill;
+            roster.CharacterClicked += Roster_CharacterClicked;
+            page.Controls.Add(roster);
             return page;
         }
 
@@ -1021,6 +1035,7 @@ namespace AA2Trainer
             gameStatusLabel.ForeColor = Color.DarkRed;
             classLabel.Text = "-";
             seatList.Items.Clear();
+            if (roster != null) roster.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
@@ -1116,6 +1131,46 @@ namespace AA2Trainer
             if (seatList.SelectedItems.Count == 0) return;
             CharacterInfo info = seatList.SelectedItems[0].Tag as CharacterInfo;
             if (info == null) return;
+            ApplySelection(info);
+        }
+
+        private void Roster_CharacterClicked(object sender, CharacterSelectedEventArgs e)
+        {
+            if (e.Character == null) return;
+            CharacterInfo info = ctx.FindByPointer(e.Character.Pointer);
+            if (info == null) info = e.Character;
+            SyncSeatList(info);
+            ApplySelection(info);
+        }
+
+        private void SyncSeatList(CharacterInfo info)
+        {
+            if (seatList == null || info == null) return;
+            suppressSeatEvent = true;
+            try
+            {
+                bool found = false;
+                foreach (ListViewItem item in seatList.Items)
+                {
+                    CharacterInfo itemInfo = item.Tag as CharacterInfo;
+                    if (itemInfo == null || itemInfo.Pointer != info.Pointer) continue;
+                    item.Selected = true;
+                    item.Focused = true;
+                    item.EnsureVisible();
+                    found = true;
+                    break;
+                }
+                if (!found) seatList.SelectedItems.Clear();
+            }
+            finally
+            {
+                suppressSeatEvent = false;
+            }
+        }
+
+        private void ApplySelection(CharacterInfo info)
+        {
+            if (info == null) return;
             ctx.Select(mem, info);
             UpdateSelectedGender();
             MaybeRunHealthCheck();
@@ -1151,7 +1206,7 @@ namespace AA2Trainer
             SetKV(charKv, "Traits", TraitSummary(), true);
 
             SetKV(statusKv, "Status", DashboardData.Value(mem, ctx, "Status", 0), true);
-            SetKV(statusKv, "Action", ActionText(DashboardData.Value(mem, ctx, "Action", 0)), true);
+            SetKV(statusKv, "Action", DisplayText.ActionText(DashboardData.Value(mem, ctx, "Action", 0)), true);
             SetKV(statusKv, "Location", DashboardData.Value(mem, ctx, "Location", 0), true);
             SetKV(statusKv, "Response", ResponseText(DashboardData.Value(mem, ctx, "Response", 0)), true);
             SetKV(statusKv, "Mood action", DashboardData.Value(mem, ctx, "MoodAction", 0), true);
@@ -1331,15 +1386,6 @@ namespace AA2Trainer
                 if (n.Value == 0) return "Male";
                 if (n.Value == 1) return "Female";
             }
-            return value;
-        }
-
-        private static string ActionText(string value)
-        {
-            int? n = LeadingInt(value);
-            if (!n.HasValue) return value;
-            string name;
-            if (ActionNames.TryGetValue(n.Value, out name)) return n.Value.ToString() + "  " + name;
             return value;
         }
 
@@ -1529,29 +1575,36 @@ namespace AA2Trainer
 
         private void RefreshCurrentTabValues()
         {
-            if (!mem.IsAttached || ctx.Selected == null) return;
             if (tabs == null) return;
+            if (!mem.IsAttached || ctx.Selected == null)
+            {
+                if (roster != null) roster.Clear();
+                return;
+            }
             switch (tabs.SelectedIndex)
             {
                 case 0:
                     UpdateOverview();
                     break;
                 case 1:
-                    personalGrid.RefreshValues(mem, ctx, 0);
+                    if (roster != null) roster.RefreshRoster(mem, ctx, ctx.Selected);
                     break;
                 case 2:
-                    relationGrid.RefreshValues(mem, ctx, relationIndex == null ? 0 : (int)relationIndex.Value);
+                    personalGrid.RefreshValues(mem, ctx, 0);
                     break;
                 case 3:
-                    activityGrid.RefreshValues(mem, ctx, 0);
+                    relationGrid.RefreshValues(mem, ctx, relationIndex == null ? 0 : (int)relationIndex.Value);
                     break;
                 case 4:
-                    classGrid.RefreshValues(mem, ctx, 0);
+                    activityGrid.RefreshValues(mem, ctx, 0);
                     break;
                 case 5:
-                    configGrid.RefreshValues(mem, ctx, 0);
+                    classGrid.RefreshValues(mem, ctx, 0);
                     break;
                 case 6:
+                    configGrid.RefreshValues(mem, ctx, 0);
+                    break;
+                case 7:
                     pointerGrid.RefreshValues(mem, ctx, 0);
                     RefreshPointerDetails();
                     break;
@@ -1625,39 +1678,6 @@ namespace AA2Trainer
         }
 
         #endregion
-
-        private static Dictionary<int, string> BuildActionNames()
-        {
-            Dictionary<int, string> d = new Dictionary<int, string>();
-            d[-1] = "None";
-            d[0] = "Cheer Up";
-            d[1] = "Calm";
-            d[5] = "Encourage to Study";
-            d[10] = "Good Rumor";
-            d[11] = "Get Along";
-            d[12] = "Need Along";
-            d[17] = "Food";
-            d[18] = "Love Life";
-            d[20] = "Try Study";
-            d[21] = "Try Exercise";
-            d[23] = "Message";
-            d[24] = "Let's Class";
-            d[40] = "Ask Date";
-            d[41] = "Confess";
-            d[42] = "Ask Lover";
-            d[48] = "Want H";
-            d[76] = "Show Panties";
-            d[77] = "Had You Fucked?";
-            d[84] = "Morning Kiss";
-            d[86] = "Kiss";
-            d[93] = "Seems ... likes you";
-            d[94] = "Had Confess";
-            d[105] = "Changing Cloth";
-            d[108] = "To Study";
-            d[109] = "To Exercise";
-            d[114] = "Gust of wind";
-            return d;
-        }
 
         private static Dictionary<int, string> BuildResponseNames()
         {
