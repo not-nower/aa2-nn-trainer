@@ -44,16 +44,24 @@ namespace AA2Trainer
         private Label classLabel;
         private ListView seatList;
         private TabControl tabs;
+        private TabControl characterEditorTabs;
+        private TabControl debugTabs;
         private SplitContainer mainSplit;
 
         private PictureBox portraitBox;
         private Label portraitName;
+        private PictureBox seatPortraitBox;
+        private Label seatPortraitName;
+        private Label seatPortraitPlaceholder;
+        private PortraitImage seatPortrait;
+        private uint seatPortraitPointer;
         private Dictionary<string, Label> charKv;
         private Dictionary<string, Label> statusKv;
         private Dictionary<string, Label> classKv;
         private Dictionary<string, Label> sessionKv;
 
         private ClassRosterControl roster;
+        private CharacterDataControl characterData;
         private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
@@ -81,6 +89,10 @@ namespace AA2Trainer
 
         private bool suppressSeatEvent;
         private bool buildingDefinitions;
+        private bool resizeHiddenCharacterData;
+        private bool resizeHiddenRoster;
+        private bool resizeHiddenSaveViewer;
+        private bool resizeHiddenDebugTabs;
         private string namesRoot;
         private int selectedGender;
         private string lastSeatSignature;
@@ -108,6 +120,7 @@ namespace AA2Trainer
             StartPosition = FormStartPosition.CenterScreen;
             Font = new Font("Segoe UI", 9F);
             KeyPreview = true;
+            DoubleBuffered = true;
 
             BuildUi();
             KeyDown += MainForm_KeyDown;
@@ -164,6 +177,8 @@ namespace AA2Trainer
             };
 
             Load += delegate { SetInitialLayout(); AttachAndRefresh(); };
+            ResizeBegin += delegate { BeginInteractiveResize(); };
+            ResizeEnd += delegate { EndInteractiveResize(); };
             FormClosing += delegate
             {
                 refreshTimer.Stop();
@@ -175,6 +190,7 @@ namespace AA2Trainer
                 HideHoverPortrait();
                 DisposeHoverPopup();
                 if (roster != null) roster.DisposePortraits();
+                ClearSeatPortrait();
                 mem.Dispose();
             };
             Deactivate += delegate { HideHoverPortrait(); };
@@ -237,6 +253,72 @@ namespace AA2Trainer
             if (desired > max) desired = max;
             if (desired < mainSplit.Panel1MinSize) desired = mainSplit.Panel1MinSize;
             try { mainSplit.SplitterDistance = desired; } catch { }
+        }
+
+        private void BeginInteractiveResize()
+        {
+            // Hiding the heavy pages during a border drag avoids re-laying out
+            // dozens of nested controls for every mouse move.
+            if (characterData != null && characterData.Visible)
+            {
+                resizeHiddenCharacterData = true;
+                characterData.Visible = false;
+            }
+            if (roster != null && roster.Visible)
+            {
+                resizeHiddenRoster = true;
+                roster.Visible = false;
+            }
+            if (saveViewer != null && saveViewer.Visible)
+            {
+                resizeHiddenSaveViewer = true;
+                saveViewer.Visible = false;
+            }
+            if (debugTabs != null && debugTabs.Visible)
+            {
+                resizeHiddenDebugTabs = true;
+                debugTabs.Visible = false;
+            }
+        }
+
+        private void EndInteractiveResize()
+        {
+            if (resizeHiddenCharacterData)
+            {
+                resizeHiddenCharacterData = false;
+                if (characterData != null)
+                {
+                    characterData.Visible = true;
+                    characterData.PerformLayout();
+                }
+            }
+            if (resizeHiddenRoster)
+            {
+                resizeHiddenRoster = false;
+                if (roster != null)
+                {
+                    roster.Visible = true;
+                    roster.PerformLayout();
+                }
+            }
+            if (resizeHiddenSaveViewer)
+            {
+                resizeHiddenSaveViewer = false;
+                if (saveViewer != null)
+                {
+                    saveViewer.Visible = true;
+                    saveViewer.PerformLayout();
+                }
+            }
+            if (resizeHiddenDebugTabs)
+            {
+                resizeHiddenDebugTabs = false;
+                if (debugTabs != null)
+                {
+                    debugTabs.Visible = true;
+                    debugTabs.PerformLayout();
+                }
+            }
         }
 
         private Control BuildTopPanel()
@@ -326,17 +408,23 @@ namespace AA2Trainer
             split.FixedPanel = FixedPanel.Panel1;
             mainSplit = split;
 
-            Panel left = new Panel();
+            TableLayoutPanel left = new TableLayoutPanel();
             left.Dock = DockStyle.Fill;
+            left.ColumnCount = 1;
+            left.RowCount = 3;
             left.Padding = new Padding(8, 4, 4, 8);
+            left.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            left.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
+            left.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            left.RowStyles.Add(new RowStyle(SizeType.Absolute, 330F));
 
             Label seatsHeader = new Label();
             seatsHeader.Text = "Class seats";
-            seatsHeader.Dock = DockStyle.Top;
-            seatsHeader.Height = 26;
+            seatsHeader.Dock = DockStyle.Fill;
             seatsHeader.Font = new Font(Font, FontStyle.Bold);
             seatsHeader.TextAlign = ContentAlignment.MiddleLeft;
-            left.Controls.Add(seatsHeader);
+            seatsHeader.Margin = new Padding(0);
+            left.Controls.Add(seatsHeader, 0, 0);
 
             seatList = new ListView();
             seatList.Dock = DockStyle.Fill;
@@ -357,7 +445,52 @@ namespace AA2Trainer
             seatList.MouseWheel += delegate { HideHoverPortrait(); };
             seatList.MouseDown += delegate { HideHoverPortrait(); };
             seatList.KeyDown += delegate { HideHoverPortrait(); };
-            left.Controls.Add(seatList);
+            left.Controls.Add(seatList, 0, 1);
+
+            TableLayoutPanel seatPortraitPanel = new TableLayoutPanel();
+            seatPortraitPanel.Dock = DockStyle.Fill;
+            seatPortraitPanel.ColumnCount = 1;
+            seatPortraitPanel.RowCount = 2;
+            seatPortraitPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            seatPortraitPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            seatPortraitPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            seatPortraitPanel.Margin = new Padding(0, 6, 0, 0);
+
+            Panel portraitHost = new Panel();
+            portraitHost.Dock = DockStyle.Fill;
+            portraitHost.BackColor = Color.FromArgb(236, 238, 242);
+            portraitHost.Margin = new Padding(0);
+
+            seatPortraitBox = new PictureBox();
+            seatPortraitBox.Dock = DockStyle.Fill;
+            seatPortraitBox.SizeMode = PictureBoxSizeMode.Zoom;
+            seatPortraitBox.BorderStyle = BorderStyle.FixedSingle;
+            seatPortraitBox.BackColor = Color.FromArgb(236, 238, 242);
+            seatPortraitBox.Margin = new Padding(0);
+            portraitHost.Controls.Add(seatPortraitBox);
+
+            seatPortraitPlaceholder = new Label();
+            seatPortraitPlaceholder.Dock = DockStyle.Fill;
+            seatPortraitPlaceholder.TextAlign = ContentAlignment.MiddleCenter;
+            seatPortraitPlaceholder.Text = "No portrait";
+            seatPortraitPlaceholder.ForeColor = Color.DimGray;
+            seatPortraitPlaceholder.BackColor = Color.FromArgb(236, 238, 242);
+            seatPortraitPlaceholder.Visible = false;
+            portraitHost.Controls.Add(seatPortraitPlaceholder);
+            seatPortraitPlaceholder.BringToFront();
+
+            seatPortraitPanel.Controls.Add(portraitHost, 0, 0);
+
+            seatPortraitName = new Label();
+            seatPortraitName.Dock = DockStyle.Fill;
+            seatPortraitName.TextAlign = ContentAlignment.MiddleCenter;
+            seatPortraitName.AutoEllipsis = true;
+            seatPortraitName.Font = new Font(Font, FontStyle.Bold);
+            seatPortraitName.Text = "No character";
+            seatPortraitName.Margin = new Padding(0);
+            seatPortraitPanel.Controls.Add(seatPortraitName, 0, 1);
+
+            left.Controls.Add(seatPortraitPanel, 0, 2);
 
             split.Panel1.Controls.Add(left);
             split.Panel2.Controls.Add(BuildTabs());
@@ -371,19 +504,109 @@ namespace AA2Trainer
             tabs.Padding = new Point(12, 6);
             tabs.SelectedIndexChanged += delegate { RefreshCurrentTabValues(); };
 
-            tabs.TabPages.Add(BuildOverviewTab());
             tabs.TabPages.Add(BuildRosterTab());
-            tabs.TabPages.Add(BuildPersonalTab());
-            tabs.TabPages.Add(BuildRelationsTab());
-            tabs.TabPages.Add(BuildActivityTab());
-            tabs.TabPages.Add(BuildClassTab());
+            tabs.TabPages.Add(BuildCharacterEditorTab());
             tabs.TabPages.Add(BuildSaveViewerTab());
-            tabs.TabPages.Add(BuildConfigTab());
-            tabs.TabPages.Add(BuildPointersTab());
+            tabs.TabPages.Add(BuildDebugTab());
 
-            // The roster is the landing page; the other tabs remain one click away.
-            tabs.SelectedIndex = 1;
+            // The roster is the landing page.
+            tabs.SelectedIndex = 0;
             return tabs;
+        }
+
+        private TabPage BuildCharacterEditorTab()
+        {
+            TabPage page = new TabPage("Character Editor");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            characterEditorTabs = new TabControl();
+            characterEditorTabs.Dock = DockStyle.Fill;
+            characterEditorTabs.Padding = new Point(12, 6);
+            characterEditorTabs.SelectedIndexChanged += delegate { RefreshCurrentTabValues(); };
+
+            TabPage dataPage = new TabPage("Character Data");
+            dataPage.BackColor = Color.FromArgb(248, 249, 251);
+
+            Panel scrollHost = new Panel();
+            scrollHost.Dock = DockStyle.Fill;
+            scrollHost.AutoScroll = true;
+            scrollHost.BackColor = Color.FromArgb(248, 249, 251);
+
+            characterData = new CharacterDataControl();
+            characterData.Dock = DockStyle.None;
+            characterData.ConfirmWriteAllowed = delegate
+            {
+                RunHealthCheck();
+                return writesAllowed && mem.CanWrite;
+            };
+            characterData.CharacterSaved += delegate { OnCharacterSaved(); };
+            scrollHost.Controls.Add(characterData);
+
+            EventHandler resizeContent = delegate
+            {
+                const int minimumHeight = 470;
+                int width = scrollHost.ClientSize.Width;
+                int height = Math.Max(minimumHeight, scrollHost.ClientSize.Height);
+                if (scrollHost.ClientSize.Height < minimumHeight)
+                    width -= SystemInformation.VerticalScrollBarWidth;
+                width = Math.Max(0, width);
+                if (characterData.Width == width && characterData.Height == height) return;
+                characterData.SuspendLayout();
+                try
+                {
+                    characterData.SetBounds(0, 0, width, height);
+                }
+                finally
+                {
+                    characterData.ResumeLayout(true);
+                }
+            };
+            scrollHost.Resize += resizeContent;
+            resizeContent(scrollHost, EventArgs.Empty);
+
+            dataPage.Controls.Add(scrollHost);
+
+            characterEditorTabs.TabPages.Add(dataPage);
+            characterEditorTabs.TabPages.Add(BuildTraitsTab());
+
+            page.Controls.Add(characterEditorTabs);
+            return page;
+        }
+
+        private TabPage BuildTraitsTab()
+        {
+            TabPage page = new TabPage("Traits");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            Label placeholder = new Label();
+            placeholder.Dock = DockStyle.Fill;
+            placeholder.TextAlign = ContentAlignment.MiddleCenter;
+            placeholder.ForeColor = Color.DimGray;
+            placeholder.Text = "Traits";
+            page.Controls.Add(placeholder);
+            return page;
+        }
+
+        private TabPage BuildDebugTab()
+        {
+            TabPage page = new TabPage("Debug");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            debugTabs = new TabControl();
+            debugTabs.Dock = DockStyle.Fill;
+            debugTabs.Padding = new Point(12, 6);
+            debugTabs.SelectedIndexChanged += delegate { RefreshCurrentTabValues(); };
+
+            debugTabs.TabPages.Add(BuildOverviewTab());
+            debugTabs.TabPages.Add(BuildPersonalTab());
+            debugTabs.TabPages.Add(BuildRelationsTab());
+            debugTabs.TabPages.Add(BuildActivityTab());
+            debugTabs.TabPages.Add(BuildClassTab());
+            debugTabs.TabPages.Add(BuildConfigTab());
+            debugTabs.TabPages.Add(BuildPointersTab());
+
+            page.Controls.Add(debugTabs);
+            return page;
         }
 
         private TabPage BuildOverviewTab()
@@ -462,8 +685,22 @@ namespace AA2Trainer
             roster = new ClassRosterControl();
             roster.Dock = DockStyle.Fill;
             roster.CharacterClicked += Roster_CharacterClicked;
+            roster.CharacterActivated += Roster_CharacterActivated;
             page.Controls.Add(roster);
             return page;
+        }
+
+        private void OnCharacterSaved()
+        {
+            if (!mem.IsAttached) return;
+            if (!TryRefreshContext()) return;
+
+            UpdateSelectedGender();
+            PopulateSeats();
+            UpdateOverview();
+            RefreshCurrentTabValues();
+            SetSummary();
+            RefreshSaveViewer();
         }
 
         private TabPage BuildSaveViewerTab()
@@ -896,6 +1133,9 @@ namespace AA2Trainer
                               health.CheckedAt.ToString("HH:mm:ss"));
                 if (health.EmptyFields.Count > 0)
                     sb.AppendLine("  empty: " + string.Join(", ", health.EmptyFields.ToArray()));
+                if (health.OptionalFields.Count > 0)
+                    sb.AppendLine("  optional/legacy: " + health.OptionalFields.Count.ToString() +
+                                  " (not gated)");
             }
             sb.AppendLine("  write gate: " + (writesAllowed ? "open" : "locked"));
             if (health != null && health.Failures.Count > 0)
@@ -903,6 +1143,12 @@ namespace AA2Trainer
                 sb.AppendLine();
                 sb.AppendLine("Problems");
                 sb.Append(health.FailureText(25));
+            }
+            if (health != null && health.OptionalFields.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("Optional / legacy (not gated)");
+                sb.Append(health.OptionalText(12));
             }
             MessageBox.Show(this, sb.ToString(), "Fail-safe details",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -967,6 +1213,9 @@ namespace AA2Trainer
                         tip.AppendLine();
                         tip.Append("Problems:\n" + health.FailureText(12));
                     }
+                    if (health.Optional > 0)
+                        tip.AppendLine("Optional/legacy: " + health.Optional.ToString() +
+                                       " (not gated)");
                 }
                 tip.AppendLine("Write gate: " + (writesAllowed ? "open" : "locked"));
                 tip.Append("Use Details for more.");
@@ -974,6 +1223,7 @@ namespace AA2Trainer
             }
 
             SetHealthSession();
+            if (characterData != null) characterData.SetWriteAllowed(writesAllowed);
         }
 
         private void SetHealthSession()
@@ -1123,6 +1373,7 @@ namespace AA2Trainer
             classLabel.Text = "-";
             seatList.Items.Clear();
             if (roster != null) roster.Clear();
+            if (characterData != null) characterData.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
@@ -1234,6 +1485,20 @@ namespace AA2Trainer
             if (info == null) info = e.Character;
             SyncSeatList(info);
             ApplySelection(info);
+        }
+
+        private void Roster_CharacterActivated(object sender, CharacterSelectedEventArgs e)
+        {
+            if (e.Character == null) return;
+            CharacterInfo info = ctx.FindByPointer(e.Character.Pointer);
+            if (info == null) info = e.Character;
+
+            SyncSeatList(info);
+            ApplySelection(info);
+
+            if (tabs != null) tabs.SelectedIndex = 1; // Character Editor
+            if (characterEditorTabs != null) characterEditorTabs.SelectedIndex = 0; // Character Data
+            RefreshCurrentTabValues();
         }
 
         private void SyncSeatList(CharacterInfo info)
@@ -1627,6 +1892,7 @@ namespace AA2Trainer
             SetHealthSession();
 
             LoadPortrait();
+            LoadSeatPortrait();
         }
 
         private void ClearOverview()
@@ -1636,6 +1902,7 @@ namespace AA2Trainer
             if (classKv != null) foreach (Label l in classKv.Values) { l.Text = "-"; l.ForeColor = Color.DimGray; }
             if (sessionKv != null) foreach (Label l in sessionKv.Values) { l.Text = "-"; l.ForeColor = Color.DimGray; }
             DisposePortrait();
+            ClearSeatPortrait();
             if (portraitName != null) portraitName.Text = "No character";
         }
 
@@ -1693,6 +1960,61 @@ namespace AA2Trainer
             }
         }
 
+        private void LoadSeatPortrait()
+        {
+            if (seatPortraitName == null) return;
+            if (!mem.IsAttached || ctx.Selected == null)
+            {
+                ClearSeatPortrait();
+                return;
+            }
+
+            string seat = ctx.Selected.Seat >= 0 ? ctx.Selected.Seat.ToString("D2") : "??";
+            string name = string.IsNullOrEmpty(ctx.Selected.Name) ? "(unnamed)" : ctx.Selected.Name;
+            seatPortraitName.Text = seat + "  " + name + (ctx.Selected.IsPlayer ? "  [PC]" : "");
+
+            uint address;
+            uint size;
+            PortraitLoader.ReadFullInfo(mem, ctx, out address, out size);
+
+            if (seatPortrait != null && seatPortraitPointer == ctx.Selected.Pointer &&
+                seatPortrait.Address == address && seatPortrait.Size == size)
+                return;
+
+            if (seatPortraitBox != null) seatPortraitBox.Image = null;
+            if (seatPortrait != null)
+            {
+                seatPortrait.Dispose();
+                seatPortrait = null;
+            }
+
+            seatPortrait = PortraitLoader.Load(mem, address, size);
+            seatPortraitPointer = ctx.Selected.Pointer;
+
+            bool hasImage = seatPortrait != null && seatPortrait.Bitmap != null;
+            if (seatPortraitBox != null)
+            {
+                seatPortraitBox.Image = hasImage ? seatPortrait.Bitmap : null;
+                seatPortraitBox.Visible = hasImage;
+            }
+            if (seatPortraitPlaceholder != null)
+                seatPortraitPlaceholder.Visible = !hasImage;
+        }
+
+        private void ClearSeatPortrait()
+        {
+            if (seatPortraitBox != null) seatPortraitBox.Image = null;
+            if (seatPortrait != null)
+            {
+                seatPortrait.Dispose();
+                seatPortrait = null;
+            }
+            seatPortraitPointer = 0;
+            if (seatPortraitName != null) seatPortraitName.Text = "No character";
+            if (seatPortraitBox != null) seatPortraitBox.Visible = false;
+            if (seatPortraitPlaceholder != null) seatPortraitPlaceholder.Visible = true;
+        }
+
         private byte[] ReadPortraitBytes(string sizeName, string addrName, out uint addr, out uint size)
         {
             addr = 0;
@@ -1748,6 +2070,115 @@ namespace AA2Trainer
             string name = DashboardData.Value(mem, ctx, defName, 0);
             if (name == null || name == "-" || name == "\"\"") return "Club " + index.ToString();
             return name.Trim('"') + "  [" + index.ToString() + "]";
+        }
+
+        private List<CharacterChoice> BuildPersonalityChoices()
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            HashSet<int> seen = new HashSet<int>();
+
+            // Root XMLs can define modded personalities well above the 0-29
+            // range used by the base game (for example 78 Succubus).
+            if (names != null)
+            {
+                foreach (KeyValuePair<int, string> pair in names.Entries("PERSONALITY"))
+                {
+                    if (pair.Key < 0 || pair.Key > 255) continue;
+                    if (string.IsNullOrEmpty(pair.Value)) continue;
+                    list.Add(new CharacterChoice(pair.Key,
+                        pair.Key.ToString("D2") + "  " + pair.Value));
+                    seen.Add(pair.Key);
+                }
+            }
+
+            for (int i = 0; i < PersonalityNames.Length; i++)
+            {
+                if (seen.Contains(i)) continue;
+                string name = PersonalityNames[i];
+                if (string.IsNullOrEmpty(name))
+                    name = "Personality " + i.ToString();
+                list.Add(new CharacterChoice(i, i.ToString("D2") + "  " + name));
+                seen.Add(i);
+            }
+
+            list.Sort(delegate(CharacterChoice a, CharacterChoice b)
+            {
+                return a.Value.CompareTo(b.Value);
+            });
+            return list;
+        }
+
+        private List<CharacterChoice> BuildClubChoices()
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            for (int i = 0; i < 8; i++)
+            {
+                string name = DashboardData.Value(mem, ctx,
+                    "Club" + (i + 1).ToString() + "Name", 0);
+                name = StripQuotes(name == null ? "" : name).Trim();
+                if (string.IsNullOrEmpty(name) || name == "-" || name == "BROKEN")
+                    name = "Club " + (i + 1).ToString();
+                list.Add(new CharacterChoice(i, i.ToString() + "  " + name));
+            }
+            return list;
+        }
+
+        private CharacterChoiceSet BuildCharacterChoices()
+        {
+            CharacterChoiceSet set = new CharacterChoiceSet();
+            set.Personality = BuildPersonalityChoices();
+            set.Club = BuildClubChoices();
+
+            List<CharacterChoice> lowHigh = BuildEnumChoices("LOW_HIGH", 4);
+            set.Social = lowHigh;
+            set.Virtue = lowHigh;
+            set.VoicePitch = lowHigh;
+            set.FightingStyle = BuildEnumChoices("FIGHTSTYLE", 2);
+            set.SexualOrientation = BuildEnumChoices("SEXUALITY", 4);
+            set.Intelligence = BuildEnumChoices("LOW_HIGHPLUS", 5);
+            set.Grade = BuildGradeChoices();
+            return set;
+        }
+
+        private List<CharacterChoice> BuildGradeChoices()
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            list.Add(new CharacterChoice(255, "None"));
+            string[] grades = new string[] { "F", "E", "D", "C", "B", "A" };
+            for (int i = 0; i < grades.Length; i++)
+                list.Add(new CharacterChoice(i, grades[i]));
+            return list;
+        }
+
+        private List<CharacterChoice> BuildEnumChoices(string key, int fallbackMax)
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            HashSet<int> seen = new HashSet<int>();
+
+            if (names != null)
+            {
+                foreach (KeyValuePair<int, string> pair in names.Entries(key))
+                {
+                    if (pair.Key < 0 || pair.Key > 255) continue;
+                    if (string.IsNullOrEmpty(pair.Value)) continue;
+                    list.Add(new CharacterChoice(pair.Key,
+                        pair.Key.ToString("D2") + "  " + pair.Value));
+                    seen.Add(pair.Key);
+                }
+            }
+
+            for (int i = 0; i <= fallbackMax; i++)
+            {
+                if (seen.Contains(i)) continue;
+                list.Add(new CharacterChoice(i, i.ToString("D2") + "  (unnamed)"));
+                seen.Add(i);
+            }
+
+            list.Sort(delegate(CharacterChoice a, CharacterChoice b)
+            {
+                return a.Value.CompareTo(b.Value);
+            });
+            return list;
         }
 
         private string PersonalityName(int value)
@@ -1970,30 +2401,24 @@ namespace AA2Trainer
             if (!mem.IsAttached || ctx.Selected == null)
             {
                 if (roster != null) roster.Clear();
+                if (characterData != null) characterData.Clear();
                 return;
             }
             switch (tabs.SelectedIndex)
             {
                 case 0:
-                    UpdateOverview();
-                    break;
-                case 1:
                     if (roster != null)
                         roster.RefreshRoster(mem, ctx, ctx.Selected, names);
                     break;
+                case 1:
+                    if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 0 &&
+                        characterData != null)
+                    {
+                        characterData.SetChoices(BuildCharacterChoices());
+                        characterData.SetTarget(mem, ctx.Selected, writesAllowed);
+                    }
+                    break;
                 case 2:
-                    personalGrid.RefreshValues(mem, ctx, 0);
-                    break;
-                case 3:
-                    relationGrid.RefreshValues(mem, ctx, relationIndex == null ? 0 : (int)relationIndex.Value);
-                    break;
-                case 4:
-                    activityGrid.RefreshValues(mem, ctx, 0);
-                    break;
-                case 5:
-                    classGrid.RefreshValues(mem, ctx, 0);
-                    break;
-                case 6:
                     if (saveViewer != null)
                     {
                         saveViewer.SetGameRoot(GetGameRoot());
@@ -2001,10 +2426,37 @@ namespace AA2Trainer
                         if (ctx.Selected != null) saveViewer.SetSelectedSeat(ctx.Selected.Seat);
                     }
                     break;
-                case 7:
+                case 3:
+                    RefreshDebugTabValues();
+                    break;
+            }
+        }
+
+        private void RefreshDebugTabValues()
+        {
+            if (debugTabs == null || !mem.IsAttached || ctx.Selected == null) return;
+            switch (debugTabs.SelectedIndex)
+            {
+                case 0:
+                    UpdateOverview();
+                    break;
+                case 1:
+                    personalGrid.RefreshValues(mem, ctx, 0);
+                    break;
+                case 2:
+                    relationGrid.RefreshValues(mem, ctx,
+                        relationIndex == null ? 0 : (int)relationIndex.Value);
+                    break;
+                case 3:
+                    activityGrid.RefreshValues(mem, ctx, 0);
+                    break;
+                case 4:
+                    classGrid.RefreshValues(mem, ctx, 0);
+                    break;
+                case 5:
                     configGrid.RefreshValues(mem, ctx, 0);
                     break;
-                case 8:
+                case 6:
                     pointerGrid.RefreshValues(mem, ctx, 0);
                     RefreshPointerDetails();
                     break;
@@ -2023,7 +2475,10 @@ namespace AA2Trainer
             sb.AppendLine("Category: " + data.Def.Category + "    Type: " + Evaluator.TypeName(data.Def.Type) +
                           "    Context: " + data.Def.Context);
             sb.AppendLine("Address:  " + (r != null && r.HasAddress ? "0x" + r.Address.ToString("X8") : "-"));
-            sb.AppendLine("Status:   " + (r != null ? r.Status : "-"));
+            sb.AppendLine("Status:   " + (data.Def.Optional
+                ? "OPTIONAL / legacy (not gated)"
+                : (r != null ? r.Status : "-")));
+            if (data.Def.Optional) sb.AppendLine("Health:   excluded from the write gate");
             sb.AppendLine();
             if (r != null) sb.AppendLine(r.Trace);
             if (r != null && r.Bytes != null)

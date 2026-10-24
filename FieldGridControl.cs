@@ -103,7 +103,7 @@ namespace AA2Trainer
                     GridRowData data = new GridRowData();
                     data.Def = d;
                     Grid.Rows[i].Tag = data;
-                    Grid.Rows[i].Cells[0].Value = d.Name;
+                    Grid.Rows[i].Cells[0].Value = d.Optional ? d.Name + "  [optional]" : d.Name;
                     Grid.Rows[i].Cells[4].Value = Evaluator.ChainText(d.Chain);
                     Grid.Rows[i].Cells[5].Value = Evaluator.TypeName(d.Type);
                 }
@@ -136,8 +136,10 @@ namespace AA2Trainer
                     data.Result = r;
                     row.Cells[1].Value = ValueFormatter != null ? ValueFormatter(data.Def, r) : r.Value;
                     row.Cells[2].Value = r.HasAddress ? "0x" + r.Address.ToString("X8") : "";
-                    row.Cells[3].Value = r.Status;
-                    row.DefaultCellStyle.BackColor = DashboardData.StatusColor(r.Status);
+                    row.Cells[3].Value = data.Def.Optional ? "OPTIONAL" : r.Status;
+                    row.DefaultCellStyle.BackColor = data.Def.Optional
+                        ? DashboardData.StatusColor("OPTIONAL")
+                        : DashboardData.StatusColor(r.Status);
                     row.Visible = !(HideOkRows && r.Status == "OK");
                 }
             }

@@ -206,6 +206,18 @@ namespace AA2Trainer
             return value;
         }
 
+        public List<KeyValuePair<int, string>> Entries(string enumKey)
+        {
+            List<KeyValuePair<int, string>> result = new List<KeyValuePair<int, string>>();
+            SortedDictionary<int, string> map;
+            if (maps.TryGetValue(enumKey, out map))
+            {
+                foreach (KeyValuePair<int, string> pair in map)
+                    result.Add(pair);
+            }
+            return result;
+        }
+
         public string ForField(string field, int gender, int value)
         {
             if (string.IsNullOrEmpty(field)) return null;

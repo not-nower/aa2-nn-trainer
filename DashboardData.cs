@@ -51,6 +51,7 @@ namespace AA2Trainer
             {
                 case "OK": return Color.FromArgb(242, 255, 242);
                 case "EMPTY": return Color.FromArgb(244, 244, 244);
+                case "OPTIONAL": return Color.FromArgb(240, 244, 250);
                 case "SUSPICIOUS": return Color.FromArgb(255, 252, 220);
                 default: return Color.FromArgb(255, 232, 232);
             }

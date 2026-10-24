@@ -9,7 +9,10 @@ namespace AA2Trainer
     public sealed class GameMemory : IDisposable
     {
         public const uint PROCESS_VM_READ = 0x0010;
+        public const uint PROCESS_VM_WRITE = 0x0020;
+        public const uint PROCESS_VM_OPERATION = 0x0008;
         public const uint PROCESS_QUERY_INFORMATION = 0x0400;
+        private const uint PAGE_READWRITE = 0x04;
 
         public int Pid { get; private set; }
         public string ProcessName { get; private set; }
@@ -17,7 +20,9 @@ namespace AA2Trainer
         public uint ModuleBase { get; private set; }
         public uint ModuleSize { get; private set; }
         public bool IsAttached { get { return handle != IntPtr.Zero; } }
+        public bool CanWrite { get; private set; }
         public string LastError { get; private set; }
+        public string WriteError { get; private set; }
 
         private IntPtr handle = IntPtr.Zero;
         private Process process;
@@ -41,11 +46,26 @@ namespace AA2Trainer
                 ProcessName = process.ProcessName;
                 try { GamePath = process.MainModule.FileName; } catch { GamePath = null; }
 
-                handle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, false, Pid);
-                if (handle == IntPtr.Zero)
+                CanWrite = false;
+                WriteError = null;
+                handle = OpenProcess(
+                    PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION,
+                    false, Pid);
+                if (handle != IntPtr.Zero)
                 {
-                    // Some protected/elevated games only allow VM_READ first.
-                    handle = OpenProcess(PROCESS_VM_READ, false, Pid);
+                    CanWrite = true;
+                }
+                else
+                {
+                    int writeAccessError = Marshal.GetLastWin32Error();
+                    // Fall back to a read-only handle so the dashboard still works
+                    // when the game is running elevated or is otherwise protected.
+                    handle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, false, Pid);
+                    if (handle == IntPtr.Zero)
+                        handle = OpenProcess(PROCESS_VM_READ, false, Pid);
+                    if (handle != IntPtr.Zero)
+                        WriteError = "Write access was denied (error " + writeAccessError +
+                                     "). Run the trainer as administrator to edit.";
                 }
                 if (handle == IntPtr.Zero)
                 {
@@ -87,6 +107,8 @@ namespace AA2Trainer
             GamePath = null;
             ModuleBase = 0;
             ModuleSize = 0;
+            CanWrite = false;
+            WriteError = null;
         }
 
         public void Dispose()
@@ -182,6 +204,51 @@ namespace AA2Trainer
             return bytes != null;
         }
 
+        public bool WriteBytes(uint address, byte[] data)
+        {
+            WriteError = null;
+            if (!IsAttached)
+            {
+                WriteError = "The game is not attached.";
+                return false;
+            }
+            if (!CanWrite)
+            {
+                WriteError = string.IsNullOrEmpty(WriteError)
+                    ? "The process handle was opened read-only."
+                    : WriteError;
+                return false;
+            }
+            if (data == null || data.Length == 0)
+            {
+                WriteError = "Nothing to write.";
+                return false;
+            }
+
+            IntPtr target = new IntPtr(unchecked((int)address));
+            uint oldProtect;
+            bool protectionChanged = VirtualProtectEx(handle, target, (UIntPtr)data.Length,
+                PAGE_READWRITE, out oldProtect);
+            int protectError = protectionChanged ? 0 : Marshal.GetLastWin32Error();
+
+            IntPtr written;
+            bool ok = WriteProcessMemory(handle, target, data, new IntPtr(data.Length), out written);
+
+            if (protectionChanged)
+                VirtualProtectEx(handle, target, (UIntPtr)data.Length, oldProtect, out oldProtect);
+
+            if (!ok || written.ToInt64() != data.Length)
+            {
+                int writeError = ok ? 0 : Marshal.GetLastWin32Error();
+                WriteError = "WriteProcessMemory failed" +
+                    (writeError != 0 ? " (error " + writeError + ")" :
+                     protectionChanged ? "" : " (VirtualProtectEx error " + protectError + ")") +
+                    " at 0x" + address.ToString("X8") + ".";
+                return false;
+            }
+            return true;
+        }
+
         public byte? ReadU8(uint address)
         {
             byte[] b = ReadBytes(address, 1);
@@ -264,6 +331,14 @@ namespace AA2Trainer
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool ReadProcessMemory(IntPtr process, IntPtr baseAddress,
             [Out] byte[] buffer, IntPtr size, out IntPtr bytesRead);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool WriteProcessMemory(IntPtr process, IntPtr baseAddress,
+            byte[] buffer, IntPtr size, out IntPtr bytesWritten);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool VirtualProtectEx(IntPtr process, IntPtr address,
+            UIntPtr size, uint newProtect, out uint oldProtect);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CloseHandle(IntPtr handle);

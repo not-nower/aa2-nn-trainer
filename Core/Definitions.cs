@@ -905,5 +905,16 @@ namespace AA2Trainer {
   }
   public class PointerDef {
     public string Name; public int Type; public int BaseOffset; public int FieldOffset; public int[] Chain; public int Stride; public string Context; public bool Unicode; public string Raw; public string Format; public string Category;
+
+    // The old trainer mixed a data offset into the pointer chain for these
+    // behaviour-level fields. In the compact relationship layout that offset
+    // is not a pointer, so they cannot be health-gated as normal pointers.
+    public bool Optional {
+      get {
+        if (Stride != 0x58) return false;
+        if (Name == "MoodMax") return true;
+        return Name.StartsWith("Level", StringComparison.Ordinal);
+      }
+    }
   }
 }

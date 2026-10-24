@@ -34,6 +34,7 @@ namespace AA2Trainer
         private TableLayoutPanel grid;
 
         public event EventHandler<CharacterSelectedEventArgs> CharacterClicked;
+        public event EventHandler<CharacterSelectedEventArgs> CharacterActivated;
 
         public ClassRosterControl()
         {
@@ -65,6 +66,7 @@ namespace AA2Trainer
                     int seat = SeatGrid[r, c];
                     ClassRosterCard card = new ClassRosterCard(seat);
                     card.Click += Card_Click;
+                    card.DoubleClicked += Card_DoubleClicked;
                     cards[seat] = card;
                     grid.Controls.Add(card, c, r);
                 }
@@ -221,6 +223,14 @@ namespace AA2Trainer
                 CharacterClicked(this, new CharacterSelectedEventArgs(card.Character));
         }
 
+        private void Card_DoubleClicked(object sender, EventArgs e)
+        {
+            ClassRosterCard card = sender as ClassRosterCard;
+            if (card == null || card.Character == null) return;
+            if (CharacterActivated != null)
+                CharacterActivated(this, new CharacterSelectedEventArgs(card.Character));
+        }
+
         private static int? ReadInt(GameMemory mem, GameContext view, string name)
         {
             EvalResult r = DashboardData.Eval(mem, view, name, 0);
@@ -349,6 +359,7 @@ namespace AA2Trainer
     {
         public int Seat { get; private set; }
         public CharacterInfo Character { get; private set; }
+        public event EventHandler DoubleClicked;
 
         private readonly Label seatLabel;
         private readonly Label badgeLabel;
@@ -379,6 +390,7 @@ namespace AA2Trainer
         private uint lastPortraitAddr;
         private uint lastPortraitSize;
         private string lastPortraitName;
+        private DateTime lastDoubleClick;
 
         private static readonly Font HeartFont = new Font("Segoe UI Symbol", 21F, FontStyle.Bold);
 
@@ -404,6 +416,7 @@ namespace AA2Trainer
             tooltip.AutoPopDelay = 10000;
             tooltip.InitialDelay = 300;
             tooltip.ReshowDelay = 100;
+            DoubleClick += delegate { RaiseDoubleClicked(); };
 
             TableLayoutPanel root = new TableLayoutPanel();
             root.Dock = DockStyle.Fill;
@@ -551,8 +564,17 @@ namespace AA2Trainer
             foreach (Control child in parent.Controls)
             {
                 child.Click += delegate { OnClick(EventArgs.Empty); };
+                child.DoubleClick += delegate { RaiseDoubleClicked(); };
                 WireChildClicks(child);
             }
+        }
+
+        private void RaiseDoubleClicked()
+        {
+            if (Character == null) return;
+            if ((DateTime.UtcNow - lastDoubleClick).TotalMilliseconds < 250) return;
+            lastDoubleClick = DateTime.UtcNow;
+            if (DoubleClicked != null) DoubleClicked(this, EventArgs.Empty);
         }
 
         public void SetCharacter(CharacterInfo info, string name, string personality,
