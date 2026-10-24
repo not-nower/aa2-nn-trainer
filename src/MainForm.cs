@@ -63,6 +63,7 @@ namespace AA2Trainer
         private ClassRosterControl roster;
         private CharacterDataControl characterData;
         private TraitsControl traits;
+        private BodyControl body;
         private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
@@ -92,6 +93,7 @@ namespace AA2Trainer
         private bool buildingDefinitions;
         private bool resizeHiddenCharacterData;
         private bool resizeHiddenTraits;
+        private bool resizeHiddenBody;
         private bool resizeHiddenRoster;
         private bool resizeHiddenSaveViewer;
         private bool resizeHiddenDebugTabs;
@@ -269,6 +271,11 @@ namespace AA2Trainer
                 resizeHiddenTraits = true;
                 traits.Visible = false;
             }
+            if (body != null && body.Visible)
+            {
+                resizeHiddenBody = true;
+                body.Visible = false;
+            }
             if (roster != null && roster.Visible)
             {
                 resizeHiddenRoster = true;
@@ -304,6 +311,15 @@ namespace AA2Trainer
                 {
                     traits.Visible = true;
                     traits.PerformLayout();
+                }
+            }
+            if (resizeHiddenBody)
+            {
+                resizeHiddenBody = false;
+                if (body != null)
+                {
+                    body.Visible = true;
+                    body.PerformLayout();
                 }
             }
             if (resizeHiddenRoster)
@@ -727,6 +743,7 @@ namespace AA2Trainer
             SetHealthSession();
             if (characterData != null) characterData.SetWriteAllowed(writesAllowed);
             if (traits != null) traits.SetWriteAllowed(writesAllowed);
+            if (body != null) body.SetWriteAllowed(writesAllowed);
         }
 
         private void SetHealthSession()
@@ -835,6 +852,7 @@ namespace AA2Trainer
             if (roster != null) roster.Clear();
             if (characterData != null) characterData.Clear();
             if (traits != null) traits.Clear();
+            if (body != null) body.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
@@ -854,6 +872,7 @@ namespace AA2Trainer
                 if (roster != null) roster.Clear();
                 if (characterData != null) characterData.Clear();
                 if (traits != null) traits.Clear();
+                if (body != null) body.Clear();
                 return;
             }
             switch (tabs.SelectedIndex)
@@ -873,6 +892,12 @@ namespace AA2Trainer
                         traits != null)
                     {
                         traits.SetTarget(mem, ctx.Selected, writesAllowed);
+                    }
+                    else if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 2 &&
+                        body != null)
+                    {
+                        body.SetChoices(BuildBodyChoices(), BodyChoiceSignature());
+                        body.SetTarget(mem, ctx.Selected, writesAllowed);
                     }
                     break;
                 case 2:

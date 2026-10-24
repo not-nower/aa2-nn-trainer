@@ -65,6 +65,7 @@ namespace AA2Trainer
 
             characterEditorTabs.TabPages.Add(dataPage);
             characterEditorTabs.TabPages.Add(BuildTraitsTab());
+            characterEditorTabs.TabPages.Add(BuildBodyTab());
 
             page.Controls.Add(characterEditorTabs);
             return page;
@@ -87,6 +88,23 @@ namespace AA2Trainer
             return page;
         }
 
+        private TabPage BuildBodyTab()
+        {
+            TabPage page = new TabPage("Body");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            body = new BodyControl();
+            body.Dock = DockStyle.Fill;
+            body.ConfirmWriteAllowed = delegate
+            {
+                RunHealthCheck();
+                return writesAllowed && mem.CanWrite;
+            };
+            body.CharacterSaved += delegate { OnCharacterSaved(); };
+            page.Controls.Add(body);
+            return page;
+        }
+
         private void OnCharacterSaved()
         {
             if (!mem.IsAttached) return;
@@ -98,6 +116,28 @@ namespace AA2Trainer
             RefreshCurrentTabValues();
             SetSummary();
             RefreshSaveViewer();
+        }
+
+        private Dictionary<string, List<CharacterChoice>> BuildBodyChoices()
+        {
+            Dictionary<string, List<CharacterChoice>> map =
+                new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
+            map["Heights"] = BuildEnumChoices("HEIGHT", 2, false);
+            map["Figure"] = BuildEnumChoices(selectedGender == 0 ? "MALEFIGURE" : "FEMALEFIGURE", 4, false);
+            map["BreastShape"] = BuildEnumChoices("BREASTSHAPE", 4, false);
+            map["BreastSoftness"] = BuildEnumChoices("BREASTFIRMNESS", 3, false);
+            map["PubHairType"] = BuildEnumChoices("PUBICHAIR", 4, false);
+            map["NippleType"] = BuildEnumChoices("NIPPLETYPE", 4, false);
+            map["NippleColor"] = BuildEnumChoices("NIPPLECOLOR", 8, false);
+            map["TanMark"] = BuildEnumChoices("TANMARKS", 6, false);
+            map["PussyMosaic"] = BuildEnumChoices("MOSAICCOLOR", 5, false);
+            return map;
+        }
+
+        private string BodyChoiceSignature()
+        {
+            return "g" + selectedGender.ToString() + "/" +
+                   (names == null ? 0 : names.EntryCount).ToString();
         }
 
         private List<CharacterChoice> BuildPersonalityChoices()
@@ -180,6 +220,11 @@ namespace AA2Trainer
 
         private List<CharacterChoice> BuildEnumChoices(string key, int fallbackMax)
         {
+            return BuildEnumChoices(key, fallbackMax, true);
+        }
+
+        private List<CharacterChoice> BuildEnumChoices(string key, int fallbackMax, bool showIndex)
+        {
             List<CharacterChoice> list = new List<CharacterChoice>();
             HashSet<int> seen = new HashSet<int>();
 
@@ -189,8 +234,9 @@ namespace AA2Trainer
                 {
                     if (pair.Key < 0 || pair.Key > 255) continue;
                     if (string.IsNullOrEmpty(pair.Value)) continue;
-                    list.Add(new CharacterChoice(pair.Key,
-                        pair.Key.ToString("D2") + "  " + pair.Value));
+                    list.Add(new CharacterChoice(pair.Key, showIndex
+                        ? pair.Key.ToString("D2") + "  " + pair.Value
+                        : pair.Value));
                     seen.Add(pair.Key);
                 }
             }
@@ -198,7 +244,9 @@ namespace AA2Trainer
             for (int i = 0; i <= fallbackMax; i++)
             {
                 if (seen.Contains(i)) continue;
-                list.Add(new CharacterChoice(i, i.ToString("D2") + "  (unnamed)"));
+                list.Add(new CharacterChoice(i, showIndex
+                    ? i.ToString("D2") + "  (unnamed)"
+                    : "Value " + i.ToString()));
                 seen.Add(i);
             }
 
