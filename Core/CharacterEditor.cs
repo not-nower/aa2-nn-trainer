@@ -839,7 +839,7 @@ namespace AA2Trainer
             return false;
         }
 
-        private static bool TryGetCharacterData(GameMemory mem, CharacterInfo info,
+        public static bool TryGetCharacterData(GameMemory mem, CharacterInfo info,
             out uint characterData, out string error)
         {
             characterData = 0;

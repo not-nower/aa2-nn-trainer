@@ -62,6 +62,7 @@ namespace AA2Trainer
 
         private ClassRosterControl roster;
         private CharacterDataControl characterData;
+        private TraitsControl traits;
         private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
@@ -90,6 +91,7 @@ namespace AA2Trainer
         private bool suppressSeatEvent;
         private bool buildingDefinitions;
         private bool resizeHiddenCharacterData;
+        private bool resizeHiddenTraits;
         private bool resizeHiddenRoster;
         private bool resizeHiddenSaveViewer;
         private bool resizeHiddenDebugTabs;
@@ -264,6 +266,11 @@ namespace AA2Trainer
                 resizeHiddenCharacterData = true;
                 characterData.Visible = false;
             }
+            if (traits != null && traits.Visible)
+            {
+                resizeHiddenTraits = true;
+                traits.Visible = false;
+            }
             if (roster != null && roster.Visible)
             {
                 resizeHiddenRoster = true;
@@ -290,6 +297,15 @@ namespace AA2Trainer
                 {
                     characterData.Visible = true;
                     characterData.PerformLayout();
+                }
+            }
+            if (resizeHiddenTraits)
+            {
+                resizeHiddenTraits = false;
+                if (traits != null)
+                {
+                    traits.Visible = true;
+                    traits.PerformLayout();
                 }
             }
             if (resizeHiddenRoster)
@@ -578,12 +594,15 @@ namespace AA2Trainer
             TabPage page = new TabPage("Traits");
             page.BackColor = Color.FromArgb(248, 249, 251);
 
-            Label placeholder = new Label();
-            placeholder.Dock = DockStyle.Fill;
-            placeholder.TextAlign = ContentAlignment.MiddleCenter;
-            placeholder.ForeColor = Color.DimGray;
-            placeholder.Text = "Traits";
-            page.Controls.Add(placeholder);
+            traits = new TraitsControl();
+            traits.Dock = DockStyle.Fill;
+            traits.ConfirmWriteAllowed = delegate
+            {
+                RunHealthCheck();
+                return writesAllowed && mem.CanWrite;
+            };
+            traits.CharacterSaved += delegate { OnCharacterSaved(); };
+            page.Controls.Add(traits);
             return page;
         }
 
@@ -686,6 +705,7 @@ namespace AA2Trainer
             roster.Dock = DockStyle.Fill;
             roster.CharacterClicked += Roster_CharacterClicked;
             roster.CharacterActivated += Roster_CharacterActivated;
+            roster.PlayRequested += Roster_PlayRequested;
             page.Controls.Add(roster);
             return page;
         }
@@ -1224,6 +1244,7 @@ namespace AA2Trainer
 
             SetHealthSession();
             if (characterData != null) characterData.SetWriteAllowed(writesAllowed);
+            if (traits != null) traits.SetWriteAllowed(writesAllowed);
         }
 
         private void SetHealthSession()
@@ -1374,6 +1395,7 @@ namespace AA2Trainer
             seatList.Items.Clear();
             if (roster != null) roster.Clear();
             if (characterData != null) characterData.Clear();
+            if (traits != null) traits.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
@@ -1499,6 +1521,49 @@ namespace AA2Trainer
             if (tabs != null) tabs.SelectedIndex = 1; // Character Editor
             if (characterEditorTabs != null) characterEditorTabs.SelectedIndex = 0; // Character Data
             RefreshCurrentTabValues();
+        }
+
+        private void Roster_PlayRequested(object sender, CharacterSelectedEventArgs e)
+        {
+            if (e.Character == null || !mem.IsAttached) return;
+
+            if (e.Character.IsPlayer)
+            {
+                SetSummaryText(e.Character.Name + " is already the player character.");
+                return;
+            }
+
+            RunHealthCheck();
+            if (!writesAllowed || !mem.CanWrite)
+            {
+                MessageBox.Show(this,
+                    "The write gate is locked. Wait for a clean pointer check before switching the player character.",
+                    "Play this character", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string error;
+            if (!PlayerSwitch.TrySetPlayer(mem, ctx, e.Character, out error))
+            {
+                MessageBox.Show(this, error, "Play this character",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!TryRefreshContext())
+            {
+                SetSummaryText("Player switched, but the class data could not be refreshed.");
+                return;
+            }
+
+            CharacterInfo info = ctx.FindByPointer(e.Character.Pointer);
+            if (info == null) info = e.Character;
+
+            SyncSeatList(info);
+            ApplySelection(info);
+            PopulateSeats();
+            RefreshCurrentTabValues();
+            SetSummaryText("Now playing: " + info.Name);
         }
 
         private void SyncSeatList(CharacterInfo info)
@@ -2402,6 +2467,7 @@ namespace AA2Trainer
             {
                 if (roster != null) roster.Clear();
                 if (characterData != null) characterData.Clear();
+                if (traits != null) traits.Clear();
                 return;
             }
             switch (tabs.SelectedIndex)
@@ -2416,6 +2482,11 @@ namespace AA2Trainer
                     {
                         characterData.SetChoices(BuildCharacterChoices());
                         characterData.SetTarget(mem, ctx.Selected, writesAllowed);
+                    }
+                    else if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 1 &&
+                        traits != null)
+                    {
+                        traits.SetTarget(mem, ctx.Selected, writesAllowed);
                     }
                     break;
                 case 2:

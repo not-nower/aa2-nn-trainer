@@ -14,6 +14,7 @@ $sources = @(
     "DisplayText.cs",
     "ClassRosterControl.cs",
     "CharacterDataControl.cs",
+    "TraitsControl.cs",
     "SaveViewerControl.cs",
     "PortraitLoader.cs",
     "NameMap.cs",
@@ -22,6 +23,9 @@ $sources = @(
     "Core\GameMemory.cs",
     "Core\GameContext.cs",
     "Core\CharacterEditor.cs",
+    "Core\Traits.cs",
+    "Core\RiskSchedule.cs",
+    "Core\PlayerSwitch.cs",
     "Core\SaveData.cs",
     "Core\RelationshipData.cs",
     "Core\Evaluator.cs",
@@ -32,6 +36,7 @@ Write-Host "Building AA2Trainer.exe ..."
 & $csc /nologo /target:winexe /platform:x86 `
     /out:"$root\AA2Trainer.exe" `
     "/resource:$root\NameData.tsv,AA2Trainer.NameData.tsv" `
+    "/resource:$root\TraitEffects.tsv,AA2Trainer.TraitEffects.tsv" `
     /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Core.dll /r:System.Xml.dll `
     $sources
 

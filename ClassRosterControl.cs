@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -35,6 +36,7 @@ namespace AA2Trainer
 
         public event EventHandler<CharacterSelectedEventArgs> CharacterClicked;
         public event EventHandler<CharacterSelectedEventArgs> CharacterActivated;
+        public event EventHandler<CharacterSelectedEventArgs> PlayRequested;
 
         public ClassRosterControl()
         {
@@ -67,6 +69,7 @@ namespace AA2Trainer
                     ClassRosterCard card = new ClassRosterCard(seat);
                     card.Click += Card_Click;
                     card.DoubleClicked += Card_DoubleClicked;
+                    card.PlayClicked += Card_PlayClicked;
                     cards[seat] = card;
                     grid.Controls.Add(card, c, r);
                 }
@@ -231,6 +234,14 @@ namespace AA2Trainer
                 CharacterActivated(this, new CharacterSelectedEventArgs(card.Character));
         }
 
+        private void Card_PlayClicked(object sender, EventArgs e)
+        {
+            ClassRosterCard card = sender as ClassRosterCard;
+            if (card == null || card.Character == null) return;
+            if (PlayRequested != null)
+                PlayRequested(this, new CharacterSelectedEventArgs(card.Character));
+        }
+
         private static int? ReadInt(GameMemory mem, GameContext view, string name)
         {
             EvalResult r = DashboardData.Eval(mem, view, name, 0);
@@ -360,6 +371,7 @@ namespace AA2Trainer
         public int Seat { get; private set; }
         public CharacterInfo Character { get; private set; }
         public event EventHandler DoubleClicked;
+        public event EventHandler PlayClicked;
 
         private readonly Label seatLabel;
         private readonly Label badgeLabel;
@@ -372,6 +384,8 @@ namespace AA2Trainer
         private readonly Label personalityLabel;
         private readonly PictureBox portraitBox;
         private readonly ToolTip tooltip;
+        private readonly ContextMenuStrip contextMenu;
+        private readonly ToolStripMenuItem playItem;
 
         private readonly Font seatFont;
         private readonly Font badgeFont;
@@ -417,6 +431,13 @@ namespace AA2Trainer
             tooltip.InitialDelay = 300;
             tooltip.ReshowDelay = 100;
             DoubleClick += delegate { RaiseDoubleClicked(); };
+
+            contextMenu = new ContextMenuStrip();
+            playItem = new ToolStripMenuItem("Play this character");
+            playItem.Click += delegate { RaisePlayClicked(); };
+            contextMenu.Items.Add(playItem);
+            contextMenu.Opening += ContextMenu_Opening;
+            ContextMenuStrip = contextMenu;
 
             TableLayoutPanel root = new TableLayoutPanel();
             root.Dock = DockStyle.Fill;
@@ -565,8 +586,24 @@ namespace AA2Trainer
             {
                 child.Click += delegate { OnClick(EventArgs.Empty); };
                 child.DoubleClick += delegate { RaiseDoubleClicked(); };
+                child.ContextMenuStrip = contextMenu;
                 WireChildClicks(child);
             }
+        }
+
+        private void ContextMenu_Opening(object sender, CancelEventArgs e)
+        {
+            bool hasCharacter = Character != null;
+            bool isPlayer = hasCharacter && Character.IsPlayer;
+            playItem.Enabled = hasCharacter && !isPlayer;
+            playItem.Text = isPlayer ? "Already the player character" : "Play this character";
+            e.Cancel = !hasCharacter;
+        }
+
+        private void RaisePlayClicked()
+        {
+            if (Character == null || Character.IsPlayer) return;
+            if (PlayClicked != null) PlayClicked(this, EventArgs.Empty);
         }
 
         private void RaiseDoubleClicked()
