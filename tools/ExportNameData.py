@@ -41,7 +41,7 @@ def main():
     )
     parser.add_argument(
         "--output",
-        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "NameData.tsv"),
+        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "Data", "NameData.tsv"),
         help="output TSV path",
     )
     args = parser.parse_args()
