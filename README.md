@@ -5,11 +5,16 @@ Fully vibe coded.
 
 ## Build
 
+Requires the .NET SDK 8 or newer (`dotnet --version`).
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-Output: `bin\AA2Trainer.exe` (x86, .NET Framework 4.x compiler).
+Output: `bin\AA2Trainer.exe` — x86, targeting .NET Framework 4.8.
+
+The project is `AA2Trainer.csproj`; you can also build it directly with
+`dotnet build -c Release`.
 
 ## Layout
 
