@@ -1,6 +1,6 @@
 # AA2 NN's Trainer
 
-Inspired by Ahries' AA2Trainer.
+Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
 
 ## Build
