@@ -27,6 +27,7 @@ namespace AA2Trainer
         private readonly Control[] editors;
         private readonly CheckBox[] flipBoxes;
         private readonly TrackBar[] bars;
+        private readonly int[] colors;
         private Dictionary<string, List<CharacterChoice>> choices =
             new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
         private string choiceSignature = "";
@@ -45,6 +46,9 @@ namespace AA2Trainer
             editors = new Control[HairEditor.Fields.Count];
             flipBoxes = new CheckBox[HairEditor.Fields.Count];
             bars = new TrackBar[HairEditor.Fields.Count];
+            colors = new int[HairEditor.Fields.Count];
+            for (int i = 0; i < colors.Length; i++)
+                colors[i] = unchecked((int)0xFF000000);
             BuildUi();
         }
 
@@ -70,7 +74,7 @@ namespace AA2Trainer
             content.ColumnCount = 1;
             content.RowCount = 2;
             content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            content.RowStyles.Add(new RowStyle(SizeType.Absolute, (8 * RowHeight) + 40));
+            content.RowStyles.Add(new RowStyle(SizeType.Absolute, (9 * RowHeight) + 40));
             content.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             content.Margin = new Padding(0);
             root.Controls.Add(content, 0, 0);
@@ -262,6 +266,40 @@ namespace AA2Trainer
                 row++;
             }
 
+            // Hair colour applies to every part, so it sits at the bottom of
+            // the same box rather than repeating under each style.
+            int colorIndex = HairEditor.IndexOf("HairColor");
+            if (colorIndex >= 0)
+            {
+                HairFieldDef color = HairEditor.Fields[colorIndex];
+                table.RowCount = row + 1;
+                table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
+
+                Label colorLabel = new Label();
+                colorLabel.Text = "Hair colour";
+                colorLabel.Dock = DockStyle.Fill;
+                colorLabel.TextAlign = ContentAlignment.MiddleLeft;
+                colorLabel.Margin = new Padding(0);
+                tooltip.SetToolTip(colorLabel, TipFor(color));
+                table.Controls.Add(colorLabel, 0, row);
+
+                Button colorButton = new Button();
+                colorButton.Dock = DockStyle.Fill;
+                colorButton.Margin = new Padding(0, 2, 0, 2);
+                colorButton.FlatStyle = FlatStyle.Flat;
+                colorButton.Font = new Font("Segoe UI", 8.25F);
+                colorButton.AutoEllipsis = true;
+                colorButton.Tag = colorIndex;
+                colorButton.Click += Color_Click;
+                colorButton.EnabledChanged += delegate { RefreshColorButton(colorIndex); };
+                tooltip.SetToolTip(colorButton, TipFor(color));
+                table.Controls.Add(colorButton, 1, row);
+                editors[colorIndex] = colorButton;
+                RefreshColorButton(colorIndex);
+
+                row++;
+            }
+
             // Absorb leftover height so the rows keep their spacing.
             table.RowCount = row + 1;
             table.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
@@ -287,6 +325,61 @@ namespace AA2Trainer
         private static string TipFor(HairFieldDef def)
         {
             return def.Name + "   (char + 0x" + def.Offset.ToString("X") + ")";
+        }
+
+        private void Color_Click(object sender, EventArgs e)
+        {
+            if (applying) return;
+
+            Button button = sender as Button;
+            if (button == null) return;
+            int index = (int)button.Tag;
+
+            using (ColorDialog dialog = new ColorDialog())
+            {
+                dialog.FullOpen = true;
+                dialog.AnyColor = true;
+                dialog.Color = ToColor(colors[index]);
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                SetColorValue(index, dialog.Color.ToArgb());
+            }
+        }
+
+        private static Color ToColor(int argb)
+        {
+            return Color.FromArgb(255, (argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
+        }
+
+        private void SetColorValue(int index, int argb)
+        {
+            // The game stores opaque colours; normalising the alpha keeps the
+            // edited value equal to what gets written back.
+            colors[index] = (argb & 0x00FFFFFF) | unchecked((int)0xFF000000);
+            RefreshColorButton(index);
+        }
+
+        // Enabled cells show the colour as a swatch; disabled cells fall back to
+        // the normal button face so the hex text stays readable.
+        private void RefreshColorButton(int index)
+        {
+            Button button = editors[index] as Button;
+            if (button == null) return;
+
+            int argb = colors[index];
+            Color color = ToColor(argb);
+            button.Text = string.Format("#{0:X6}", argb & 0xFFFFFF);
+
+            if (!button.Enabled)
+            {
+                button.BackColor = SystemColors.Control;
+                button.ForeColor = Color.Gray;
+                return;
+            }
+
+            button.BackColor = color;
+            int brightness = (color.R * 299 + color.G * 587 + color.B * 114) / 1000;
+            button.ForeColor = brightness > 140 ? Color.Black : Color.White;
         }
 
         public void SetChoices(Dictionary<string, List<CharacterChoice>> source, string signature)
@@ -519,6 +612,12 @@ namespace AA2Trainer
                     continue;
                 }
 
+                if (def.Kind == HairFieldKind.Color)
+                {
+                    values[i] = colors[i];
+                    continue;
+                }
+
                 NumericUpDown number = editors[i] as NumericUpDown;
                 values[i] = number == null ? 0 : (int)number.Value;
             }
@@ -557,6 +656,10 @@ namespace AA2Trainer
                     {
                         CheckBox check = editors[i] as CheckBox;
                         if (check != null) check.Checked = value != 0;
+                    }
+                    else if (def.Kind == HairFieldKind.Color)
+                    {
+                        SetColorValue(i, value);
                     }
                     else
                     {

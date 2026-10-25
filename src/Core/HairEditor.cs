@@ -8,14 +8,16 @@ namespace AA2Trainer
     {
         Number,
         Choice,
-        Toggle
+        Toggle,
+        Color
     }
 
     public enum HairGroup
     {
         Style,
         Length,
-        Flip
+        Flip,
+        Color
     }
 
     public sealed class HairFieldDef
@@ -27,13 +29,13 @@ namespace AA2Trainer
         public HairFieldKind Kind;
     }
 
-    // Hair appearance fields. The game keeps them as one-byte values in a
-    // contiguous block at charData + 0x69C .. 0x6A7: four style indices, four
-    // length sliders and four flip flags.
+    // Hair appearance fields. The game keeps them in a contiguous block at
+    // charData + 0x69C: four style indices, four length sliders, four flip
+    // flags and the 32-bit hair colour.
     public static class HairEditor
     {
         public const int FirstOffset = 0x69C;
-        public const int LastOffset = 0x6A7;
+        public const int LastOffset = 0x6AB;
         public const int SpanSize = LastOffset - FirstOffset + 1;
 
         private static readonly HairFieldDef[] fields = new HairFieldDef[]
@@ -51,7 +53,9 @@ namespace AA2Trainer
             F("FlipFrontHair", "Front", 0x6A4, HairGroup.Flip, HairFieldKind.Toggle),
             F("FlipSideHair", "Side", 0x6A5, HairGroup.Flip, HairFieldKind.Toggle),
             F("FlipBackHair", "Back", 0x6A6, HairGroup.Flip, HairFieldKind.Toggle),
-            F("FlipExtHair", "Extension", 0x6A7, HairGroup.Flip, HairFieldKind.Toggle)
+            F("FlipExtHair", "Extension", 0x6A7, HairGroup.Flip, HairFieldKind.Toggle),
+
+            F("HairColor", "Hair", 0x6A8, HairGroup.Color, HairFieldKind.Color)
         };
 
         private static HairFieldDef F(string name, string label, int offset, HairGroup group,
@@ -119,7 +123,25 @@ namespace AA2Trainer
 
             values = new int[fields.Length];
             for (int i = 0; i < fields.Length; i++)
-                values[i] = bytes[fields[i].Offset - FirstOffset];
+            {
+                int offset = fields[i].Offset - FirstOffset;
+                if (fields[i].Kind == HairFieldKind.Color)
+                {
+                    if (offset + 4 > bytes.Length)
+                    {
+                        error = "The hair colour is unreadable.";
+                        return false;
+                    }
+                    // The game stores opaque colours; normalising the alpha
+                    // keeps the loaded value equal to what the UI edits.
+                    values[i] = BitConverter.ToInt32(bytes, offset) |
+                        unchecked((int)0xFF000000);
+                }
+                else
+                {
+                    values[i] = bytes[offset];
+                }
+            }
             return true;
         }
 
@@ -155,6 +177,7 @@ namespace AA2Trainer
 
             for (int i = 0; i < fields.Length; i++)
             {
+                if (fields[i].Kind == HairFieldKind.Color) continue;
                 if (edited[i] < 0 || edited[i] > 255)
                 {
                     error = fields[i].Label + " is out of range (0-255).";
@@ -183,8 +206,18 @@ namespace AA2Trainer
                 HairFieldDef def = fields[i];
                 uint address = characterData + (uint)def.Offset;
 
-                if (!MemoryWriter.TryWriteByte(mem, address, (byte)edited[i], def.Label, out error))
-                    return Partial(written, error, out changed);
+                bool ok;
+                if (def.Kind == HairFieldKind.Color)
+                {
+                    int argb = (edited[i] & 0x00FFFFFF) | unchecked((int)0xFF000000);
+                    ok = MemoryWriter.TryWriteInt32(mem, address, argb, def.Label, out error);
+                }
+                else
+                {
+                    ok = MemoryWriter.TryWriteByte(mem, address, (byte)edited[i], def.Label,
+                        out error);
+                }
+                if (!ok) return Partial(written, error, out changed);
 
                 if (written.Length > 0) written.Append(", ");
                 written.Append(GroupName(def.Group).ToLowerInvariant() + " " +
@@ -201,6 +234,7 @@ namespace AA2Trainer
             {
                 case HairGroup.Style: return "Style";
                 case HairGroup.Length: return "Length";
+                case HairGroup.Color: return "Colour";
                 default: return "Flip";
             }
         }
