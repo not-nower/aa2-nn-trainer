@@ -122,22 +122,52 @@ namespace AA2Trainer
         {
             Dictionary<string, List<CharacterChoice>> map =
                 new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
-            map["Heights"] = BuildEnumChoices("HEIGHT", 2, false);
-            map["Figure"] = BuildEnumChoices(selectedGender == 0 ? "MALEFIGURE" : "FEMALEFIGURE", 4, false);
-            map["BreastShape"] = BuildEnumChoices("BREASTSHAPE", 4, false);
-            map["BreastSoftness"] = BuildEnumChoices("BREASTFIRMNESS", 3, false);
-            map["PubHairType"] = BuildEnumChoices("PUBICHAIR", 4, false);
-            map["NippleType"] = BuildEnumChoices("NIPPLETYPE", 4, false);
-            map["NippleColor"] = BuildEnumChoices("NIPPLECOLOR", 8, false);
-            map["TanMark"] = BuildEnumChoices("TANMARKS", 6, false);
-            map["PussyMosaic"] = BuildEnumChoices("MOSAICCOLOR", 5, false);
+            map["BodyType"] = BuildBodyTypeChoices();
+            // The name data already lists every body value; -1 means "do not
+            // invent placeholder entries" so the dropdowns stay exact.
+            map["Heights"] = BuildBodyHeightChoices();
+            map["Figure"] = BuildBodyFigureChoices();
+            map["BreastShape"] = BuildEnumChoices("BREASTSHAPE", -1, false);
+            map["BreastSoftness"] = BuildEnumChoices("BREASTFIRMNESS", -1, false);
+            map["PubHairType"] = BuildEnumChoices("PUBICHAIR", -1, false);
+            map["NippleType"] = BuildEnumChoices("NIPPLETYPE", -1, false);
+            map["NippleColor"] = BuildEnumChoices("NIPPLECOLOR", -1, false);
+            map["TanMark"] = BuildEnumChoices("TANMARKS", -1, false);
+            map["PussyMosaic"] = BuildEnumChoices("MOSAICCOLOR", -1, false);
             return map;
+        }
+
+        private List<CharacterChoice> BuildBodyTypeChoices()
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            list.Add(new CharacterChoice(0, "Delicate"));
+            list.Add(new CharacterChoice(1, "Standard"));
+            list.Add(new CharacterChoice(2, "Tall"));
+            list.Add(new CharacterChoice(3, "Fat"));
+            return list;
+        }
+
+        private List<CharacterChoice> BuildBodyHeightChoices()
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            list.Add(new CharacterChoice(0, "Low"));
+            list.Add(new CharacterChoice(1, "Standard"));
+            list.Add(new CharacterChoice(2, "High"));
+            return list;
+        }
+
+        private List<CharacterChoice> BuildBodyFigureChoices()
+        {
+            List<CharacterChoice> list = new List<CharacterChoice>();
+            list.Add(new CharacterChoice(0, "Slim"));
+            list.Add(new CharacterChoice(1, "Standard"));
+            list.Add(new CharacterChoice(2, "Fat"));
+            return list;
         }
 
         private string BodyChoiceSignature()
         {
-            return "g" + selectedGender.ToString() + "/" +
-                   (names == null ? 0 : names.EntryCount).ToString();
+            return "n" + (names == null ? 0 : names.EntryCount).ToString();
         }
 
         private List<CharacterChoice> BuildPersonalityChoices()

@@ -25,8 +25,6 @@ namespace AA2Trainer
         public int Offset;
         public BodyFieldKind Kind;
         public BodyGroup Group;
-        public string EnumKey;
-        public bool FigureByGender;
         public string Tip;
     }
 
@@ -41,39 +39,37 @@ namespace AA2Trainer
 
         private static readonly BodyFieldDef[] fields = new BodyFieldDef[]
         {
-            F("BodyType", "Body type", 0x448, BodyFieldKind.Number, BodyGroup.Body, null),
-            F("Heights", "Height", 0x449, BodyFieldKind.Choice, BodyGroup.Body, "HEIGHT"),
-            F("Figure", "Figure", 0x44A, BodyFieldKind.Choice, BodyGroup.Body, null, true),
-            F("HeadSize", "Head size", 0x44B, BodyFieldKind.Number, BodyGroup.Body, null),
-            F("HeadLength", "Head length", 0x44C, BodyFieldKind.Number, BodyGroup.Body, null),
-            F("Waist", "Waist", 0x44D, BodyFieldKind.Number, BodyGroup.Body, null),
+            F("BodyType", "Body type", 0x448, BodyFieldKind.Choice, BodyGroup.Body),
+            F("Heights", "Height", 0x449, BodyFieldKind.Choice, BodyGroup.Body),
+            F("Figure", "Figure", 0x44A, BodyFieldKind.Choice, BodyGroup.Body),
+            F("HeadSize", "Head size", 0x44B, BodyFieldKind.Number, BodyGroup.Body),
+            F("HeadLength", "Head length", 0x44C, BodyFieldKind.Number, BodyGroup.Body),
+            F("Waist", "Waist", 0x44D, BodyFieldKind.Number, BodyGroup.Body),
 
-            F("BreastSize", "Size", 0x44E, BodyFieldKind.Number, BodyGroup.Breasts, null,
-                false, "Small     0~33%\nNormal   34~66%\nBig        67%+"),
-            F("BreastShape", "Shape", 0x450, BodyFieldKind.Choice, BodyGroup.Breasts, "BREASTSHAPE"),
-            F("BreastRoundness", "Roundness", 0x451, BodyFieldKind.Number, BodyGroup.Breasts, null),
-            F("BreastDirection", "Direction", 0x452, BodyFieldKind.Number, BodyGroup.Breasts, null),
-            F("BreastHeight", "Height", 0x453, BodyFieldKind.Number, BodyGroup.Breasts, null),
-            F("BreastSpacing", "Spacing", 0x454, BodyFieldKind.Number, BodyGroup.Breasts, null),
-            F("BreastDepth", "Depth", 0x455, BodyFieldKind.Number, BodyGroup.Breasts, null),
-            F("BreastSoftness", "Firmness", 0x456, BodyFieldKind.Choice, BodyGroup.Breasts,
-                "BREASTFIRMNESS"),
+            F("BreastSize", "Size", 0x44E, BodyFieldKind.Number, BodyGroup.Breasts,
+                "Small     0~33%\nNormal   34~66%\nBig        67%+"),
+            F("BreastShape", "Shape", 0x450, BodyFieldKind.Choice, BodyGroup.Breasts),
+            F("BreastRoundness", "Roundness", 0x451, BodyFieldKind.Number, BodyGroup.Breasts),
+            F("BreastDirection", "Direction", 0x452, BodyFieldKind.Number, BodyGroup.Breasts),
+            F("BreastHeight", "Height", 0x453, BodyFieldKind.Number, BodyGroup.Breasts),
+            F("BreastSpacing", "Spacing", 0x454, BodyFieldKind.Number, BodyGroup.Breasts),
+            F("BreastDepth", "Depth", 0x455, BodyFieldKind.Number, BodyGroup.Breasts),
+            F("BreastSoftness", "Firmness", 0x456, BodyFieldKind.Choice, BodyGroup.Breasts),
 
-            F("SkinColor", "Skin colour", 0x458, BodyFieldKind.Color, BodyGroup.Skin, null),
-            F("PubHairType", "Pubic hair", 0x45C, BodyFieldKind.Choice, BodyGroup.Skin, "PUBICHAIR"),
-            F("PubHairOpa", "Pubic opacity", 0x45D, BodyFieldKind.Number, BodyGroup.Skin, null),
-            F("PubHairColor", "Pubic colour", 0x460, BodyFieldKind.Color, BodyGroup.Skin, null),
-            F("NippleType", "Nipple type", 0x464, BodyFieldKind.Choice, BodyGroup.Skin, "NIPPLETYPE"),
-            F("NippleColor", "Nipple colour", 0x465, BodyFieldKind.Choice, BodyGroup.Skin,
-                "NIPPLECOLOR"),
-            F("NippleOpa", "Nipple opacity", 0x466, BodyFieldKind.Number, BodyGroup.Skin, null),
-            F("TanMark", "Tan mark", 0x467, BodyFieldKind.Choice, BodyGroup.Skin, "TANMARKS"),
-            F("TanOpa", "Tan opacity", 0x468, BodyFieldKind.Number, BodyGroup.Skin, null),
-            F("PussyMosaic", "Mosaic", 0x469, BodyFieldKind.Choice, BodyGroup.Skin, "MOSAICCOLOR")
+            F("SkinColor", "Skin colour", 0x458, BodyFieldKind.Color, BodyGroup.Skin),
+            F("PubHairType", "Pubic hair", 0x45C, BodyFieldKind.Choice, BodyGroup.Skin),
+            F("PubHairOpa", "Pubic opacity", 0x45D, BodyFieldKind.Number, BodyGroup.Skin),
+            F("PubHairColor", "Pubic colour", 0x460, BodyFieldKind.Color, BodyGroup.Skin),
+            F("NippleType", "Nipple type", 0x464, BodyFieldKind.Choice, BodyGroup.Skin),
+            F("NippleColor", "Nipple colour", 0x465, BodyFieldKind.Choice, BodyGroup.Skin),
+            F("NippleOpa", "Nipple opacity", 0x466, BodyFieldKind.Number, BodyGroup.Skin),
+            F("TanMark", "Tan mark", 0x467, BodyFieldKind.Choice, BodyGroup.Skin),
+            F("TanOpa", "Tan opacity", 0x468, BodyFieldKind.Number, BodyGroup.Skin),
+            F("PussyMosaic", "Mosaic", 0x469, BodyFieldKind.Choice, BodyGroup.Skin)
         };
 
         private static BodyFieldDef F(string name, string label, int offset, BodyFieldKind kind,
-            BodyGroup group, string enumKey, bool figureByGender = false, string tip = null)
+            BodyGroup group, string tip = null)
         {
             BodyFieldDef def = new BodyFieldDef();
             def.Name = name;
@@ -81,8 +77,6 @@ namespace AA2Trainer
             def.Offset = offset;
             def.Kind = kind;
             def.Group = group;
-            def.EnumKey = enumKey;
-            def.FigureByGender = figureByGender;
             def.Tip = tip;
             return def;
         }

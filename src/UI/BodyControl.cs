@@ -25,6 +25,7 @@ namespace AA2Trainer
         private bool applying;
 
         private readonly Control[] editors;
+        private readonly int[] colors;
         private Dictionary<string, List<CharacterChoice>> choices =
             new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
         private string choiceSignature = "";
@@ -41,6 +42,7 @@ namespace AA2Trainer
             Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(248, 249, 251);
             editors = new Control[BodyEditor.Fields.Count];
+            colors = new int[BodyEditor.Fields.Count];
             BuildUi();
         }
 
@@ -241,11 +243,14 @@ namespace AA2Trainer
             {
                 Button button = new Button();
                 button.Dock = DockStyle.Fill;
-                button.Margin = new Padding(0, 3, 0, 3);
+                button.Margin = new Padding(0, 1, 0, 1);
                 button.FlatStyle = FlatStyle.Flat;
+                button.Font = new Font("Segoe UI", 8.25F);
+                button.AutoEllipsis = true;
                 button.Tag = index;
                 button.Text = "#000000";
                 button.Click += Color_Click;
+                button.EnabledChanged += delegate { RefreshColorButton(index); };
                 tooltip.SetToolTip(button, TipFor(def));
                 return button;
             }
@@ -278,18 +283,37 @@ namespace AA2Trainer
                 dialog.Color = button.BackColor;
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
-                int argb = dialog.Color.ToArgb();
-                button.Tag = index;
-                SetColorButton(button, argb);
+                SetColorValue(index, dialog.Color.ToArgb());
             }
         }
 
-        private static void SetColorButton(Button button, int argb)
+        private void SetColorValue(int index, int argb)
         {
+            // The game stores opaque colours; normalising the alpha keeps the
+            // edited value equal to what gets written back.
+            colors[index] = (argb & 0x00FFFFFF) | unchecked((int)0xFF000000);
+            RefreshColorButton(index);
+        }
+
+        // Enabled cells show the colour as a swatch; disabled cells fall back to
+        // the normal button face so the hex text stays readable.
+        private void RefreshColorButton(int index)
+        {
+            Button button = editors[index] as Button;
+            if (button == null) return;
+
+            int argb = colors[index];
             Color color = Color.FromArgb(255, (argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
-            button.BackColor = color;
             button.Text = string.Format("#{0:X6}", argb & 0xFFFFFF);
 
+            if (!button.Enabled)
+            {
+                button.BackColor = SystemColors.Control;
+                button.ForeColor = Color.Gray;
+                return;
+            }
+
+            button.BackColor = color;
             int brightness = (color.R * 299 + color.G * 587 + color.B * 114) / 1000;
             button.ForeColor = brightness > 140 ? Color.Black : Color.White;
         }
@@ -511,10 +535,7 @@ namespace AA2Trainer
                 }
                 else if (def.Kind == BodyFieldKind.Color)
                 {
-                    Button button = editors[i] as Button;
-                    if (button == null) { values[i] = 0; continue; }
-                    Color color = button.BackColor;
-                    values[i] = (0xFF << 24) | (color.R << 16) | (color.G << 8) | color.B;
+                    values[i] = colors[i];
                 }
                 else
                 {
@@ -556,8 +577,7 @@ namespace AA2Trainer
                     }
                     else if (def.Kind == BodyFieldKind.Color)
                     {
-                        Button button = editors[i] as Button;
-                        if (button != null) SetColorButton(button, value);
+                        SetColorValue(i, value);
                     }
                     else
                     {
@@ -587,7 +607,11 @@ namespace AA2Trainer
                 }
             }
 
-            if (combo.Items.Count > 0) combo.SelectedIndex = 0;
+            // Keep values the game stores outside the known list visible (and
+            // round-trippable) instead of silently falling back to the first
+            // entry.
+            combo.Items.Add(new CharacterChoice(value, value.ToString("D3") + "  (unnamed)"));
+            combo.SelectedIndex = combo.Items.Count - 1;
         }
 
         private void UpdateGate()
@@ -598,6 +622,9 @@ namespace AA2Trainer
 
             for (int i = 0; i < editors.Length; i++)
                 if (editors[i] != null) editors[i].Enabled = writable;
+
+            for (int i = 0; i < editors.Length; i++)
+                if (BodyEditor.Fields[i].Kind == BodyFieldKind.Color) RefreshColorButton(i);
 
             if (applyButton != null) applyButton.Enabled = writable;
             if (revertButton != null) revertButton.Enabled = hasCharacter;
