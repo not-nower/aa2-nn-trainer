@@ -170,8 +170,9 @@ namespace AA2Trainer
             SyncSeatList(info);
             ApplySelection(info);
 
+            // Keep whichever editor sub-tab was last open; only the top-level
+            // tab changes.
             if (tabs != null) tabs.SelectedIndex = 1; // Character Editor
-            if (characterEditorTabs != null) characterEditorTabs.SelectedIndex = 0; // Character Data
             RefreshCurrentTabValues();
         }
 
