@@ -66,6 +66,8 @@ namespace AA2Trainer
             characterEditorTabs.TabPages.Add(dataPage);
             characterEditorTabs.TabPages.Add(BuildTraitsTab());
             characterEditorTabs.TabPages.Add(BuildBodyTab());
+            characterEditorTabs.TabPages.Add(BuildFaceTab());
+            characterEditorTabs.TabPages.Add(BuildHairTab());
 
             page.Controls.Add(characterEditorTabs);
             return page;
@@ -102,6 +104,40 @@ namespace AA2Trainer
             };
             body.CharacterSaved += delegate { OnCharacterSaved(); };
             page.Controls.Add(body);
+            return page;
+        }
+
+        private TabPage BuildFaceTab()
+        {
+            TabPage page = new TabPage("Face");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            face = new FaceControl();
+            face.Dock = DockStyle.Fill;
+            face.ConfirmWriteAllowed = delegate
+            {
+                RunHealthCheck();
+                return writesAllowed && mem.CanWrite;
+            };
+            face.CharacterSaved += delegate { OnCharacterSaved(); };
+            page.Controls.Add(face);
+            return page;
+        }
+
+        private TabPage BuildHairTab()
+        {
+            TabPage page = new TabPage("Hair");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            hair = new HairControl();
+            hair.Dock = DockStyle.Fill;
+            hair.ConfirmWriteAllowed = delegate
+            {
+                RunHealthCheck();
+                return writesAllowed && mem.CanWrite;
+            };
+            hair.CharacterSaved += delegate { OnCharacterSaved(); };
+            page.Controls.Add(hair);
             return page;
         }
 
@@ -163,6 +199,52 @@ namespace AA2Trainer
             list.Add(new CharacterChoice(1, "Standard"));
             list.Add(new CharacterChoice(2, "Fat"));
             return list;
+        }
+
+        private Dictionary<string, List<CharacterChoice>> BuildFaceChoices()
+        {
+            Dictionary<string, List<CharacterChoice>> map =
+                new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
+            map["FaceType"] = BuildEnumChoices(selectedGender == 0 ? "FACETYPE_M" : "FACETYPE_F",
+                -1, false);
+            map["IrisShape"] = BuildEnumChoices("IRISSHAPE", -1, false);
+            map["IrisType"] = BuildEnumChoices("IRISTYPE", -1, false);
+            map["HightlightType"] = BuildEnumChoices("HIGHLIGHTTYPE", -1, false);
+            map["BrowShape"] = BuildEnumChoices("EYEBROWSHAPE", -1, false);
+            map["Eyelid"] = BuildEnumChoices("EYELIDTYPE", -1, false);
+            map["UpperEyelid"] = BuildEnumChoices("EYELIDTYPEU", -1, false);
+            map["LowerEyelid"] = BuildEnumChoices("EYELIDTYPEL", -1, false);
+            map["Glasses"] = BuildEnumChoices("GLASSESTYPE", -1, false);
+            map["LipsticColor"] = BuildEnumChoices("LIPSTICKCOLOR", -1, false);
+            return map;
+        }
+
+        private Dictionary<string, List<CharacterChoice>> BuildHairChoices()
+        {
+            // The game keeps no name table for hair styles, so list the raw
+            // byte values instead of inventing labels.
+            List<CharacterChoice> styles = new List<CharacterChoice>();
+            for (int i = 0; i <= 255; i++)
+                styles.Add(new CharacterChoice(i, i.ToString()));
+
+            Dictionary<string, List<CharacterChoice>> map =
+                new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
+            map["FrontHair"] = styles;
+            map["SideHair"] = styles;
+            map["BackHair"] = styles;
+            map["ExtHair"] = styles;
+            return map;
+        }
+
+        private string HairChoiceSignature()
+        {
+            return "hair";
+        }
+
+        private string FaceChoiceSignature()
+        {
+            return "g" + selectedGender.ToString() + "/" +
+                   (names == null ? 0 : names.EntryCount).ToString();
         }
 
         private string BodyChoiceSignature()

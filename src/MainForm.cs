@@ -64,6 +64,8 @@ namespace AA2Trainer
         private CharacterDataControl characterData;
         private TraitsControl traits;
         private BodyControl body;
+        private FaceControl face;
+        private HairControl hair;
         private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
@@ -94,6 +96,8 @@ namespace AA2Trainer
         private bool resizeHiddenCharacterData;
         private bool resizeHiddenTraits;
         private bool resizeHiddenBody;
+        private bool resizeHiddenFace;
+        private bool resizeHiddenHair;
         private bool resizeHiddenRoster;
         private bool resizeHiddenSaveViewer;
         private bool resizeHiddenDebugTabs;
@@ -276,6 +280,16 @@ namespace AA2Trainer
                 resizeHiddenBody = true;
                 body.Visible = false;
             }
+            if (face != null && face.Visible)
+            {
+                resizeHiddenFace = true;
+                face.Visible = false;
+            }
+            if (hair != null && hair.Visible)
+            {
+                resizeHiddenHair = true;
+                hair.Visible = false;
+            }
             if (roster != null && roster.Visible)
             {
                 resizeHiddenRoster = true;
@@ -320,6 +334,24 @@ namespace AA2Trainer
                 {
                     body.Visible = true;
                     body.PerformLayout();
+                }
+            }
+            if (resizeHiddenFace)
+            {
+                resizeHiddenFace = false;
+                if (face != null)
+                {
+                    face.Visible = true;
+                    face.PerformLayout();
+                }
+            }
+            if (resizeHiddenHair)
+            {
+                resizeHiddenHair = false;
+                if (hair != null)
+                {
+                    hair.Visible = true;
+                    hair.PerformLayout();
                 }
             }
             if (resizeHiddenRoster)
@@ -744,6 +776,8 @@ namespace AA2Trainer
             if (characterData != null) characterData.SetWriteAllowed(writesAllowed);
             if (traits != null) traits.SetWriteAllowed(writesAllowed);
             if (body != null) body.SetWriteAllowed(writesAllowed);
+            if (face != null) face.SetWriteAllowed(writesAllowed);
+            if (hair != null) hair.SetWriteAllowed(writesAllowed);
         }
 
         private void SetHealthSession()
@@ -853,6 +887,8 @@ namespace AA2Trainer
             if (characterData != null) characterData.Clear();
             if (traits != null) traits.Clear();
             if (body != null) body.Clear();
+            if (face != null) face.Clear();
+            if (hair != null) hair.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
@@ -873,6 +909,8 @@ namespace AA2Trainer
                 if (characterData != null) characterData.Clear();
                 if (traits != null) traits.Clear();
                 if (body != null) body.Clear();
+                if (face != null) face.Clear();
+                if (hair != null) hair.Clear();
                 return;
             }
             switch (tabs.SelectedIndex)
@@ -898,6 +936,18 @@ namespace AA2Trainer
                     {
                         body.SetChoices(BuildBodyChoices(), BodyChoiceSignature());
                         body.SetTarget(mem, ctx.Selected, writesAllowed);
+                    }
+                    else if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 3 &&
+                        face != null)
+                    {
+                        face.SetChoices(BuildFaceChoices(), FaceChoiceSignature());
+                        face.SetTarget(mem, ctx.Selected, writesAllowed);
+                    }
+                    else if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 4 &&
+                        hair != null)
+                    {
+                        hair.SetChoices(BuildHairChoices(), HairChoiceSignature());
+                        hair.SetTarget(mem, ctx.Selected, writesAllowed);
                     }
                     break;
                 case 2:
