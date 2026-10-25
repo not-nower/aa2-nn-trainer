@@ -190,22 +190,7 @@ namespace AA2Trainer
             uint address = characterData + (uint)trait.Offset;
             byte desired = enabled ? (byte)1 : (byte)0;
 
-            if (!mem.WriteBytes(address, new byte[] { desired }))
-            {
-                error = trait.Display + " write failed: " +
-                        (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            byte? check = mem.ReadU8(address);
-            if (!check.HasValue || check.Value != desired)
-            {
-                error = trait.Display + " verification failed at 0x" +
-                        address.ToString("X8") + ".";
-                return false;
-            }
-
-            return true;
+            return MemoryWriter.TryWriteByte(mem, address, desired, trait.Display, out error);
         }
     }
 }

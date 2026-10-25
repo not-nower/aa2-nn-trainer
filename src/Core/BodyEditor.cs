@@ -194,12 +194,13 @@ namespace AA2Trainer
                 if (def.Kind == BodyFieldKind.Color)
                 {
                     int argb = (edited[i] & 0x00FFFFFF) | (ColorAlpha << 24);
-                    if (!WriteInt32(mem, address, argb, def.Label, out error))
+                    if (!MemoryWriter.TryWriteInt32(mem, address, argb, def.Label, out error))
                         return Partial(written, error, out changed);
                 }
                 else
                 {
-                    if (!WriteByte(mem, address, (byte)edited[i], def.Label, out error))
+                    if (!MemoryWriter.TryWriteByte(mem, address, (byte)edited[i], def.Label,
+                            out error))
                         return Partial(written, error, out changed);
                 }
 
@@ -221,42 +222,5 @@ namespace AA2Trainer
             return false;
         }
 
-        private static bool WriteByte(GameMemory mem, uint address, byte value,
-            string label, out string error)
-        {
-            error = null;
-            if (!mem.WriteBytes(address, new byte[] { value }))
-            {
-                error = label + " write failed: " + (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            byte? check = mem.ReadU8(address);
-            if (!check.HasValue || check.Value != value)
-            {
-                error = label + " verification failed at 0x" + address.ToString("X8") + ".";
-                return false;
-            }
-            return true;
-        }
-
-        private static bool WriteInt32(GameMemory mem, uint address, int value,
-            string label, out string error)
-        {
-            error = null;
-            if (!mem.WriteBytes(address, BitConverter.GetBytes(value)))
-            {
-                error = label + " write failed: " + (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            int? check = mem.ReadI32(address);
-            if (!check.HasValue || check.Value != value)
-            {
-                error = label + " verification failed at 0x" + address.ToString("X8") + ".";
-                return false;
-            }
-            return true;
-        }
     }
 }

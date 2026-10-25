@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
@@ -902,46 +903,38 @@ namespace AA2Trainer
             get { return !SnapshotsEqual(ReadUi(), loaded); }
         }
 
+        // Compared by reflection so a new field in CharacterSnapshot is
+        // covered automatically; forgetting to extend a hand-written
+        // comparison would silently treat the field as unchanged.
+        private static readonly FieldInfo[] SnapshotFields =
+            typeof(CharacterSnapshot).GetFields(BindingFlags.Public | BindingFlags.Instance);
+
         private static bool SnapshotsEqual(CharacterSnapshot a, CharacterSnapshot b)
         {
             if (a == null || b == null) return false;
-            return string.Equals(a.FirstName ?? "", b.FirstName ?? "", StringComparison.Ordinal) &&
-                   string.Equals(a.LastName ?? "", b.LastName ?? "", StringComparison.Ordinal) &&
-                   string.Equals(CharacterEditor.NormalizeProfileText(a.Profile),
-                                 CharacterEditor.NormalizeProfileText(b.Profile),
-                                 StringComparison.Ordinal) &&
-                   a.Personality == b.Personality &&
-                   a.Club == b.Club &&
-                   a.Social == b.Social &&
-                   a.FightingStyle == b.FightingStyle &&
-                   a.Virtue == b.Virtue &&
-                   a.SexualOrientation == b.SexualOrientation &&
-                   a.VoicePitch == b.VoicePitch &&
-                   a.IntelligenceLevel == b.IntelligenceLevel &&
-                   a.IntelligenceRank == b.IntelligenceRank &&
-                   a.IntelligenceValue == b.IntelligenceValue &&
-                   a.IntelligenceGrade == b.IntelligenceGrade &&
-                   a.IntelligenceTopRank == b.IntelligenceTopRank &&
-                   a.StrengthLevel == b.StrengthLevel &&
-                   a.StrengthRank == b.StrengthRank &&
-                   a.StrengthValue == b.StrengthValue &&
-                   a.StrengthGrade == b.StrengthGrade &&
-                   a.StrengthTopRank == b.StrengthTopRank &&
-                   a.ClubLevel == b.ClubLevel &&
-                   a.ClubValue == b.ClubValue &&
-                   a.ClubGrade == b.ClubGrade &&
-                   a.VictoryCount == b.VictoryCount &&
-                   a.ClassSkip == b.ClassSkip &&
-                   a.WinningOver == b.WinningOver &&
-                   a.Partner == b.Partner &&
-                   a.Rejected == b.Rejected &&
-                   a.SexIntercourse == b.SexIntercourse &&
-                   a.SexPartner == b.SexPartner &&
-                   string.Equals(a.FirstTime ?? "", b.FirstTime ?? "", StringComparison.Ordinal) &&
-                   string.Equals(a.FirstAnal ?? "", b.FirstAnal ?? "", StringComparison.Ordinal) &&
-                   string.Equals(a.LastTime ?? "", b.LastTime ?? "", StringComparison.Ordinal) &&
-                   a.SexExperience == b.SexExperience &&
-                   a.AnalExperience == b.AnalExperience;
+
+            foreach (FieldInfo field in SnapshotFields)
+            {
+                object va = field.GetValue(a);
+                object vb = field.GetValue(b);
+
+                if (field.FieldType == typeof(string))
+                {
+                    string sa = (string)va ?? "";
+                    string sb = (string)vb ?? "";
+                    if (field.Name == "Profile")
+                    {
+                        sa = CharacterEditor.NormalizeProfileText(sa);
+                        sb = CharacterEditor.NormalizeProfileText(sb);
+                    }
+                    if (!string.Equals(sa, sb, StringComparison.Ordinal)) return false;
+                    continue;
+                }
+
+                if (!object.Equals(va, vb)) return false;
+            }
+
+            return true;
         }
 
         private void ApplySnapshot(CharacterSnapshot snapshot)

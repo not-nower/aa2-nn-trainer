@@ -46,22 +46,8 @@ namespace AA2Trainer
             if (current.HasValue && current.Value == info.Pointer)
                 return true;
 
-            if (!mem.WriteBytes(address, BitConverter.GetBytes(info.Pointer)))
-            {
-                error = "Player switch failed: " +
-                        (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            uint? check = mem.ReadU32(address);
-            if (!check.HasValue || check.Value != info.Pointer)
-            {
-                error = "Player switch verification failed at 0x" +
-                        address.ToString("X8") + ".";
-                return false;
-            }
-
-            return true;
+            return MemoryWriter.TryWriteInt32(mem, address, unchecked((int)info.Pointer),
+                "Player switch", out error);
         }
     }
 }

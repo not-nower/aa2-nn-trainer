@@ -115,21 +115,7 @@ namespace AA2Trainer
                 return false;
 
             uint address = characterData + (uint)OffsetOf(week, day);
-            byte desired = (byte)value;
-            if (!mem.WriteBytes(address, new byte[] { desired }))
-            {
-                error = "Risk write failed: " + (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            byte? check = mem.ReadU8(address);
-            if (!check.HasValue || check.Value != desired)
-            {
-                error = "Risk verification failed at 0x" + address.ToString("X8") + ".";
-                return false;
-            }
-
-            return true;
+            return MemoryWriter.TryWriteByte(mem, address, (byte)value, "Risk", out error);
         }
     }
 }

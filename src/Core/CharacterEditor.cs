@@ -590,189 +590,189 @@ namespace AA2Trainer
             }
             if (personalityChanged)
             {
-                if (!WriteByte(mem, characterData + PersonalityOffset, (byte)personality,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + PersonalityOffset, (byte)personality,
                         "Personality", out error))
                     return Partial(written, error, out changed);
                 written.Add("personality");
             }
             if (clubChanged)
             {
-                if (!WriteByte(mem, characterData + ClubOffset, (byte)club,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + ClubOffset, (byte)club,
                         "Club", out error))
                     return Partial(written, error, out changed);
                 written.Add("club");
             }
             if (socialChanged)
             {
-                if (!WriteByte(mem, characterData + SocialOffset, (byte)social,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + SocialOffset, (byte)social,
                         "Social", out error))
                     return Partial(written, error, out changed);
                 written.Add("social");
             }
             if (fightingStyleChanged)
             {
-                if (!WriteByte(mem, characterData + FightingStyleOffset, (byte)fightingStyle,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + FightingStyleOffset, (byte)fightingStyle,
                         "Fighting style", out error))
                     return Partial(written, error, out changed);
                 written.Add("fighting style");
             }
             if (virtueChanged)
             {
-                if (!WriteByte(mem, characterData + VirtueOffset, (byte)virtue,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + VirtueOffset, (byte)virtue,
                         "Virtue", out error))
                     return Partial(written, error, out changed);
                 written.Add("virtue");
             }
             if (sexualOrientationChanged)
             {
-                if (!WriteByte(mem, characterData + SexualOrientationOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + SexualOrientationOffset,
                         (byte)sexualOrientation, "Sexual orientation", out error))
                     return Partial(written, error, out changed);
                 written.Add("sexual orientation");
             }
             if (voicePitchChanged)
             {
-                if (!WriteByte(mem, characterData + VoicePitchOffset, (byte)voicePitch,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + VoicePitchOffset, (byte)voicePitch,
                         "Voice pitch", out error))
                     return Partial(written, error, out changed);
                 written.Add("voice pitch");
             }
             if (intelligenceLevelChanged)
             {
-                if (!WriteByte(mem, characterData + IntelligenceLevelOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + IntelligenceLevelOffset,
                         (byte)intelligenceLevel, "Intelligence", out error))
                     return Partial(written, error, out changed);
                 written.Add("intelligence");
             }
             if (intelligenceRankChanged)
             {
-                if (!WriteByte(mem, characterData + IntelligenceRankOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + IntelligenceRankOffset,
                         (byte)intelligenceRank, "Level", out error))
                     return Partial(written, error, out changed);
                 written.Add("level");
             }
             if (intelligenceValueChanged)
             {
-                if (!WriteInt32(mem, characterData + IntelligenceValueOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, characterData + IntelligenceValueOffset,
                         intelligenceValue, "Value", out error))
                     return Partial(written, error, out changed);
                 written.Add("value");
             }
             if (intelligenceGradeChanged)
             {
-                if (!WriteByte(mem, statusPointer + IntelligenceGradeStatusOffset,
+                if (!MemoryWriter.TryWriteByte(mem, statusPointer + IntelligenceGradeStatusOffset,
                         (byte)intelligenceGrade, "Grade", out error))
                     return Partial(written, error, out changed);
                 written.Add("grade");
             }
             if (intelligenceTopRankChanged)
             {
-                if (!WriteByte(mem, statusPointer + IntelligenceTopRankStatusOffset,
+                if (!MemoryWriter.TryWriteByte(mem, statusPointer + IntelligenceTopRankStatusOffset,
                         (byte)intelligenceTopRank, "Rank", out error))
                     return Partial(written, error, out changed);
                 written.Add("rank");
             }
             if (strengthLevelChanged)
             {
-                if (!WriteByte(mem, characterData + StrengthLevelOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + StrengthLevelOffset,
                         (byte)strengthLevel, "Strength", out error))
                     return Partial(written, error, out changed);
                 written.Add("strength");
             }
             if (strengthRankChanged)
             {
-                if (!WriteByte(mem, characterData + StrengthRankOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + StrengthRankOffset,
                         (byte)strengthRank, "Strength level", out error))
                     return Partial(written, error, out changed);
                 written.Add("strength level");
             }
             if (strengthValueChanged)
             {
-                if (!WriteInt32(mem, characterData + StrengthValueOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, characterData + StrengthValueOffset,
                         strengthValue, "Strength value", out error))
                     return Partial(written, error, out changed);
                 written.Add("strength value");
             }
             if (strengthGradeChanged)
             {
-                if (!WriteByte(mem, statusPointer + StrengthGradeStatusOffset,
+                if (!MemoryWriter.TryWriteByte(mem, statusPointer + StrengthGradeStatusOffset,
                         (byte)strengthGrade, "Strength grade", out error))
                     return Partial(written, error, out changed);
                 written.Add("strength grade");
             }
             if (strengthTopRankChanged)
             {
-                if (!WriteByte(mem, statusPointer + StrengthTopRankStatusOffset,
+                if (!MemoryWriter.TryWriteByte(mem, statusPointer + StrengthTopRankStatusOffset,
                         (byte)strengthTopRank, "Strength rank", out error))
                     return Partial(written, error, out changed);
                 written.Add("strength rank");
             }
             if (clubLevelChanged)
             {
-                if (!WriteByte(mem, characterData + ClubLevelOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + ClubLevelOffset,
                         (byte)clubLevel, "Club level", out error))
                     return Partial(written, error, out changed);
                 written.Add("club level");
             }
             if (clubValueChanged)
             {
-                if (!WriteInt32(mem, characterData + ClubValueOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, characterData + ClubValueOffset,
                         clubValue, "Club value", out error))
                     return Partial(written, error, out changed);
                 written.Add("club value");
             }
             if (clubGradeChanged)
             {
-                if (!WriteByte(mem, statusPointer + ClubGradeStatusOffset,
+                if (!MemoryWriter.TryWriteByte(mem, statusPointer + ClubGradeStatusOffset,
                         (byte)clubGrade, "Club grade", out error))
                     return Partial(written, error, out changed);
                 written.Add("club grade");
             }
             if (victoryChanged)
             {
-                if (!WriteInt32(mem, statusPointer + VictoryStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + VictoryStatusOffset,
                         victory, "Victory count", out error))
                     return Partial(written, error, out changed);
                 written.Add("victory count");
             }
             if (classSkipChanged)
             {
-                if (!WriteInt32(mem, statusPointer + ClassSkipStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + ClassSkipStatusOffset,
                         classSkip, "Class skip", out error))
                     return Partial(written, error, out changed);
                 written.Add("class skip");
             }
             if (winningOverChanged)
             {
-                if (!WriteInt32(mem, statusPointer + WinningOverStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + WinningOverStatusOffset,
                         winningOver, "Winning over", out error))
                     return Partial(written, error, out changed);
                 written.Add("winning over");
             }
             if (partnerChanged)
             {
-                if (!WriteInt32(mem, statusPointer + PartnerStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + PartnerStatusOffset,
                         partner, "Partner", out error))
                     return Partial(written, error, out changed);
                 written.Add("partner");
             }
             if (rejectedChanged)
             {
-                if (!WriteInt32(mem, statusPointer + RejectedStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + RejectedStatusOffset,
                         rejected, "Rejected", out error))
                     return Partial(written, error, out changed);
                 written.Add("rejected");
             }
             if (sexIntercourseChanged)
             {
-                if (!WriteInt32(mem, statusPointer + SexIntercourseStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + SexIntercourseStatusOffset,
                         sexIntercourse, "H intercourse", out error))
                     return Partial(written, error, out changed);
                 written.Add("H intercourse");
             }
             if (sexPartnerChanged)
             {
-                if (!WriteInt32(mem, statusPointer + SexPartnerStatusOffset,
+                if (!MemoryWriter.TryWriteInt32(mem, statusPointer + SexPartnerStatusOffset,
                         sexPartner, "H partner", out error))
                     return Partial(written, error, out changed);
                 written.Add("H partner");
@@ -800,14 +800,14 @@ namespace AA2Trainer
             }
             if (sexExperienceChanged)
             {
-                if (!WriteByte(mem, characterData + SexExperienceOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + SexExperienceOffset,
                         sexExperience ? (byte)1 : (byte)0, "Sex experience", out error))
                     return Partial(written, error, out changed);
                 written.Add("sex experience");
             }
             if (analExperienceChanged)
             {
-                if (!WriteByte(mem, characterData + AnalExperienceOffset,
+                if (!MemoryWriter.TryWriteByte(mem, characterData + AnalExperienceOffset,
                         analExperience ? (byte)1 : (byte)0, "Anal experience", out error))
                     return Partial(written, error, out changed);
                 written.Add("anal experience");
@@ -885,75 +885,11 @@ namespace AA2Trainer
         private static bool WriteText(GameMemory mem, uint address, byte[] bytes,
             int fieldSize, string fieldName, out string error)
         {
-            error = null;
-
             byte[] buffer = new byte[fieldSize];
             if (bytes != null && bytes.Length > 0)
                 Buffer.BlockCopy(bytes, 0, buffer, 0, bytes.Length);
 
-            if (!mem.WriteBytes(address, buffer))
-            {
-                error = fieldName + " write failed: " + (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            byte[] check = mem.ReadBytes(address, fieldSize);
-            if (check == null || !BytesEqual(buffer, check))
-            {
-                error = fieldName + " verification failed at 0x" + address.ToString("X8") + ".";
-                return false;
-            }
-            return true;
-        }
-
-        private static bool WriteByte(GameMemory mem, uint address, byte value,
-            string fieldName, out string error)
-        {
-            error = null;
-
-            byte[] buffer = new byte[] { value };
-            if (!mem.WriteBytes(address, buffer))
-            {
-                error = fieldName + " write failed: " + (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            byte? check = mem.ReadU8(address);
-            if (!check.HasValue || check.Value != value)
-            {
-                error = fieldName + " verification failed at 0x" + address.ToString("X8") + ".";
-                return false;
-            }
-            return true;
-        }
-
-        private static bool WriteInt32(GameMemory mem, uint address, int value,
-            string fieldName, out string error)
-        {
-            error = null;
-
-            byte[] buffer = BitConverter.GetBytes(value);
-            if (!mem.WriteBytes(address, buffer))
-            {
-                error = fieldName + " write failed: " + (mem.WriteError ?? "unknown error");
-                return false;
-            }
-
-            int? check = mem.ReadI32(address);
-            if (!check.HasValue || check.Value != value)
-            {
-                error = fieldName + " verification failed at 0x" + address.ToString("X8") + ".";
-                return false;
-            }
-            return true;
-        }
-
-        private static bool BytesEqual(byte[] a, byte[] b)
-        {
-            if (a == null || b == null || a.Length != b.Length) return false;
-            for (int i = 0; i < a.Length; i++)
-                if (a[i] != b[i]) return false;
-            return true;
+            return MemoryWriter.TryWriteBlock(mem, address, buffer, fieldName, out error);
         }
 
         private static bool HasControlCharacters(string text)
