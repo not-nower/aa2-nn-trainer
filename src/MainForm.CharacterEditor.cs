@@ -68,6 +68,7 @@ namespace AA2Trainer
             characterEditorTabs.TabPages.Add(BuildBodyTab());
             characterEditorTabs.TabPages.Add(BuildFaceTab());
             characterEditorTabs.TabPages.Add(BuildHairTab());
+            characterEditorTabs.TabPages.Add(BuildOutfitsTab());
 
             page.Controls.Add(characterEditorTabs);
             return page;
@@ -138,6 +139,23 @@ namespace AA2Trainer
             };
             hair.CharacterSaved += delegate { OnCharacterSaved(); };
             page.Controls.Add(hair);
+            return page;
+        }
+
+        private TabPage BuildOutfitsTab()
+        {
+            TabPage page = new TabPage("Outfits");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            outfits = new OutfitsControl();
+            outfits.Dock = DockStyle.Fill;
+            outfits.ConfirmWriteAllowed = delegate
+            {
+                RunHealthCheck();
+                return writesAllowed && mem.CanWrite;
+            };
+            outfits.CharacterSaved += delegate { OnCharacterSaved(); };
+            page.Controls.Add(outfits);
             return page;
         }
 
@@ -239,6 +257,35 @@ namespace AA2Trainer
         private string HairChoiceSignature()
         {
             return "hair";
+        }
+
+        private Dictionary<string, List<CharacterChoice>> BuildOutfitChoices()
+        {
+            string clothes = selectedGender == 0 ? "CLOTHES_M" : "CLOTHES_F";
+            string socks = selectedGender == 0 ? "SOCKS_M" : "SOCKS_F";
+            string shoes = selectedGender == 0 ? "SHOES_M" : "SHOES_F";
+
+            List<CharacterChoice> outfitTypes = BuildEnumChoices(clothes, -1, true);
+            List<CharacterChoice> sockTypes = BuildEnumChoices(socks, 5, false);
+            List<CharacterChoice> shoeTypes = BuildEnumChoices(shoes, 4, false);
+
+            Dictionary<string, List<CharacterChoice>> map =
+                new Dictionary<string, List<CharacterChoice>>(StringComparer.Ordinal);
+            string[] prefixes = new string[] { "Outfit", "Sport", "Swim", "Club" };
+            foreach (string prefix in prefixes)
+            {
+                map[prefix + "UType"] = outfitTypes;
+                map[prefix + "Socks"] = sockTypes;
+                map[prefix + "InShoes"] = shoeTypes;
+                map[prefix + "OutShoes"] = shoeTypes;
+            }
+            return map;
+        }
+
+        private string OutfitChoiceSignature()
+        {
+            return "o" + selectedGender.ToString() + "/" +
+                   (names == null ? 0 : names.EntryCount).ToString();
         }
 
         private string FaceChoiceSignature()

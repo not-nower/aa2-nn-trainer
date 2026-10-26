@@ -40,9 +40,11 @@ namespace AA2Trainer
         private uint hoverPortraitPointer;
         private bool hoverPopupVisible;
 
-        private Label gameStatusLabel;
         private Label classLabel;
         private ListView seatList;
+        private Font seatRowTextFont;
+        private Font seatRowTextBoldFont;
+        private const int SeatRowHeight = 22;
         private TabControl tabs;
         private TabControl characterEditorTabs;
         private TabControl debugTabs;
@@ -66,6 +68,7 @@ namespace AA2Trainer
         private BodyControl body;
         private FaceControl face;
         private HairControl hair;
+        private OutfitsControl outfits;
         private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
@@ -98,15 +101,20 @@ namespace AA2Trainer
         private bool resizeHiddenBody;
         private bool resizeHiddenFace;
         private bool resizeHiddenHair;
+        private bool resizeHiddenOutfits;
         private bool resizeHiddenRoster;
         private bool resizeHiddenSaveViewer;
         private bool resizeHiddenDebugTabs;
         private string namesRoot;
         private int selectedGender;
         private string lastSeatSignature;
+        private string lastOutfitChoiceSignature;
         private int lastSaveViewerSeat = -1;
         private uint lastPortraitAddr;
         private uint lastPortraitSize;
+
+        private const string AppTitle = "NN's AA2 Trainer";
+        private const string DetachedTitle = AppTitle + " - not attached";
 
         private static readonly string[] PersonalityNames = new string[]
         {
@@ -121,7 +129,7 @@ namespace AA2Trainer
 
         public MainForm()
         {
-            Text = "AA2 NN's Trainer";
+            Text = DetachedTitle;
             Width = 1440;
             Height = 900;
             MinimumSize = new Size(1100, 650);
@@ -195,10 +203,21 @@ namespace AA2Trainer
                 hoverTimer.Stop();
                 hoverWatchTimer.Stop();
                 hoverHideTimer.Stop();
+                DisposeScheduleUi();
                 HideHoverPortrait();
                 DisposeHoverPopup();
                 if (roster != null) roster.DisposePortraits();
                 ClearSeatPortrait();
+                if (seatRowTextFont != null)
+                {
+                    seatRowTextFont.Dispose();
+                    seatRowTextFont = null;
+                }
+                if (seatRowTextBoldFont != null)
+                {
+                    seatRowTextBoldFont.Dispose();
+                    seatRowTextBoldFont = null;
+                }
                 mem.Dispose();
             };
             Deactivate += delegate { HideHoverPortrait(); };
@@ -211,22 +230,25 @@ namespace AA2Trainer
             root.ColumnCount = 1;
             root.RowCount = 2;
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 78F));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             root.Controls.Add(BuildTopPanel(), 0, 0);
             root.Controls.Add(BuildMainArea(), 0, 1);
             Controls.Add(root);
 
             StatusStrip strip = new StatusStrip();
+            strip.ShowItemToolTips = true;
             summaryLabel = new ToolStripStatusLabel("Not attached.");
             summaryLabel.Spring = true;
             summaryLabel.TextAlign = ContentAlignment.MiddleLeft;
             healthLabel = new ToolStripStatusLabel("Pointers: not checked");
             healthLabel.BorderSides = ToolStripStatusLabelBorderSides.Left;
             healthLabel.BorderStyle = Border3DStyle.Etched;
+            healthLabel.AutoToolTip = false;
             namesLabel = new ToolStripStatusLabel("Names: not loaded");
             namesLabel.BorderSides = ToolStripStatusLabelBorderSides.Left;
             namesLabel.BorderStyle = Border3DStyle.Etched;
+            namesLabel.AutoToolTip = false;
             updatedLabel = new ToolStripStatusLabel("");
             strip.Items.Add(summaryLabel);
             strip.Items.Add(healthLabel);
@@ -253,7 +275,7 @@ namespace AA2Trainer
         private void SetInitialLayout()
         {
             if (mainSplit == null) return;
-            int desired = 340;
+            int desired = 225;
             int max = mainSplit.Width - 500;
             if (max < mainSplit.Panel1MinSize) max = mainSplit.Panel1MinSize;
             if (desired > max) desired = max;
@@ -289,6 +311,11 @@ namespace AA2Trainer
             {
                 resizeHiddenHair = true;
                 hair.Visible = false;
+            }
+            if (outfits != null && outfits.Visible)
+            {
+                resizeHiddenOutfits = true;
+                outfits.Visible = false;
             }
             if (roster != null && roster.Visible)
             {
@@ -354,6 +381,15 @@ namespace AA2Trainer
                     hair.PerformLayout();
                 }
             }
+            if (resizeHiddenOutfits)
+            {
+                resizeHiddenOutfits = false;
+                if (outfits != null)
+                {
+                    outfits.Visible = true;
+                    outfits.PerformLayout();
+                }
+            }
             if (resizeHiddenRoster)
             {
                 resizeHiddenRoster = false;
@@ -387,73 +423,78 @@ namespace AA2Trainer
         {
             TableLayoutPanel p = new TableLayoutPanel();
             p.Dock = DockStyle.Fill;
-            p.Padding = new Padding(10, 8, 10, 4);
-            p.ColumnCount = 8;
+            p.Padding = new Padding(10, 4, 10, 4);
+            p.ColumnCount = 1;
             p.RowCount = 2;
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52F));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 75F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 118F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 10F));
-            p.RowStyles.Add(new RowStyle(SizeType.Percent, 55F));
-            p.RowStyles.Add(new RowStyle(SizeType.Percent, 45F));
+            p.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+            p.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
+            p.Controls.Add(BuildScheduleRow(), 0, 0);
+            p.Controls.Add(BuildActionsRow(), 0, 1);
+            return p;
+        }
 
-            Label gameCaption = MakeCaption("Game:");
-            p.Controls.Add(gameCaption, 0, 0);
-
-            gameStatusLabel = new Label();
-            gameStatusLabel.Dock = DockStyle.Fill;
-            gameStatusLabel.AutoSize = false;
-            gameStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
-            gameStatusLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            gameStatusLabel.ForeColor = Color.DarkRed;
-            gameStatusLabel.Text = "Not attached";
-            p.Controls.Add(gameStatusLabel, 1, 0);
+        private Control BuildActionsRow()
+        {
+            TableLayoutPanel p = new TableLayoutPanel();
+            p.Dock = DockStyle.Fill;
+            p.Margin = new Padding(0);
+            p.Padding = new Padding(0);
+            p.ColumnCount = 7;
+            p.RowCount = 1;
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82F));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82F));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 86F));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112F));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 12F));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            p.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             Button refresh = new Button();
             refresh.Text = "Refresh";
             refresh.Dock = DockStyle.Fill;
-            refresh.Click += delegate { AttachAndRefresh(); };
-            p.Controls.Add(refresh, 2, 0);
+            refresh.Click += delegate
+            {
+                DiscardScheduleEdits();
+                AttachAndRefresh();
+            };
+            p.Controls.Add(refresh, 0, 0);
 
             Button recheck = new Button();
             recheck.Text = "Recheck";
             recheck.Dock = DockStyle.Fill;
             recheck.Click += delegate { RunHealthCheck(); };
-            p.Controls.Add(recheck, 3, 0);
+            p.Controls.Add(recheck, 1, 0);
 
             Button details = new Button();
             details.Text = "Details";
             details.Dock = DockStyle.Fill;
             details.Click += delegate { ShowHealthDetails(); };
-            p.Controls.Add(details, 4, 0);
+            p.Controls.Add(details, 2, 0);
 
             CheckBox auto = new CheckBox();
             auto.Text = "Auto 1s";
             auto.Dock = DockStyle.Fill;
             auto.CheckedChanged += delegate { refreshTimer.Enabled = auto.Checked; };
-            p.Controls.Add(auto, 5, 0);
+            p.Controls.Add(auto, 3, 0);
 
             Button reloadNames = new Button();
             reloadNames.Text = "Reload names";
             reloadNames.Dock = DockStyle.Fill;
             reloadNames.Click += delegate { ReloadNames(); };
-            p.Controls.Add(reloadNames, 6, 0);
-
-            Label classCaption = MakeCaption("Class:");
-            p.Controls.Add(classCaption, 0, 1);
+            p.Controls.Add(reloadNames, 4, 0);
 
             classLabel = new Label();
             classLabel.Dock = DockStyle.Fill;
             classLabel.AutoSize = false;
+            classLabel.AutoEllipsis = true;
+            classLabel.UseMnemonic = false;
             classLabel.TextAlign = ContentAlignment.MiddleLeft;
             classLabel.ForeColor = Color.DimGray;
-            classLabel.Text = "-";
-            p.Controls.Add(classLabel, 1, 1);
-            p.SetColumnSpan(classLabel, 6);
+            classLabel.Margin = new Padding(0);
+            classLabel.Text = "Class: -";
+            p.Controls.Add(classLabel, 6, 0);
 
             return p;
         }
@@ -463,8 +504,8 @@ namespace AA2Trainer
             SplitContainer split = new SplitContainer();
             split.Dock = DockStyle.Fill;
             split.Orientation = Orientation.Vertical;
-            split.SplitterDistance = 340;
-            split.Panel1MinSize = 280;
+            split.SplitterDistance = 225;
+            split.Panel1MinSize = 220;
             split.Panel2MinSize = 0;
             split.SplitterWidth = 5;
             split.FixedPanel = FixedPanel.Panel1;
@@ -491,17 +532,20 @@ namespace AA2Trainer
             seatList = new ListView();
             seatList.Dock = DockStyle.Fill;
             seatList.View = View.Details;
+            seatList.HeaderStyle = ColumnHeaderStyle.None;
+            seatList.OwnerDraw = true;
             seatList.FullRowSelect = true;
             seatList.HideSelection = false;
             seatList.MultiSelect = false;
             seatList.GridLines = false;
-            seatList.ShowItemToolTips = true;
-            seatList.Columns.Add("Seat", 38);
-            seatList.Columns.Add("Name", 110);
-            seatList.Columns.Add("Personality", 130);
-            seatList.Columns.Add("Sex", 32);
-            seatList.Columns.Add("PC", 28);
+            seatList.ShowItemToolTips = false;
+            seatList.Columns.Add("Seats", 200);
+            seatRowTextFont = new Font("Segoe UI", 8.25F);
+            seatRowTextBoldFont = new Font("Segoe UI", 8.25F, FontStyle.Bold);
             seatList.SelectedIndexChanged += SeatList_SelectedIndexChanged;
+            seatList.DrawItem += SeatList_DrawItem;
+            seatList.DrawSubItem += SeatList_DrawSubItem;
+            seatList.Resize += delegate { SizeSeatColumn(); };
             seatList.MouseMove += SeatList_MouseMove;
             seatList.MouseLeave += delegate { ScheduleHideHoverPortrait(); };
             seatList.MouseWheel += delegate { HideHoverPortrait(); };
@@ -667,6 +711,18 @@ namespace AA2Trainer
         private void ShowHealthDetails()
         {
             StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Process");
+            if (mem.IsAttached)
+            {
+                sb.AppendLine("  " + GameExeName());
+                sb.AppendLine("  PID " + mem.Pid.ToString());
+                sb.AppendLine("  module 0x" + mem.ModuleBase.ToString("X8"));
+            }
+            else
+            {
+                sb.AppendLine("  not attached");
+            }
+            sb.AppendLine();
             sb.AppendLine("Profile");
             sb.AppendLine("  " + (profile != null ? profile.Display : "not detected"));
             if (profile != null)
@@ -747,6 +803,11 @@ namespace AA2Trainer
                 healthLabel.ForeColor = color;
 
                 StringBuilder tip = new StringBuilder();
+                if (mem.IsAttached)
+                {
+                    tip.AppendLine("Process: " + GameExeName() + "  PID " + mem.Pid +
+                                   "  module 0x" + mem.ModuleBase.ToString("X8"));
+                }
                 if (profile != null)
                 {
                     tip.AppendLine("Profile: " + profile.Display);
@@ -778,6 +839,8 @@ namespace AA2Trainer
             if (body != null) body.SetWriteAllowed(writesAllowed);
             if (face != null) face.SetWriteAllowed(writesAllowed);
             if (hair != null) hair.SetWriteAllowed(writesAllowed);
+            if (outfits != null) outfits.SetWriteAllowed(writesAllowed);
+            UpdateScheduleGate();
         }
 
         private void SetHealthSession()
@@ -879,9 +942,8 @@ namespace AA2Trainer
 
         private void ShowNotAttached(string reason)
         {
-            gameStatusLabel.Text = "Not attached: " + (reason == null ? "" : reason);
-            gameStatusLabel.ForeColor = Color.DarkRed;
-            classLabel.Text = "-";
+            UpdateWindowTitle();
+            classLabel.Text = "Class: -";
             seatList.Items.Clear();
             if (roster != null) roster.Clear();
             if (characterData != null) characterData.Clear();
@@ -889,13 +951,16 @@ namespace AA2Trainer
             if (body != null) body.Clear();
             if (face != null) face.Clear();
             if (hair != null) hair.Clear();
+            if (outfits != null) outfits.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
             writesAllowed = false;
+            StopScheduleFreeze(true);
+            ClearScheduleRow();
             ClearOverview();
             UpdateHealthUi();
-            SetSummaryText("Not attached.");
+            SetSummaryText(string.IsNullOrEmpty(reason) ? "Not attached." : "Not attached: " + reason);
             lastSaveViewerSeat = -1;
             RefreshSaveViewer();
         }
@@ -911,6 +976,7 @@ namespace AA2Trainer
                 if (body != null) body.Clear();
                 if (face != null) face.Clear();
                 if (hair != null) hair.Clear();
+                if (outfits != null) outfits.Clear();
                 return;
             }
             switch (tabs.SelectedIndex)
@@ -949,6 +1015,20 @@ namespace AA2Trainer
                         hair.SetChoices(BuildHairChoices(), HairChoiceSignature());
                         hair.SetTarget(mem, ctx.Selected, writesAllowed);
                     }
+                    else if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 5 &&
+                        outfits != null)
+                    {
+                        // Building the gender-specific outfit list is expensive;
+                        // only rebuild it when the name map or gender changes.
+                        string outfitSignature = OutfitChoiceSignature();
+                        if (!string.Equals(outfitSignature, lastOutfitChoiceSignature,
+                            StringComparison.Ordinal))
+                        {
+                            outfits.SetChoices(BuildOutfitChoices(), outfitSignature);
+                            lastOutfitChoiceSignature = outfitSignature;
+                        }
+                        outfits.SetTarget(mem, ctx.Selected, writesAllowed);
+                    }
                     break;
                 case 2:
                     if (saveViewer != null)
@@ -964,24 +1044,35 @@ namespace AA2Trainer
             }
         }
 
+        private string GameExeName()
+        {
+            string name = mem.ProcessName;
+            if (string.IsNullOrEmpty(name)) name = "AA2Play";
+            if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                name += ".exe";
+            return name;
+        }
+
+        private void UpdateWindowTitle()
+        {
+            string title = mem.IsAttached ? AppTitle + " - " + GameExeName() : DetachedTitle;
+            if (Text != title) Text = title;
+        }
+
         private void SetSummary()
         {
+            UpdateWindowTitle();
+            RefreshScheduleRow();
             if (!mem.IsAttached || ctx.Selected == null)
             {
                 SetSummaryText("Not attached.");
                 return;
             }
             string className = DashboardData.Value(mem, ctx, "ClassName", 0).Trim('"');
-            if (gameStatusLabel != null)
-            {
-                gameStatusLabel.Text = "AA2Play.exe   PID " + mem.Pid + "   |   module 0x" +
-                                       mem.ModuleBase.ToString("X8");
-                gameStatusLabel.ForeColor = Color.DarkGreen;
-            }
             SetSummaryText("Class: " + className + "   |   " + ctx.Characters.Count +
                            " characters   |   selected: " + ctx.SelectedName);
             if (classLabel != null)
-                classLabel.Text = className + "   |   save: " +
+                classLabel.Text = "Class: " + className + "   |   save: " +
                     DashboardData.Value(mem, ctx, "SaveName", 0).Trim('"') +
                     "   |   " + ctx.Characters.Count + " loaded";
             if (updatedLabel != null)

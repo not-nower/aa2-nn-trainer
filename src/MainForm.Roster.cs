@@ -118,7 +118,7 @@ namespace AA2Trainer
                     item.SubItems.Add(info.Name);
                     item.SubItems.Add(personality);
                     item.SubItems.Add(sex);
-                    item.SubItems.Add(info.IsPlayer ? "*" : "");
+                    item.SubItems.Add(info.IsPlayer ? "PC" : "");
                     item.Tag = info;
                     if (info.IsPlayer) item.Font = new Font(seatList.Font, FontStyle.Bold);
                     seatList.Items.Add(item);
@@ -141,6 +141,56 @@ namespace AA2Trainer
                 seatList.EndUpdate();
                 suppressSeatEvent = false;
             }
+            SizeSeatColumn();
+        }
+
+        private void SeatList_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            bool selected = e.Item.Selected;
+            Color back = selected ? SystemColors.Highlight : seatList.BackColor;
+            Color fore = selected ? SystemColors.HighlightText : seatList.ForeColor;
+
+            using (SolidBrush brush = new SolidBrush(back))
+                e.Graphics.FillRectangle(brush, e.Bounds);
+
+            string seat = e.Item.Text;
+            string name = e.Item.SubItems.Count > 1 ? e.Item.SubItems[1].Text : "";
+            string personality = e.Item.SubItems.Count > 2 ? e.Item.SubItems[2].Text : "";
+
+            string line = seat + " " + name;
+            if (!string.IsNullOrEmpty(personality))
+                line += " (" + personality.Replace(" (", "(") + ")";
+
+            Rectangle textRect = new Rectangle(e.Bounds.Left + 5, e.Bounds.Top,
+                Math.Max(0, e.Bounds.Width - 10), e.Bounds.Height);
+            TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
+                TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis |
+                TextFormatFlags.NoPrefix;
+            Font rowFont = e.Item.Font.Bold ? seatRowTextBoldFont : seatRowTextFont;
+            if (rowFont == null) rowFont = e.Item.Font;
+            TextRenderer.DrawText(e.Graphics, line, rowFont, textRect, fore, flags);
+
+            if (selected && e.Item.Focused)
+                e.DrawFocusRectangle();
+            e.DrawDefault = false;
+        }
+
+        private void SeatList_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            // DrawItem paints the whole row; suppress the default column text
+            // so it does not overdraw it.
+            e.DrawDefault = false;
+        }
+
+        private void SizeSeatColumn()
+        {
+            if (seatList == null || seatList.Columns.Count == 0) return;
+            int width = seatList.ClientSize.Width - 2;
+            int rowHeight = SeatRowHeight + 2;
+            if (seatList.Items.Count * rowHeight > seatList.ClientSize.Height)
+                width -= SystemInformation.VerticalScrollBarWidth;
+            if (width < 80) width = 80;
+            seatList.Columns[0].Width = width;
         }
 
         private void SeatList_SelectedIndexChanged(object sender, EventArgs e)
@@ -150,6 +200,7 @@ namespace AA2Trainer
             CharacterInfo info = seatList.SelectedItems[0].Tag as CharacterInfo;
             if (info == null) return;
             ApplySelection(info);
+            seatList.Invalidate();
         }
 
         private void Roster_CharacterClicked(object sender, CharacterSelectedEventArgs e)
@@ -319,7 +370,10 @@ namespace AA2Trainer
 
             hoverName.Text = string.IsNullOrEmpty(info.Name) ? "(unnamed)" : info.Name;
             string seat = info.Seat >= 0 ? info.Seat.ToString() : "?";
-            hoverMeta.Text = "Seat " + seat + "  -  " + PersonalityFor(info);
+            string sex = hoverItem.SubItems.Count > 3 ? hoverItem.SubItems[3].Text : "";
+            string meta = "Seat " + seat + "  -  " + PersonalityFor(info);
+            if (!string.IsNullOrEmpty(sex)) meta += "  -  " + sex;
+            hoverMeta.Text = meta;
 
             ShowHoverPopupAtAnchor();
         }

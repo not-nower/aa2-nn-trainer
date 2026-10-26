@@ -1,4 +1,4 @@
-# AA2 NN's Trainer
+# NN's AA2 Trainer
 
 Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
