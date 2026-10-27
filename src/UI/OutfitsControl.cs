@@ -263,12 +263,12 @@ namespace AA2Trainer
         {
             TableLayoutPanel table = MakeColorTable();
             int row = 0;
-            AddColorRow(table, row++, setIndex, "UndieC", "UndieO", "Colour");
-            AddNumberRow(table, row++, DefIndex(setIndex, "UndieT"), "Texture");
+            AddColorRow(table, row++, setIndex, "UndieC", "UndieO", "Color");
+            AddNumberRow(table, row++, DefIndex(setIndex, "UndieT"), "Texture ID");
             AddNumberRow(table, row++, DefIndex(setIndex, "UndieH"), "Hue");
             AddNumberRow(table, row++, DefIndex(setIndex, "UndieL"), "Lightness");
-            AddNumberRow(table, row++, DefIndex(setIndex, "UndieShdH"), "Shd Hue");
-            AddNumberRow(table, row++, DefIndex(setIndex, "UndieShdL"), "Shd Light");
+            AddNumberRow(table, row++, DefIndex(setIndex, "UndieShdH"), "Shadow hue");
+            AddNumberRow(table, row++, DefIndex(setIndex, "UndieShdL"), "Shadow light");
             FinishRows(table, row);
             return MakeGroup("Underwear", table);
         }

@@ -14,7 +14,7 @@ namespace AA2Trainer
         public Func<bool> ConfirmWriteAllowed { get; set; }
 
         private const int RowHeight = 26;
-        private const int LabelWidth = 92;
+        private const int LabelWidth = 110;
         private const int GroupHeader = 34;
         private const int GroupGap = 8;
 
@@ -193,7 +193,7 @@ namespace AA2Trainer
                 case FaceGroup.Brow: return "Brow";
                 case FaceGroup.Glasses: return "Glasses";
                 case FaceGroup.Mole: return "Mole";
-                default: return "Ext textures";
+                default: return "External textures";
             }
         }
 

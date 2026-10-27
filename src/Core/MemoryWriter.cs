@@ -47,6 +47,26 @@ namespace AA2Trainer
             return true;
         }
 
+        public static bool TryWriteFloat(GameMemory mem, uint address, float value,
+            string label, out string error)
+        {
+            error = null;
+
+            if (!mem.WriteBytes(address, BitConverter.GetBytes(value)))
+            {
+                error = label + " write failed: " + (mem.WriteError ?? "unknown error");
+                return false;
+            }
+
+            float? check = mem.ReadFloat(address);
+            if (!check.HasValue || check.Value != value)
+            {
+                error = label + " verification failed at 0x" + address.ToString("X8") + ".";
+                return false;
+            }
+            return true;
+        }
+
         public static bool TryWriteBlock(GameMemory mem, uint address, byte[] buffer,
             string label, out string error)
         {

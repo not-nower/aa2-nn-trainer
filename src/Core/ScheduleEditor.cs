@@ -41,8 +41,8 @@ namespace AA2Trainer
         public const int SaveNameBytes = 260;
 
         public const int MinDuration = 1;
-        public const int MaxDuration = 999;
-        public const int MaxTimeMilliseconds = 59999000;
+        public const int MaxDuration = 60;
+        public const int MaxTimeMilliseconds = 3599999;
 
         public static readonly string[] Weekdays = new string[]
         {
@@ -213,10 +213,11 @@ namespace AA2Trainer
                         " and " + MaxDuration.ToString() + " minutes.";
                 return false;
             }
-            if (edited.TimeMilliseconds < 0 ||
-                edited.TimeMilliseconds > MaxTimeMilliseconds)
+            long maxTime = (long)edited.PeriodDuration * 60L * 1000L;
+            if (edited.TimeMilliseconds < 0 || edited.TimeMilliseconds >= maxTime)
             {
-                error = "The time must be between 00:00 and 999:59.";
+                error = "The time must be within the selected period duration (" +
+                        edited.PeriodDuration.ToString() + " minutes).";
                 return false;
             }
             if (edited.Year < 0 || edited.Year > 9)

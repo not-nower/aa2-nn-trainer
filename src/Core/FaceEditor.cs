@@ -67,8 +67,8 @@ namespace AA2Trainer
             F("Eyelid", "Eyelid", 0x692, FaceFieldKind.Choice, FaceGroup.Eyes),
             F("UpperEyelid", "Upper lid", 0x693, FaceFieldKind.Choice, FaceGroup.Eyes),
             F("LowerEyelid", "Lower lid", 0x694, FaceFieldKind.Choice, FaceGroup.Eyes),
-            F("LeftEyeColor", "Left colour", 0x680, FaceFieldKind.Color, FaceGroup.Eyes),
-            F("RightEyeColor", "Right colour", 0x684, FaceFieldKind.Color, FaceGroup.Eyes),
+            F("LeftEyeColor", "Left color", 0x680, FaceFieldKind.Color, FaceGroup.Eyes),
+            F("RightEyeColor", "Right color", 0x684, FaceFieldKind.Color, FaceGroup.Eyes),
 
             F("IrisShape", "Shape", 0x470, FaceFieldKind.Choice, FaceGroup.Iris),
             F("IrisType", "Type", 0x474, FaceFieldKind.Choice, FaceGroup.Iris),
@@ -79,20 +79,20 @@ namespace AA2Trainer
 
             F("BrowShape", "Shape", 0x68C, FaceFieldKind.Choice, FaceGroup.Brow),
             F("BrowAngle", "Angle", 0x68D, FaceFieldKind.Number, FaceGroup.Brow),
-            F("BrowColor", "Colour", 0x688, FaceFieldKind.Color, FaceGroup.Brow),
+            F("BrowColor", "Color", 0x688, FaceFieldKind.Color, FaceGroup.Brow),
 
             F("Glasses", "Glasses", 0x695, FaceFieldKind.Choice, FaceGroup.Glasses),
-            F("GlassesColor", "Colour", 0x698, FaceFieldKind.Color, FaceGroup.Glasses),
+            F("GlassesColor", "Color", 0x698, FaceFieldKind.Color, FaceGroup.Glasses),
 
             F("MoleLEye", "Left eye", 0x68E, FaceFieldKind.Toggle, FaceGroup.Mole),
             F("MoleREye", "Right eye", 0x68F, FaceFieldKind.Toggle, FaceGroup.Mole),
             F("MoleLMouth", "Left mouth", 0x690, FaceFieldKind.Toggle, FaceGroup.Mole),
             F("MoleRMouth", "Right mouth", 0x691, FaceFieldKind.Toggle, FaceGroup.Mole),
 
-            F("ExtIrisTexture", "Use iris", 0x476, FaceFieldKind.Toggle, FaceGroup.Textures),
+            F("ExtIrisTexture", "Custom iris", 0x476, FaceFieldKind.Toggle, FaceGroup.Textures),
             F("ExtIrisTextureName", "Iris file", 0x478, FaceFieldKind.Text, FaceGroup.Textures,
                 false, TextFieldSize),
-            F("ExtHTexture", "Use highlight", 0x477, FaceFieldKind.Toggle, FaceGroup.Textures),
+            F("ExtHTexture", "Custom highlight", 0x477, FaceFieldKind.Toggle, FaceGroup.Textures),
             F("ExtHTextureName", "Highlight file", 0x57C, FaceFieldKind.Text, FaceGroup.Textures,
                 false, TextFieldSize)
         };

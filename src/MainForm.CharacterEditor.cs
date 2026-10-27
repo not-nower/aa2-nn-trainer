@@ -19,7 +19,11 @@ namespace AA2Trainer
             characterEditorTabs = new TabControl();
             characterEditorTabs.Dock = DockStyle.Fill;
             characterEditorTabs.Padding = new Point(12, 6);
-            characterEditorTabs.SelectedIndexChanged += delegate { RefreshCurrentTabValues(); };
+            characterEditorTabs.SelectedIndexChanged += delegate
+            {
+                RefreshCurrentTabValues();
+                UpdateLiveState();
+            };
 
             TabPage dataPage = new TabPage("Character Data");
             dataPage.BackColor = Color.FromArgb(248, 249, 251);

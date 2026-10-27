@@ -288,7 +288,7 @@ namespace AA2Trainer
             AddAttribute(attributesTable, 4, "Virtue", virtueCombo);
 
             sexualOrientationCombo = MakeCombo();
-            AddAttribute(attributesTable, 5, "Sexual O.", sexualOrientationCombo);
+            AddAttribute(attributesTable, 5, "Orientation", sexualOrientationCombo);
 
             voicePitchCombo = MakeCombo();
             AddAttribute(attributesTable, 6, "Voice Pitch", voicePitchCombo);
@@ -384,27 +384,27 @@ namespace AA2Trainer
 
             classSkipBox = MakeNumberBox(0, int.MaxValue, 1);
             classSkipBox.ThousandsSeparator = true;
-            AddAcademic(statusTable, 1, "Class Skip", classSkipBox);
+            AddAcademic(statusTable, 1, "Classes Skipped", classSkipBox);
 
             winningOverBox = MakeNumberBox(0, int.MaxValue, 1);
             winningOverBox.ThousandsSeparator = true;
-            AddAcademic(statusTable, 2, "Winning Over", winningOverBox);
+            AddAcademic(statusTable, 2, "Won Over", winningOverBox);
 
             partnerBox = MakeNumberBox(0, int.MaxValue, 1);
             partnerBox.ThousandsSeparator = true;
-            AddAcademic(statusTable, 3, "Partner", partnerBox);
+            AddAcademic(statusTable, 3, "Partners", partnerBox);
 
             rejectedBox = MakeNumberBox(0, int.MaxValue, 1);
             rejectedBox.ThousandsSeparator = true;
-            AddAcademic(statusTable, 4, "Rejected", rejectedBox);
+            AddAcademic(statusTable, 4, "Rejections", rejectedBox);
 
             sexIntercourseBox = MakeNumberBox(0, int.MaxValue, 1);
             sexIntercourseBox.ThousandsSeparator = true;
-            AddAcademic(statusTable, 5, "H Intercourse", sexIntercourseBox);
+            AddAcademic(statusTable, 5, "H Encounters", sexIntercourseBox);
 
             sexPartnerBox = MakeNumberBox(0, int.MaxValue, 1);
             sexPartnerBox.ThousandsSeparator = true;
-            AddAcademic(statusTable, 6, "H Partner", sexPartnerBox);
+            AddAcademic(statusTable, 6, "H Partners", sexPartnerBox);
 
             statusGroup.Controls.Add(statusTable);
             statusColumn.Controls.Add(statusGroup, 0, 0);
@@ -427,13 +427,13 @@ namespace AA2Trainer
             historyTable.Margin = new Padding(0);
 
             firstTimeBox = MakeHistoryTextBox();
-            AddAcademic(historyTable, 0, "First Time", firstTimeBox);
+            AddAcademic(historyTable, 0, "First Partner", firstTimeBox);
 
             firstAnalBox = MakeHistoryTextBox();
             AddAcademic(historyTable, 1, "First Anal", firstAnalBox);
 
             lastTimeBox = MakeHistoryTextBox();
-            AddAcademic(historyTable, 2, "Last Time", lastTimeBox);
+            AddAcademic(historyTable, 2, "Last Partner", lastTimeBox);
 
             TableLayoutPanel experienceTable = new TableLayoutPanel();
             experienceTable.Dock = DockStyle.Fill;
@@ -445,7 +445,7 @@ namespace AA2Trainer
             experienceTable.Margin = new Padding(0);
 
             sexExperienceCheck = new CheckBox();
-            sexExperienceCheck.Text = "Sex";
+            sexExperienceCheck.Text = "Vaginal";
             sexExperienceCheck.AutoSize = true;
             sexExperienceCheck.Anchor = AnchorStyles.Left;
             sexExperienceCheck.Font = new Font("Segoe UI", 9F);
@@ -534,15 +534,15 @@ namespace AA2Trainer
             tooltip.SetToolTip(clubGradeCombo, "Club grade: none, F through A.");
             tooltip.SetToolTip(victoryBox, "Victory count.");
             tooltip.SetToolTip(classSkipBox, "Classes skipped.");
-            tooltip.SetToolTip(winningOverBox, "Winning over count.");
+            tooltip.SetToolTip(winningOverBox, "Won over count.");
             tooltip.SetToolTip(partnerBox, "Partner count.");
             tooltip.SetToolTip(rejectedBox, "Rejected count.");
-            tooltip.SetToolTip(sexIntercourseBox, "H intercourse count.");
+            tooltip.SetToolTip(sexIntercourseBox, "H encounter count.");
             tooltip.SetToolTip(sexPartnerBox, "H partner count.");
-            tooltip.SetToolTip(firstTimeBox, "First time partner name (max 31 Shift-JIS bytes).");
+            tooltip.SetToolTip(firstTimeBox, "First partner name (max 31 Shift-JIS bytes).");
             tooltip.SetToolTip(firstAnalBox, "First anal partner name (max 31 Shift-JIS bytes).");
-            tooltip.SetToolTip(lastTimeBox, "Last time partner name (max 31 Shift-JIS bytes).");
-            tooltip.SetToolTip(sexExperienceCheck, "Sex experience flag.");
+            tooltip.SetToolTip(lastTimeBox, "Last partner name (max 31 Shift-JIS bytes).");
+            tooltip.SetToolTip(sexExperienceCheck, "Vaginal experience flag.");
             tooltip.SetToolTip(analExperienceCheck, "Anal experience flag.");
 
             UpdateGate();
@@ -719,6 +719,74 @@ namespace AA2Trainer
         {
             gateAllowed = allowed;
             UpdateGate();
+        }
+
+        /// <summary>
+        /// Applies the live Status / H History counters without touching the
+        /// editable identity fields. Skipped while the form has unsaved edits
+        /// or one of the status controls has focus, so a live tick cannot
+        /// overwrite typing.
+        /// </summary>
+        public void ApplyLiveStatus(LiveCharacterStatus status)
+        {
+            if (status == null || character == null || loadedPointer == 0) return;
+            if (status.Pointer != loadedPointer) return;
+            if (mem == null || !mem.IsAttached) return;
+            if (IsDirty) return;
+            if (StatusControlFocused()) return;
+
+            SetNumberIfChanged(victoryBox, status.VictoryCount);
+            SetNumberIfChanged(classSkipBox, status.ClassSkip);
+            SetNumberIfChanged(winningOverBox, status.WinningOver);
+            SetNumberIfChanged(partnerBox, status.Partner);
+            SetNumberIfChanged(rejectedBox, status.Rejected);
+            SetNumberIfChanged(sexIntercourseBox, status.SexIntercourse);
+            SetNumberIfChanged(sexPartnerBox, status.SexPartner);
+            SetChoiceIfChanged(academicGradeCombo, status.IntelligenceGrade);
+            SetChoiceIfChanged(strengthGradeCombo, status.StrengthGrade);
+            SetChoiceIfChanged(clubGradeCombo, status.ClubGrade);
+            SetNumberIfChanged(academicRankBox, status.IntelligenceTopRank);
+            SetNumberIfChanged(strengthRankBox, status.StrengthTopRank);
+            SetTextIfChanged(firstTimeBox, status.FirstTime);
+            SetTextIfChanged(firstAnalBox, status.FirstAnal);
+            SetTextIfChanged(lastTimeBox, status.LastTime);
+            SetCheckIfChanged(sexExperienceCheck, status.SexExperience);
+            SetCheckIfChanged(analExperienceCheck, status.AnalExperience);
+
+            loaded.VictoryCount = status.VictoryCount;
+            loaded.ClassSkip = status.ClassSkip;
+            loaded.WinningOver = status.WinningOver;
+            loaded.Partner = status.Partner;
+            loaded.Rejected = status.Rejected;
+            loaded.SexIntercourse = status.SexIntercourse;
+            loaded.SexPartner = status.SexPartner;
+            loaded.IntelligenceGrade = status.IntelligenceGrade;
+            loaded.StrengthGrade = status.StrengthGrade;
+            loaded.ClubGrade = status.ClubGrade;
+            loaded.IntelligenceTopRank = status.IntelligenceTopRank;
+            loaded.StrengthTopRank = status.StrengthTopRank;
+            loaded.FirstTime = status.FirstTime;
+            loaded.FirstAnal = status.FirstAnal;
+            loaded.LastTime = status.LastTime;
+            loaded.SexExperience = status.SexExperience;
+            loaded.AnalExperience = status.AnalExperience;
+        }
+
+        private bool StatusControlFocused()
+        {
+            Control[] controls = new Control[]
+            {
+                victoryBox, classSkipBox, winningOverBox, partnerBox, rejectedBox,
+                sexIntercourseBox, sexPartnerBox, academicGradeCombo,
+                strengthGradeCombo, clubGradeCombo, academicRankBox, strengthRankBox,
+                firstTimeBox, firstAnalBox, lastTimeBox, sexExperienceCheck,
+                analExperienceCheck
+            };
+            foreach (Control control in controls)
+            {
+                if (control != null && control.ContainsFocus) return true;
+            }
+            return false;
         }
 
         public void Clear()
@@ -1080,6 +1148,36 @@ namespace AA2Trainer
             if (value < min) value = min;
             if (value > max) value = max;
             box.Value = value;
+        }
+
+        private static void SetNumberIfChanged(NumericUpDown box, int value)
+        {
+            if (box == null) return;
+            int min = (int)box.Minimum;
+            int max = (int)box.Maximum;
+            if (value < min) value = min;
+            if (value > max) value = max;
+            if (box.Value != value) box.Value = value;
+        }
+
+        private static void SetTextIfChanged(TextBox box, string text)
+        {
+            if (box == null) return;
+            string value = text ?? "";
+            if (box.Text != value) box.Text = value;
+        }
+
+        private static void SetCheckIfChanged(CheckBox box, bool value)
+        {
+            if (box == null) return;
+            if (box.Checked != value) box.Checked = value;
+        }
+
+        private static void SetChoiceIfChanged(ComboBox combo, int value)
+        {
+            if (combo == null) return;
+            if (SelectedValue(combo, int.MinValue) == value) return;
+            SelectChoice(combo, value);
         }
 
         private static void SelectChoice(ComboBox combo, int value)

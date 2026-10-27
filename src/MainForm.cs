@@ -13,6 +13,7 @@ namespace AA2Trainer
         private readonly GameMemory mem = new GameMemory();
         private readonly GameContext ctx = new GameContext();
         private readonly NameMap names = new NameMap();
+        private readonly LiveReader liveReader;
 
         private GameProfile profile;
         private PointerHealth health;
@@ -40,7 +41,6 @@ namespace AA2Trainer
         private uint hoverPortraitPointer;
         private bool hoverPopupVisible;
 
-        private Label classLabel;
         private ListView seatList;
         private Font seatRowTextFont;
         private Font seatRowTextBoldFont;
@@ -69,6 +69,7 @@ namespace AA2Trainer
         private FaceControl face;
         private HairControl hair;
         private OutfitsControl outfits;
+        private OptionsControl optionsControl;
         private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
@@ -102,6 +103,7 @@ namespace AA2Trainer
         private bool resizeHiddenFace;
         private bool resizeHiddenHair;
         private bool resizeHiddenOutfits;
+        private bool resizeHiddenOptions;
         private bool resizeHiddenRoster;
         private bool resizeHiddenSaveViewer;
         private bool resizeHiddenDebugTabs;
@@ -140,12 +142,13 @@ namespace AA2Trainer
 
             BuildUi();
             KeyDown += MainForm_KeyDown;
+            liveReader = new LiveReader(mem);
 
             refreshTimer = new Timer();
             refreshTimer.Interval = 1000;
-            refreshTimer.Tick += delegate { AutoRefresh(); };
+            refreshTimer.Tick += delegate { FullRefresh(); };
 
-            // Keep the fail-safe gate current even when Auto 1s is off.
+            // Keep the fail-safe gate current even when Live refresh is off.
             healthTimer = new Timer();
             healthTimer.Interval = 15000;
             healthTimer.Tick += delegate
@@ -192,11 +195,25 @@ namespace AA2Trainer
                 HideHoverPortrait();
             };
 
-            Load += delegate { SetInitialLayout(); AttachAndRefresh(); };
+            if (optionsControl != null)
+            {
+                liveEnabled = optionsControl.LiveRefreshEnabled;
+                liveAuto = optionsControl.LiveIntervalAuto;
+                liveIntervalMs = optionsControl.LiveIntervalMs;
+            }
+
+            Load += delegate
+            {
+                SetInitialLayout();
+                AttachAndRefresh();
+                if (refreshTimer != null) refreshTimer.Enabled = liveEnabled;
+            };
             ResizeBegin += delegate { BeginInteractiveResize(); };
             ResizeEnd += delegate { EndInteractiveResize(); };
+            Resize += delegate { HandleMinimizeState(); };
             FormClosing += delegate
             {
+                ClearLiveState();
                 refreshTimer.Stop();
                 healthTimer.Stop();
                 filterTimer.Stop();
@@ -230,7 +247,7 @@ namespace AA2Trainer
             root.ColumnCount = 1;
             root.RowCount = 2;
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 78F));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             root.Controls.Add(BuildTopPanel(), 0, 0);
             root.Controls.Add(BuildMainArea(), 0, 1);
@@ -317,6 +334,11 @@ namespace AA2Trainer
                 resizeHiddenOutfits = true;
                 outfits.Visible = false;
             }
+            if (optionsControl != null && optionsControl.Visible)
+            {
+                resizeHiddenOptions = true;
+                optionsControl.Visible = false;
+            }
             if (roster != null && roster.Visible)
             {
                 resizeHiddenRoster = true;
@@ -390,6 +412,15 @@ namespace AA2Trainer
                     outfits.PerformLayout();
                 }
             }
+            if (resizeHiddenOptions)
+            {
+                resizeHiddenOptions = false;
+                if (optionsControl != null)
+                {
+                    optionsControl.Visible = true;
+                    optionsControl.PerformLayout();
+                }
+            }
             if (resizeHiddenRoster)
             {
                 resizeHiddenRoster = false;
@@ -424,78 +455,13 @@ namespace AA2Trainer
             TableLayoutPanel p = new TableLayoutPanel();
             p.Dock = DockStyle.Fill;
             p.Padding = new Padding(10, 4, 10, 4);
-            p.ColumnCount = 1;
-            p.RowCount = 2;
+            p.ColumnCount = 2;
+            p.RowCount = 1;
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32F));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             p.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-            p.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
-            p.Controls.Add(BuildScheduleRow(), 0, 0);
-            p.Controls.Add(BuildActionsRow(), 0, 1);
-            return p;
-        }
-
-        private Control BuildActionsRow()
-        {
-            TableLayoutPanel p = new TableLayoutPanel();
-            p.Dock = DockStyle.Fill;
-            p.Margin = new Padding(0);
-            p.Padding = new Padding(0);
-            p.ColumnCount = 7;
-            p.RowCount = 1;
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 86F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 12F));
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            p.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            Button refresh = new Button();
-            refresh.Text = "Refresh";
-            refresh.Dock = DockStyle.Fill;
-            refresh.Click += delegate
-            {
-                DiscardScheduleEdits();
-                AttachAndRefresh();
-            };
-            p.Controls.Add(refresh, 0, 0);
-
-            Button recheck = new Button();
-            recheck.Text = "Recheck";
-            recheck.Dock = DockStyle.Fill;
-            recheck.Click += delegate { RunHealthCheck(); };
-            p.Controls.Add(recheck, 1, 0);
-
-            Button details = new Button();
-            details.Text = "Details";
-            details.Dock = DockStyle.Fill;
-            details.Click += delegate { ShowHealthDetails(); };
-            p.Controls.Add(details, 2, 0);
-
-            CheckBox auto = new CheckBox();
-            auto.Text = "Auto 1s";
-            auto.Dock = DockStyle.Fill;
-            auto.CheckedChanged += delegate { refreshTimer.Enabled = auto.Checked; };
-            p.Controls.Add(auto, 3, 0);
-
-            Button reloadNames = new Button();
-            reloadNames.Text = "Reload names";
-            reloadNames.Dock = DockStyle.Fill;
-            reloadNames.Click += delegate { ReloadNames(); };
-            p.Controls.Add(reloadNames, 4, 0);
-
-            classLabel = new Label();
-            classLabel.Dock = DockStyle.Fill;
-            classLabel.AutoSize = false;
-            classLabel.AutoEllipsis = true;
-            classLabel.UseMnemonic = false;
-            classLabel.TextAlign = ContentAlignment.MiddleLeft;
-            classLabel.ForeColor = Color.DimGray;
-            classLabel.Margin = new Padding(0);
-            classLabel.Text = "Class: -";
-            p.Controls.Add(classLabel, 6, 0);
-
+            p.Controls.Add(BuildScheduleRow(), 1, 0);
+            p.Controls.Add(BuildAttachButton(), 0, 0);
             return p;
         }
 
@@ -608,11 +574,16 @@ namespace AA2Trainer
             tabs = new TabControl();
             tabs.Dock = DockStyle.Fill;
             tabs.Padding = new Point(12, 6);
-            tabs.SelectedIndexChanged += delegate { RefreshCurrentTabValues(); };
+            tabs.SelectedIndexChanged += delegate
+            {
+                RefreshCurrentTabValues();
+                UpdateLiveState();
+            };
 
             tabs.TabPages.Add(BuildRosterTab());
             tabs.TabPages.Add(BuildCharacterEditorTab());
             tabs.TabPages.Add(BuildSaveViewerTab());
+            tabs.TabPages.Add(BuildOptionTab());
             tabs.TabPages.Add(BuildDebugTab());
 
             // The roster is the landing page.
@@ -840,6 +811,7 @@ namespace AA2Trainer
             if (face != null) face.SetWriteAllowed(writesAllowed);
             if (hair != null) hair.SetWriteAllowed(writesAllowed);
             if (outfits != null) outfits.SetWriteAllowed(writesAllowed);
+            if (optionsControl != null) optionsControl.SetWriteAllowed(writesAllowed);
             UpdateScheduleGate();
         }
 
@@ -855,6 +827,7 @@ namespace AA2Trainer
 
         private void AttachAndRefresh()
         {
+            StopLiveReader();
             EnsureNamesLoaded();
             if (!mem.IsAttached)
             {
@@ -866,6 +839,7 @@ namespace AA2Trainer
             }
             if (!TryRefreshContext())
             {
+                StopLiveReader();
                 mem.Detach();
                 ShowNotAttached("Class data is not loaded.");
                 return;
@@ -880,6 +854,8 @@ namespace AA2Trainer
             UpdateOverview();
             RefreshCurrentTabValues();
             SetSummary();
+            PublishLiveRoster();
+            UpdateLiveState();
         }
 
         private bool TryRefreshContext()
@@ -896,8 +872,10 @@ namespace AA2Trainer
             }
         }
 
-        private void AutoRefresh()
+        private void FullRefresh()
         {
+            if (WindowState == FormWindowState.Minimized) return;
+
             EnsureNamesLoaded();
             if (!mem.IsAttached)
             {
@@ -908,42 +886,53 @@ namespace AA2Trainer
                 }
                 if (!TryRefreshContext())
                 {
+                    StopLiveReader();
                     mem.Detach();
                     ShowNotAttached("Class data is not loaded.");
                     return;
                 }
                 EnsureNamesLoaded();
                 UpdateSelectedGender();
-                RefreshSaveViewer();
                 MaybeRunHealthCheck();
                 PopulateSeats();
                 BuildAllDefinitions();
                 UpdateOverview();
                 RefreshCurrentTabValues();
                 SetSummary();
+                PublishLiveRoster();
+                if (liveTimer == null) UpdateLiveState();
                 return;
             }
 
             if (!TryRefreshContext())
             {
+                StopLiveReader();
                 mem.Detach();
                 ShowNotAttached("Class data is not loaded.");
                 return;
             }
             EnsureNamesLoaded();
             UpdateSelectedGender();
-            RefreshSaveViewer();
             MaybeRunHealthCheck();
             PopulateSeats();
-            UpdateOverview();
             RefreshCurrentTabValues();
             SetSummary();
+            PublishLiveRoster();
+            if (liveTimer == null) UpdateLiveState();
         }
 
         private void ShowNotAttached(string reason)
         {
+            StopLiveReader();
+            livePending = null;
+            liveAppliedSequence = 0;
+            if (liveReader != null)
+            {
+                liveReader.Clear();
+                liveGeneration = liveReader.Generation;
+            }
+
             UpdateWindowTitle();
-            classLabel.Text = "Class: -";
             seatList.Items.Clear();
             if (roster != null) roster.Clear();
             if (characterData != null) characterData.Clear();
@@ -952,6 +941,7 @@ namespace AA2Trainer
             if (face != null) face.Clear();
             if (hair != null) hair.Clear();
             if (outfits != null) outfits.Clear();
+            if (optionsControl != null) optionsControl.Clear();
             lastSeatSignature = null;
             profile = null;
             health = null;
@@ -965,7 +955,7 @@ namespace AA2Trainer
             RefreshSaveViewer();
         }
 
-        private void RefreshCurrentTabValues()
+        private void RefreshCurrentTabValues(LiveSnapshot live = null)
         {
             if (tabs == null) return;
             if (!mem.IsAttached || ctx.Selected == null)
@@ -977,13 +967,23 @@ namespace AA2Trainer
                 if (face != null) face.Clear();
                 if (hair != null) hair.Clear();
                 if (outfits != null) outfits.Clear();
+                if (optionsControl != null) optionsControl.Clear();
                 return;
             }
+
+            // The roster can use one cheap raw snapshot instead of evaluating
+            // every action/target definition chain. Other tabs do not need it.
+            if (live == null && tabs.SelectedIndex == 0 && liveReader != null)
+            {
+                PublishLiveRoster();
+                live = liveReader.Read();
+            }
+
             switch (tabs.SelectedIndex)
             {
                 case 0:
                     if (roster != null)
-                        roster.RefreshRoster(mem, ctx, ctx.Selected, names);
+                        roster.RefreshRoster(mem, ctx, ctx.Selected, names, live);
                     break;
                 case 1:
                     if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 0 &&
@@ -1033,12 +1033,17 @@ namespace AA2Trainer
                 case 2:
                     if (saveViewer != null)
                     {
+                        RefreshSaveViewer();
                         saveViewer.SetGameRoot(GetGameRoot());
                         saveViewer.SetLiveCharacters(ctx.Characters);
                         if (ctx.Selected != null) saveViewer.SetSelectedSeat(ctx.Selected.Seat);
                     }
                     break;
                 case 3:
+                    if (optionsControl != null)
+                        optionsControl.SetTarget(mem, ctx, writesAllowed);
+                    break;
+                case 4:
                     RefreshDebugTabValues();
                     break;
             }
@@ -1057,6 +1062,7 @@ namespace AA2Trainer
         {
             string title = mem.IsAttached ? AppTitle + " - " + GameExeName() : DetachedTitle;
             if (Text != title) Text = title;
+            UpdateAttachButton();
         }
 
         private void SetSummary()
@@ -1071,10 +1077,6 @@ namespace AA2Trainer
             string className = DashboardData.Value(mem, ctx, "ClassName", 0).Trim('"');
             SetSummaryText("Class: " + className + "   |   " + ctx.Characters.Count +
                            " characters   |   selected: " + ctx.SelectedName);
-            if (classLabel != null)
-                classLabel.Text = "Class: " + className + "   |   save: " +
-                    DashboardData.Value(mem, ctx, "SaveName", 0).Trim('"') +
-                    "   |   " + ctx.Characters.Count + " loaded";
             if (updatedLabel != null)
                 updatedLabel.Text = "Updated " + DateTime.Now.ToString("HH:mm:ss");
         }

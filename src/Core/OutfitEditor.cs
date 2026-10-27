@@ -223,7 +223,7 @@ namespace AA2Trainer
                     {
                         if (relative + 4 > SetSize)
                         {
-                            error = "The outfit colours are unreadable.";
+                            error = "The outfit colors are unreadable.";
                             return false;
                         }
                         values[i] = (BitConverter.ToInt32(bytes, relative) & 0x00FFFFFF) |
@@ -354,7 +354,7 @@ namespace AA2Trainer
         private static string Describe(OutfitFieldDef def)
         {
             string label = def.Label.ToLowerInvariant();
-            if (def.Kind == OutfitFieldKind.Color) return label + " colour";
+            if (def.Kind == OutfitFieldKind.Color) return label + " color";
             if (def.Kind == OutfitFieldKind.Opacity) return label + " opacity";
             return label;
         }

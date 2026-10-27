@@ -129,7 +129,7 @@ namespace AA2Trainer
                 {
                     if (offset + 4 > bytes.Length)
                     {
-                        error = "The hair colour is unreadable.";
+                        error = "The hair color is unreadable.";
                         return false;
                     }
                     // The game stores opaque colours; normalising the alpha
@@ -234,7 +234,7 @@ namespace AA2Trainer
             {
                 case HairGroup.Style: return "Style";
                 case HairGroup.Length: return "Length";
-                case HairGroup.Color: return "Colour";
+                case HairGroup.Color: return "Color";
                 default: return "Flip";
             }
         }

@@ -29,10 +29,10 @@ ACTION_KEY	25	Have Lunch Together
 ACTION_KEY	26	Take a Break Together
 ACTION_KEY	27	Go Home Together
 ACTION_KEY	28	Go Have Fun Together
-ACTION_KEY	29	Go Eat Out together
+ACTION_KEY	29	Go Eat Out Together
 ACTION_KEY	30	Go Sing Together
 ACTION_KEY	31	Study at Home Together
-ACTION_KEY	32	Study at Home Together (Sex?)
+ACTION_KEY	32	Study at Home Together (H?)
 ACTION_KEY	33	Insult
 ACTION_KEY	34	Pick a Fight
 ACTION_KEY	35	Tell to Ignore...
@@ -51,7 +51,7 @@ ACTION_KEY	47	Grope
 ACTION_KEY	48	Have Sex
 ACTION_KEY	49	Come With Me
 ACTION_KEY	50	Go Away
-ACTION_KEY	51	Meet me At...
+ACTION_KEY	51	Meet Me At...
 ACTION_KEY	52	It's Nothing
 ACTION_KEY	53	Let's All Study
 ACTION_KEY	54	Let's All Train
@@ -69,9 +69,9 @@ ACTION_KEY	65	Break up the Fight
 ACTION_KEY	66	Interrupt Sex
 ACTION_KEY	67	Warn about Sex
 ACTION_KEY	68	Have a Threesome
-ACTION_KEY	69	Massage me, Please
-ACTION_KEY	70	Kiss me, Please
-ACTION_KEY	71	Hug me, Please
+ACTION_KEY	69	Massage me, please
+ACTION_KEY	70	Kiss me, please
+ACTION_KEY	71	Hug me, please
 ACTION_KEY	72	Suggest to skip out (Without Sex)
 ACTION_KEY	73	Suggest to skip out (With Sex)
 ACTION_KEY	74	Suggest to skip out (Wake-up Sex)
@@ -82,7 +82,7 @@ ACTION_KEY	78	Let's Trade
 ACTION_KEY	79	Offer Lewd Promise
 ACTION_KEY	80	Reward Lewd Promise
 ACTION_KEY	81	TogEtHeR FOrEVeR
-ACTION_KEY	82	We're having sex (forcibly?)
+ACTION_KEY	82	We're having sex (force)
 ACTION_KEY	83	Slap
 ACTION_KEY	84	Good Morning Kiss
 ACTION_KEY	85	Goodbye Kiss
@@ -96,9 +96,9 @@ ACTION_KEY	92	Notice of impending Murder
 ACTION_KEY	93	Apparently someone likes you
 ACTION_KEY	94	Someone was confessed to
 ACTION_KEY	95	Someone went on a date
-ACTION_KEY	96	Someonw had sex
+ACTION_KEY	96	Someone had sex
 ACTION_KEY	97	I don't want you to get near...
-ACTION_KEY	98	Serves you right (Won fight?)
+ACTION_KEY	98	Serves you right
 ACTION_KEY	99	Daily sex
 ACTION_KEY	102	Follow me (Sex)
 ACTION_KEY	103	Date Greeting
@@ -264,7 +264,7 @@ LOCATION	12	Rooftop Access
 LOCATION	13	Old Building 1st Floor
 LOCATION	14	Old Building 2nd Floor
 LOCATION	15	Old Building 3rd Floor
-LOCATION	16	Teachers' lounge
+LOCATION	16	Teachers' Lounge
 LOCATION	17	Infirmary
 LOCATION	18	Library
 LOCATION	19	Classroom
@@ -394,7 +394,7 @@ TEST_TYPE	1	Physical
 TEST_TYPE	2	Club
 WEEKDAY	0	Sunday
 WEEKDAY	1	Monday
-WEEKDAY	2	Tueday
+WEEKDAY	2	Tuesday
 WEEKDAY	3	Wednesday
 WEEKDAY	4	Thursday
 WEEKDAY	5	Friday

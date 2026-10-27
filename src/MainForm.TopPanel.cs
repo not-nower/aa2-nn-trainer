@@ -18,6 +18,7 @@ namespace AA2Trainer
         private NumericUpDown scheduleClass;
         private Label scheduleSaveName;
         private Button scheduleApply;
+        private Button attachButton;
 
         private Font scheduleFont;
         private ToolTip scheduleTips;
@@ -36,7 +37,7 @@ namespace AA2Trainer
             p.Dock = DockStyle.Fill;
             p.Margin = new Padding(0);
             p.Padding = new Padding(0);
-            p.ColumnCount = 21;
+            p.ColumnCount = 23;
             p.RowCount = 1;
             p.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
@@ -47,23 +48,25 @@ namespace AA2Trainer
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 64F));   // week
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112F));  // period
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 11F));   // |
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 92F));   // freeze
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 34F));   // Time
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 44F));   // duration
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 42F));   // minute
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 6F));    // :
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 42F));   // second
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 42F));   // duration
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 5F));    // |
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 40F));   // minute
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 10F));   // :
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 40F));   // second
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 18F));   // freeze check
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 56F));   // Freeze
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 11F));   // |
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 58F));   // Academy
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84F));   // academy value
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32F));   // Year
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 38F));   // year value
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 44F));   // Class
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 38F));   // class value
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));   // academy value
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 34F));   // Year
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36F));   // year value
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 40F));   // Class
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36F));   // class value
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 11F));   // |
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 36F));   // Save:
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));   // save name
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54F));   // Apply
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52F));   // Apply
 
             scheduleTips = new ToolTip();
             scheduleTips.AutoPopDelay = 10000;
@@ -107,40 +110,33 @@ namespace AA2Trainer
 
             p.Controls.Add(ScheduleSeparator(), 3, 0);
 
-            scheduleFreeze = new CheckBox();
-            scheduleFreeze.Text = "Freeze Time";
-            scheduleFreeze.AutoSize = false;
-            scheduleFreeze.Dock = DockStyle.Fill;
-            scheduleFreeze.CheckAlign = ContentAlignment.MiddleLeft;
-            scheduleFreeze.TextAlign = ContentAlignment.MiddleLeft;
-            scheduleFreeze.Margin = new Padding(4, 0, 2, 0);
-            scheduleFreeze.CheckedChanged += ScheduleFreezeChanged;
-            scheduleTips.SetToolTip(scheduleFreeze,
-                "Pin the current period time at the displayed minute:second.");
-            p.Controls.Add(scheduleFreeze, 4, 0);
-
             Label timeCaption = ScheduleCaption("Time");
             timeCaption.Margin = new Padding(2, 0, 0, 0);
             scheduleTips.SetToolTip(timeCaption,
                 "Current period timer. Minute:Second is the elapsed time in the current period.");
-            p.Controls.Add(timeCaption, 5, 0);
+            p.Controls.Add(timeCaption, 4, 0);
 
             scheduleDuration = ScheduleNumber(ScheduleEditor.MinDuration,
                 ScheduleEditor.MaxDuration);
             scheduleDuration.Margin = new Padding(2, 5, 2, 5);
             scheduleDuration.ValueChanged += ScheduleEdited;
             scheduleTips.SetToolTip(scheduleDuration,
-                "Period Duration (minutes).\n" +
+                "Period Duration (1 - 60 minutes).\n" +
                 "How long the selected period lasts before the game advances.");
-            p.Controls.Add(scheduleDuration, 6, 0);
+            p.Controls.Add(scheduleDuration, 5, 0);
 
-            scheduleMinute = ScheduleNumber(0, 999);
+            Panel durationSeparator = ScheduleSeparator();
+            durationSeparator.Margin = new Padding(2, 5, 2, 5);
+            p.Controls.Add(durationSeparator, 6, 0);
+
+            scheduleMinute = ScheduleNumber(0, 59);
             scheduleMinute.Margin = new Padding(2, 5, 2, 5);
             scheduleMinute.ValueChanged += ScheduleEdited;
             scheduleTips.SetToolTip(scheduleMinute, "Time - minutes in the current period");
             p.Controls.Add(scheduleMinute, 7, 0);
 
             Label colon = ScheduleCaption(":");
+            colon.AutoEllipsis = false;
             colon.TextAlign = ContentAlignment.MiddleCenter;
             colon.Margin = new Padding(0);
             p.Controls.Add(colon, 8, 0);
@@ -151,10 +147,33 @@ namespace AA2Trainer
             scheduleTips.SetToolTip(scheduleSecond, "Time - seconds in the current period");
             p.Controls.Add(scheduleSecond, 9, 0);
 
-            p.Controls.Add(ScheduleSeparator(), 10, 0);
+            scheduleDuration.ValueChanged += delegate { UpdateTimeMinuteLimit(); };
+            UpdateTimeMinuteLimit();
+
+            scheduleFreeze = new CheckBox();
+            scheduleFreeze.Text = "";
+            scheduleFreeze.AccessibleName = "Freeze Time";
+            scheduleFreeze.AutoSize = false;
+            scheduleFreeze.Dock = DockStyle.Fill;
+            scheduleFreeze.CheckAlign = ContentAlignment.MiddleLeft;
+            scheduleFreeze.Margin = new Padding(4, 0, 0, 0);
+            scheduleFreeze.CheckedChanged += ScheduleFreezeChanged;
+            scheduleTips.SetToolTip(scheduleFreeze,
+                "Freeze Time: pin the current period time at the displayed minute:second.");
+            p.Controls.Add(scheduleFreeze, 10, 0);
+
+            Label freezeCaption = ScheduleCaption("Freeze");
+            freezeCaption.Cursor = Cursors.Hand;
+            freezeCaption.Click += delegate
+            {
+                if (scheduleFreeze.Enabled) scheduleFreeze.Checked = !scheduleFreeze.Checked;
+            };
+            p.Controls.Add(freezeCaption, 11, 0);
+
+            p.Controls.Add(ScheduleSeparator(), 12, 0);
 
             Label academyCaption = ScheduleCaption("Academy");
-            p.Controls.Add(academyCaption, 11, 0);
+            p.Controls.Add(academyCaption, 13, 0);
 
             scheduleAcademy = new TextBox();
             scheduleAcademy.Dock = DockStyle.Fill;
@@ -162,31 +181,31 @@ namespace AA2Trainer
             scheduleAcademy.TextChanged += ScheduleEdited;
             scheduleTips.SetToolTip(scheduleAcademy,
                 "Academy name. The game stores up to 63 Shift-JIS bytes.");
-            p.Controls.Add(scheduleAcademy, 12, 0);
+            p.Controls.Add(scheduleAcademy, 14, 0);
 
             Label yearCaption = ScheduleCaption("Year");
-            p.Controls.Add(yearCaption, 13, 0);
+            p.Controls.Add(yearCaption, 15, 0);
 
             scheduleYear = ScheduleDigit();
             scheduleYear.Margin = new Padding(2, 5, 2, 5);
             scheduleYear.ValueChanged += ScheduleEdited;
             scheduleTips.SetToolTip(scheduleYear, "Year (single digit)");
-            p.Controls.Add(scheduleYear, 14, 0);
+            p.Controls.Add(scheduleYear, 16, 0);
 
             Label classCaption = ScheduleCaption("Class");
-            p.Controls.Add(classCaption, 15, 0);
+            p.Controls.Add(classCaption, 17, 0);
 
             scheduleClass = ScheduleDigit();
             scheduleClass.Margin = new Padding(2, 5, 2, 5);
             scheduleClass.ValueChanged += ScheduleEdited;
             scheduleTips.SetToolTip(scheduleClass, "Class (single digit)");
-            p.Controls.Add(scheduleClass, 16, 0);
+            p.Controls.Add(scheduleClass, 18, 0);
 
-            p.Controls.Add(ScheduleSeparator(), 17, 0);
+            p.Controls.Add(ScheduleSeparator(), 19, 0);
 
             Label saveCaption = ScheduleCaption("Save:");
             saveCaption.Margin = new Padding(2, 0, 0, 0);
-            p.Controls.Add(saveCaption, 18, 0);
+            p.Controls.Add(saveCaption, 20, 0);
 
             scheduleSaveName = new Label();
             scheduleSaveName.AutoSize = false;
@@ -200,22 +219,24 @@ namespace AA2Trainer
             scheduleSaveName.Padding = new Padding(2, 0, 2, 0);
             scheduleSaveName.UseMnemonic = false;
             scheduleSaveName.Text = "-";
-            p.Controls.Add(scheduleSaveName, 19, 0);
+            p.Controls.Add(scheduleSaveName, 21, 0);
 
             scheduleApply = new Button();
-            scheduleApply.Text = "Apply";
+            scheduleApply.Text = "\u2714";
+            scheduleApply.Font = new Font("Segoe UI Symbol", 11F, FontStyle.Bold);
+            scheduleApply.AccessibleName = "Apply schedule";
             scheduleApply.Dock = DockStyle.Fill;
             scheduleApply.Margin = new Padding(2, 3, 2, 3);
             scheduleApply.Click += ScheduleApply_Click;
             scheduleTips.SetToolTip(scheduleApply,
                 "Write the changed schedule and class fields.");
-            p.Controls.Add(scheduleApply, 20, 0);
+            p.Controls.Add(scheduleApply, 22, 0);
 
             scheduleFreezeTimer = new Timer();
             scheduleFreezeTimer.Interval = 250;
             scheduleFreezeTimer.Tick += delegate { ScheduleFreezeTick(); };
 
-            // The schedule/time header stays live even when the heavier Auto 1s
+            // The schedule/time header stays live even when the heavier Live
             // refresh is off.
             scheduleClockTimer = new Timer();
             scheduleClockTimer.Interval = 1000;
@@ -277,6 +298,7 @@ namespace AA2Trainer
 
             if (ReferenceEquals(sender, schedulePeriod))
                 ReloadSelectedPeriodDuration();
+            UpdateScheduleGate();
         }
 
         private void ReloadSelectedPeriodDuration()
@@ -348,11 +370,14 @@ namespace AA2Trainer
                     schedulePeriod.Items.Count - 1);
                 scheduleDuration.Value = Clamp(snapshot.PeriodDuration,
                     ScheduleEditor.MinDuration, ScheduleEditor.MaxDuration);
+                UpdateTimeMinuteLimit();
                 if (updateTime)
                 {
-                    int seconds = Math.Min(59999,
+                    int maxSeconds = Math.Max(0,
+                        (int)scheduleDuration.Value * 60 - 1);
+                    int seconds = Math.Min(maxSeconds,
                         Math.Max(0, snapshot.TimeMilliseconds / 1000));
-                    scheduleMinute.Value = Math.Min(999, seconds / 60);
+                    scheduleMinute.Value = seconds / 60;
                     scheduleSecond.Value = seconds % 60;
                 }
                 scheduleAcademy.Text = snapshot.Academy ?? "";
@@ -380,6 +405,7 @@ namespace AA2Trainer
                 scheduleWeek.SelectedIndex = -1;
                 schedulePeriod.SelectedIndex = -1;
                 scheduleDuration.Value = 60;
+                UpdateTimeMinuteLimit();
                 scheduleMinute.Value = 0;
                 scheduleSecond.Value = 0;
                 scheduleAcademy.Text = "";
@@ -399,6 +425,7 @@ namespace AA2Trainer
         private void DiscardScheduleEdits()
         {
             scheduleDirty = false;
+            UpdateScheduleGate();
         }
 
         private ScheduleSnapshot ReadScheduleControls()
@@ -600,7 +627,8 @@ namespace AA2Trainer
             int totalSeconds = (int)scheduleMinute.Value * 60 +
                 (int)scheduleSecond.Value;
             if (totalSeconds < 0) return 0;
-            if (totalSeconds > 59999) return ScheduleEditor.MaxTimeMilliseconds;
+            if (totalSeconds > ScheduleEditor.MaxTimeMilliseconds / 1000)
+                return ScheduleEditor.MaxTimeMilliseconds;
 
             if (preserveFraction && scheduleLoaded != null &&
                 totalSeconds == scheduleLoaded.TimeMilliseconds / 1000)
@@ -616,6 +644,66 @@ namespace AA2Trainer
             if (scheduleWeek != null && scheduleWeek.DroppedDown) return true;
             if (schedulePeriod != null && schedulePeriod.DroppedDown) return true;
             return false;
+        }
+
+        private void UpdateTimeMinuteLimit()
+        {
+            if (scheduleDuration == null || scheduleMinute == null) return;
+
+            int maximum = Math.Max(0, (int)scheduleDuration.Value - 1);
+            scheduleMinute.Maximum = maximum;
+            if (scheduleMinute.Value > maximum)
+                scheduleMinute.Value = maximum;
+        }
+
+        private Control BuildAttachButton()
+        {
+            Button button = new Button();
+            button.Text = "\u21BB";
+            button.Font = new Font("Segoe UI Symbol", 12F);
+            button.TextAlign = ContentAlignment.MiddleCenter;
+            button.ForeColor = Color.DarkOrange;
+            button.Cursor = Cursors.Hand;
+            button.Dock = DockStyle.Fill;
+            button.Margin = new Padding(0, 4, 4, 4);
+            button.AccessibleName = "Attach to the game";
+            button.Click += delegate { AttachOrRefresh(); };
+            attachButton = button;
+
+            if (scheduleTips != null)
+                scheduleTips.SetToolTip(button, "Attach to the game.");
+            return button;
+        }
+
+        private void AttachOrRefresh()
+        {
+            if (attachButton == null) return;
+
+            Cursor previous = Cursor;
+            attachButton.Enabled = false;
+            Cursor = Cursors.WaitCursor;
+            try
+            {
+                AttachAndRefresh();
+            }
+            finally
+            {
+                Cursor = previous;
+                attachButton.Enabled = true;
+                UpdateAttachButton();
+            }
+        }
+
+        private void UpdateAttachButton()
+        {
+            if (attachButton == null) return;
+
+            bool attached = mem != null && mem.IsAttached;
+            attachButton.ForeColor = attached ? SystemColors.ControlText : Color.DarkOrange;
+            attachButton.AccessibleName = attached ? "Refresh game data" : "Attach to the game";
+            if (scheduleTips != null)
+                scheduleTips.SetToolTip(attachButton,
+                    attached ? "Refresh game data." : "Attach to the game.");
         }
 
         private void UpdateScheduleGate()
@@ -638,11 +726,15 @@ namespace AA2Trainer
             scheduleYear.Enabled = hasData;
             scheduleClass.Enabled = hasData;
             scheduleFreeze.Enabled = hasData && canWrite;
-            scheduleApply.Enabled = hasData && canWrite;
+            scheduleApply.Enabled = hasData && canWrite && scheduleDirty;
 
-            string tip = canWrite
-                ? "Write the changed schedule and class fields."
-                : "The fail-safe write gate is locked until all pointer checks pass.";
+            string tip;
+            if (!canWrite)
+                tip = "The fail-safe write gate is locked until all pointer checks pass.";
+            else if (!scheduleDirty)
+                tip = "No schedule changes to apply.";
+            else
+                tip = "Write the changed schedule and class fields.";
             scheduleTips.SetToolTip(scheduleApply, tip);
         }
 

@@ -276,7 +276,7 @@ namespace AA2Trainer
                 table.RowStyles.Add(new RowStyle(SizeType.Absolute, RowHeight));
 
                 Label colorLabel = new Label();
-                colorLabel.Text = "Hair colour";
+                colorLabel.Text = "Hair color";
                 colorLabel.Dock = DockStyle.Fill;
                 colorLabel.TextAlign = ContentAlignment.MiddleLeft;
                 colorLabel.Margin = new Padding(0);

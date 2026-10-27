@@ -300,6 +300,7 @@ namespace AA2Trainer
             if (info == null) return;
             HideHoverPortrait();
             ctx.Select(mem, info);
+            PublishLiveRoster();
             UpdateSelectedGender();
             MaybeRunHealthCheck();
             UpdateOverview();

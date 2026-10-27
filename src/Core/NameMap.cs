@@ -76,7 +76,7 @@ namespace AA2Trainer
 
             string source = embeddedLoaded ? "embedded" : "no baseline";
             if (FileCount > 0)
-                source += " + " + FileCount.ToString() + " root file" + (FileCount == 1 ? "" : "s");
+                source += " + " + FileCount.ToString() + " XML file" + (FileCount == 1 ? "" : "s");
             StatusText = source + " / " + EntryCount.ToString() + " names";
             if (errors.Count > 0) StatusText += " / " + errors.Count.ToString() + " error" +
                                                  (errors.Count == 1 ? "" : "s");

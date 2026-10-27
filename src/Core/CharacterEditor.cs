@@ -501,7 +501,7 @@ namespace AA2Trainer
             }
             if (firstTimeChanged && HasControlCharacters(historyFirst))
             {
-                error = "First time cannot contain tabs, newlines, or other control characters.";
+                error = "First partner cannot contain tabs, newlines, or other control characters.";
                 return false;
             }
             if (firstAnalChanged && HasControlCharacters(historyFirstAnal))
@@ -511,7 +511,7 @@ namespace AA2Trainer
             }
             if (lastTimeChanged && HasControlCharacters(historyLast))
             {
-                error = "Last time cannot contain tabs, newlines, or other control characters.";
+                error = "Last partner cannot contain tabs, newlines, or other control characters.";
                 return false;
             }
 
@@ -532,7 +532,7 @@ namespace AA2Trainer
                 !TryEncode(profileText, "Profile", ProfileMaxBytes, out profileBytes, out error))
                 return false;
             if (firstTimeChanged &&
-                !TryEncode(historyFirst, "First time", HHistoryMaxBytes,
+                !TryEncode(historyFirst, "First partner", HHistoryMaxBytes,
                     out firstTimeBytes, out error))
                 return false;
             if (firstAnalChanged &&
@@ -540,7 +540,7 @@ namespace AA2Trainer
                     out firstAnalBytes, out error))
                 return false;
             if (lastTimeChanged &&
-                !TryEncode(historyLast, "Last time", HHistoryMaxBytes,
+                !TryEncode(historyLast, "Last partner", HHistoryMaxBytes,
                     out lastTimeBytes, out error))
                 return false;
 
@@ -738,51 +738,51 @@ namespace AA2Trainer
             if (classSkipChanged)
             {
                 if (!MemoryWriter.TryWriteInt32(mem, statusPointer + ClassSkipStatusOffset,
-                        classSkip, "Class skip", out error))
+                        classSkip, "Classes skipped", out error))
                     return Partial(written, error, out changed);
-                written.Add("class skip");
+                written.Add("classes skipped");
             }
             if (winningOverChanged)
             {
                 if (!MemoryWriter.TryWriteInt32(mem, statusPointer + WinningOverStatusOffset,
-                        winningOver, "Winning over", out error))
+                        winningOver, "Won over", out error))
                     return Partial(written, error, out changed);
-                written.Add("winning over");
+                written.Add("won over");
             }
             if (partnerChanged)
             {
                 if (!MemoryWriter.TryWriteInt32(mem, statusPointer + PartnerStatusOffset,
-                        partner, "Partner", out error))
+                        partner, "Partners", out error))
                     return Partial(written, error, out changed);
-                written.Add("partner");
+                written.Add("partners");
             }
             if (rejectedChanged)
             {
                 if (!MemoryWriter.TryWriteInt32(mem, statusPointer + RejectedStatusOffset,
-                        rejected, "Rejected", out error))
+                        rejected, "Rejections", out error))
                     return Partial(written, error, out changed);
-                written.Add("rejected");
+                written.Add("rejections");
             }
             if (sexIntercourseChanged)
             {
                 if (!MemoryWriter.TryWriteInt32(mem, statusPointer + SexIntercourseStatusOffset,
-                        sexIntercourse, "H intercourse", out error))
+                        sexIntercourse, "H encounters", out error))
                     return Partial(written, error, out changed);
-                written.Add("H intercourse");
+                written.Add("H encounters");
             }
             if (sexPartnerChanged)
             {
                 if (!MemoryWriter.TryWriteInt32(mem, statusPointer + SexPartnerStatusOffset,
-                        sexPartner, "H partner", out error))
+                        sexPartner, "H partners", out error))
                     return Partial(written, error, out changed);
-                written.Add("H partner");
+                written.Add("H partners");
             }
             if (firstTimeChanged)
             {
                 if (!WriteText(mem, statusPointer + FirstTimeStatusOffset, firstTimeBytes,
-                        HHistoryFieldSize, "First time", out error))
+                        HHistoryFieldSize, "First partner", out error))
                     return Partial(written, error, out changed);
-                written.Add("first time");
+                written.Add("first partner");
             }
             if (firstAnalChanged)
             {
@@ -794,16 +794,16 @@ namespace AA2Trainer
             if (lastTimeChanged)
             {
                 if (!WriteText(mem, statusPointer + LastTimeStatusOffset, lastTimeBytes,
-                        HHistoryFieldSize, "Last time", out error))
+                        HHistoryFieldSize, "Last partner", out error))
                     return Partial(written, error, out changed);
-                written.Add("last time");
+                written.Add("last partner");
             }
             if (sexExperienceChanged)
             {
                 if (!MemoryWriter.TryWriteByte(mem, characterData + SexExperienceOffset,
-                        sexExperience ? (byte)1 : (byte)0, "Sex experience", out error))
+                        sexExperience ? (byte)1 : (byte)0, "Vaginal experience", out error))
                     return Partial(written, error, out changed);
-                written.Add("sex experience");
+                written.Add("vaginal experience");
             }
             if (analExperienceChanged)
             {

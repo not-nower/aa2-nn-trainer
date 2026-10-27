@@ -10,10 +10,10 @@ Tsundare	- Lower success rate for touch and affectionate commands? (Success rate
 Chivalrous	- Easier to raise like points.\n- Higher success rate for 'suggestion' and 'good deed' commands.\n- Higher utilization of insulting and violent commands against disliked characters.
 Trendy	- Higher success rate when interacting with popular characters.
 Obedient	- Higher success rate for commands such as confessions, but also insulting and complaining.
-Positive	- Resistant to depressed moods.\n- Higher success rate for encouraging commands? (When recovering [?])
+Positive	- Resistant to depressed moods.\n- Higher success rate for encouraging commands.
 Shy	- Hates seeing others engaging in physical affection or public sex.\n- Lower chance to ask others on dates.
 Jealous	- Higher chance to interrupt conversations and contest public sex.
-Melancholy	- Susceptible to depressed moods. Becomes depressed after witnessing fights.\n- Higher chance for romantic advances to fail after witnessing others fool around. [TN: Higher chance to cheat on their lover?]
+Melancholy	- Susceptible to depressed moods. Becomes depressed after witnessing fights.\n- Higher chance for romantic advances to fail after witnessing others fool around.
 Preverted	- Higher success rate for erotic commands. May agree to sex with a character of low virtue on the first meeting.\n- Prone to feeling aroused.\n- Lower chance of interrupting public sex; may begin masturbating.\n- Sexual chemistry rises faster.
 Serious	- Increased chance to attend classes and club activities.\n- Will not accept invitations to skip class.\n- Increased chance of interrupting public sex.
 Calm	- Mood is less prone to ups and downs.\n- Lower chance of interrupting conversations and physical affection. However, they will interrupt the latter if one party is their lover.
@@ -22,9 +22,9 @@ Absentmind	- Attends school later, goes home earlier.
 Violent	- Higher chance of fighting and slapping.
 Passive	- Lower chance of confessing and being physically affectionate.
 Maddlesome	- Higher chance of encouraging depressed characters and offering massages.\n- Easily becomes popular, but people will dislike them if they are unpopular and make mistakes.\n- Higher chance of using 'encouragement', 'good deeds', and 'interaction' commands on good friends?
-ClassInco	- Higher chance to initiate and accept encouragements and invitations. (Is the play system reduced for studying and exercise? [?])\n- If they have no friends, they will patrol the school and interrupt any public sex. [TN: lol]
+ClassInco	- Higher chance to initiate and accept encouragements and invitations.\n- If they have no friends, they will patrol the school and interrupt any public sex.
 Chatty	- Higher chance of making conversation.
-Hungry	- Higher success rate for conversations about food.\n- Will often visit the cafeteria.\n- Can eat multiple times during lunch break.\n- Higher chance of inviting others/being invited [TN: not sure if both or just one] to eat out.
+Hungry	- Higher success rate for conversations about food.\n- Will often visit the cafeteria.\n- Can eat multiple times during lunch break.\n- Higher chance of inviting others/being invited to eat out.
 Romantic	- Higher chance of talking about love.\n- Will invite others on dates, even if they already have a lover. (Characters with the single-minded trait will rarely do this, even if they have a lover.)
 Singlemind	- Will not accept confessions, physical affection, or sex from others if they are not their lover, even if their virtue is low.
 Indencisive	- Won't choose between two people during a competition.\n- May double-book dates.
@@ -32,10 +32,10 @@ Competitive	- More likely to begin competitions.
 Scheming	- Will spread bad rumours.\n- May suddenly slap characters.\n- May take a character to the opposite-sex room and leave them there.\n- Will use threatening commands such as forcing sex. (Will not work if combined with the serious, masochist, or exploitable traits.)
 Diligent	- Will visit the library often.\n- Higher success rate for studying together.
 Wild	- High chance of asking others and accepting to skip class with them.
-Masochist	- Will become sexually aroused and gain love points when insulted. (Unlike other commands, there is no limit to the amount of times this can be performed.)\n- Higher chance of 'accepting' forced sex. (However, since the forced sex flag is still raised, it is harder for the character to accept. [?])
+Masochist	- Will become sexually aroused and gain love points when insulted. (Unlike other commands, there is no limit to the amount of times this can be performed.)\n- Higher chance of 'accepting' forced sex. (However, since the forced sex flag is still raised, it is harder for the character to accept.)
 Sweaty	- Body will become shiny.\n- Will visit the swimming pool and showers more often.
-Evil	- May attempt to murder people if they catch their lover having sex with someone else (consensual or forced). [?]\n- Has special lines and actions, such as forcing sex with no choices, daily sex with their lover, etc.
-Deaf	- "Huh?" is added as a option. (The conversation will be passed if you choose it. In fact, the answer functions like 'No', but it does not affect favourability, and will not count towards 'number of times rejected' if the character is confessing.)\n- In the case of NPCs, this trait will make it harder to recover from a bad state when combined with the wild trait and a hostile mood.
+Evil	- May attempt to murder people if they catch their lover having sex with someone else (consensual or forced).\n- Has special lines and actions, such as forcing sex with no choices, daily sex with their lover, etc.
+Deaf	- "Huh?" is added as an option. (The conversation will be passed if you choose it. In fact, the answer functions like 'No', but it does not affect favourability, and will not count towards 'number of times rejected' if the character is confessing.)\n- In the case of NPCs, this trait will make it harder to recover from a bad state when combined with the wild trait and a hostile mood.
 Exploitable	- Higher success rate for "Show me that", "Put this on", forced sex, and follow commands. (If it isn't 0%, even when rejected, the chance will become 3% --> 30% --> 60% --> 999%.)
 ASexual	- Lower success rate for sexual commands.\n- Will not get periods.\n- Asexual female characters cannot be impregnated (since patch v4), but asexual male characters can still impregnate girls.
 Lucky	- Higher chance of copping a feel during a massage.\n- A lucky character will survive or get away with murder, unless their target/killer also has the lucky trait.

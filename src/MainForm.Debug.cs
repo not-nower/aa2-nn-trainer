@@ -69,7 +69,7 @@ namespace AA2Trainer
             info.Controls.Add(CreateKvGroup("Character", new string[]
             {
                 "Name", "Seat", "Gender", "Personality", "Club", "Virtue",
-                "Oriented", "Social", "Fighting style", "Study", "Strength",
+                "Orientation", "Social", "Fighting Style", "Study", "Strength",
                 "Club rank", "Traits"
             }, out cv), 0, 0);
             info.Controls.Add(CreateKvGroup("Live status", new string[]
@@ -83,7 +83,7 @@ namespace AA2Trainer
             root.Controls.Add(top, 0, 0);
 
             Dictionary<string, Label> clv;
-            root.Controls.Add(CreateKvGroup("Class & time", new string[]
+            root.Controls.Add(CreateKvGroup("Class && Time", new string[]
             {
                 "Class", "Year", "Day / week", "Time", "Save", "Play time", "Screen type"
             }, out clv), 0, 1);
@@ -131,7 +131,7 @@ namespace AA2Trainer
 
         private TabPage BuildRelationsTab()
         {
-            TabPage page = new TabPage("Relations");
+            TabPage page = new TabPage("Relationships");
             FieldGridControl grid;
             TableLayoutPanel root = BuildFieldPage(page, out grid);
             relationGrid = grid;
@@ -373,9 +373,9 @@ namespace AA2Trainer
             SetKV(charKv, "Personality", PersonalityFromValue(personality), true);
             SetKV(charKv, "Club", ClubName(mem, ctx), true);
             SetKV(charKv, "Virtue", DashboardData.Value(mem, ctx, "Virtue", 0), true);
-            SetKV(charKv, "Oriented", NamedValue("Oriented", DashboardData.Value(mem, ctx, "Oriented", 0)), true);
+            SetKV(charKv, "Orientation", NamedValue("Oriented", DashboardData.Value(mem, ctx, "Oriented", 0)), true);
             SetKV(charKv, "Social", DashboardData.Value(mem, ctx, "Social", 0), true);
-            SetKV(charKv, "Fighting style", NamedValue("FightingStyle", DashboardData.Value(mem, ctx, "FightingStyle", 0)), true);
+            SetKV(charKv, "Fighting Style", NamedValue("FightingStyle", DashboardData.Value(mem, ctx, "FightingStyle", 0)), true);
             SetKV(charKv, "Study", StudyText("IntLevel", "IntRank", "IntValue"), true);
             SetKV(charKv, "Strength", StudyText("StrLevel", "StrRank", "StrValue"), true);
             SetKV(charKv, "Club rank", StudyText("ClubRank", null, "ClubValue"), true);

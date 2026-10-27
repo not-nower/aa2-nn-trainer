@@ -96,6 +96,12 @@ namespace AA2Trainer
 
         public void RefreshRoster(GameMemory mem, GameContext ctx, CharacterInfo selected, NameMap names)
         {
+            RefreshRoster(mem, ctx, selected, names, null);
+        }
+
+        public void RefreshRoster(GameMemory mem, GameContext ctx, CharacterInfo selected,
+            NameMap names, LiveSnapshot live)
+        {
             if (mem == null || ctx == null || !mem.IsAttached)
             {
                 Clear();
@@ -103,24 +109,54 @@ namespace AA2Trainer
             }
 
             Dictionary<int, CharacterInfo> bySeat = new Dictionary<int, CharacterInfo>();
-            Dictionary<uint, CharacterInfo> byF58 = new Dictionary<uint, CharacterInfo>();
-            Dictionary<uint, CharacterInfo> byActivity = new Dictionary<uint, CharacterInfo>();
+            Dictionary<uint, CharacterInfo> byF58 = null;
+            Dictionary<uint, CharacterInfo> byActivity = null;
+            if (live == null)
+            {
+                byF58 = new Dictionary<uint, CharacterInfo>();
+                byActivity = new Dictionary<uint, CharacterInfo>();
+            }
+
             if (ctx.Characters != null)
             {
                 foreach (CharacterInfo info in ctx.Characters)
                 {
                     if (info == null) continue;
 
-                    uint? f58 = mem.ReadU32(info.Pointer + 0xF58);
-                    if (f58.HasValue && f58.Value != 0 && !byF58.ContainsKey(f58.Value))
-                        byF58[f58.Value] = info;
+                    if (live == null)
+                    {
+                        uint? f58 = mem.ReadU32(info.Pointer + 0xF58);
+                        if (f58.HasValue && f58.Value != 0 && !byF58.ContainsKey(f58.Value))
+                            byF58[f58.Value] = info;
 
-                    uint activity = ReadActivity(mem, info.Pointer);
-                    if (activity != 0 && !byActivity.ContainsKey(activity))
-                        byActivity[activity] = info;
+                        uint activity = ReadActivity(mem, info.Pointer);
+                        if (activity != 0 && !byActivity.ContainsKey(activity))
+                            byActivity[activity] = info;
+                    }
 
                     if (info.Seat < 0 || info.Seat > 24) continue;
                     if (!bySeat.ContainsKey(info.Seat)) bySeat[info.Seat] = info;
+                }
+            }
+
+            Dictionary<int, LiveCharacterState> liveBySeat = null;
+            Dictionary<uint, LiveCharacterState> liveByPointer = null;
+            Dictionary<uint, LiveCharacterState> liveByNpcData = null;
+            Dictionary<uint, LiveCharacterState> liveByActivity = null;
+            if (live != null && live.Characters != null)
+            {
+                liveBySeat = new Dictionary<int, LiveCharacterState>();
+                liveByPointer = new Dictionary<uint, LiveCharacterState>();
+                liveByNpcData = new Dictionary<uint, LiveCharacterState>();
+                liveByActivity = new Dictionary<uint, LiveCharacterState>();
+                foreach (LiveCharacterState state in live.Characters)
+                {
+                    if (state == null) continue;
+                    if (state.Character != 0) liveByPointer[state.Character] = state;
+                    if (state.Seat >= 0 && state.Seat <= 24 && !liveBySeat.ContainsKey(state.Seat))
+                        liveBySeat[state.Seat] = state;
+                    if (state.NpcData != 0) liveByNpcData[state.NpcData] = state;
+                    if (state.Activity != 0) liveByActivity[state.Activity] = state;
                 }
             }
 
@@ -136,19 +172,50 @@ namespace AA2Trainer
                     continue;
                 }
 
-                GameContext view = ctx.CreateCharacterView(mem, info);
-                int? action = ReadInt(mem, view, "Action");
-                int? location = ReadInt(mem, view, "Location");
-                int? mood = ReadInt(mem, view, "MoodAction");
-                int? gender = ReadByte(mem, view, "Gender");
-                int? personalityId = ReadByte(mem, view, "Personality");
-                uint? npcTarget = ReadUInt(mem, view, "NPCTarget");
-                uint? reffTo = ReadUInt(mem, view, "ReffTo");
+                int? action = null;
+                int? location = null;
+                int? mood = null;
+                int? gender = null;
+                int? personalityId = null;
+                uint characterData = 0;
+                string targetText;
+                GameContext portraitView = null;
+
+                LiveCharacterState state = null;
+                bool hasLive = liveBySeat != null &&
+                    liveBySeat.TryGetValue(seat, out state) && state != null;
+                if (hasLive)
+                {
+                    characterData = state.CharacterData;
+                    if (state.ActionId >= 0) action = state.ActionId;
+                    if (state.Location >= 0) location = state.Location;
+                    if (state.MoodAction >= 0) mood = state.MoodAction;
+                    if (characterData != 0)
+                    {
+                        gender = mem.ReadU8(characterData + 0x3C);
+                        personalityId = mem.ReadU8(characterData + 0x445);
+                    }
+                    targetText = TargetText(names, state, liveByNpcData,
+                        liveByActivity, liveByPointer);
+                }
+                else
+                {
+                    portraitView = ctx.CreateCharacterView(mem, info);
+                    action = ReadInt(mem, portraitView, "Action");
+                    location = ReadInt(mem, portraitView, "Location");
+                    mood = ReadInt(mem, portraitView, "MoodAction");
+                    gender = ReadByte(mem, portraitView, "Gender");
+                    personalityId = ReadByte(mem, portraitView, "Personality");
+                    uint? npcTarget = ReadUInt(mem, portraitView, "NPCTarget");
+                    uint? reffTo = ReadUInt(mem, portraitView, "ReffTo");
+                    characterData = portraitView.SelectedCharData;
+                    targetText = TargetText(mem, ctx, names, npcTarget, reffTo,
+                        byF58, byActivity);
+                }
 
                 string actionText = action.HasValue ? ActionName(names, action.Value) : "-";
                 string locationText = location.HasValue ? LocationName(names, location.Value) : "-";
                 string moodText = mood.HasValue ? mood.Value.ToString() : "-";
-                string targetText = TargetText(mem, ctx, names, npcTarget, reffTo, byF58, byActivity);
 
                 string personalityText = "";
                 if (personalityId.HasValue)
@@ -185,12 +252,64 @@ namespace AA2Trainer
 
                 uint addr;
                 uint size;
-                PortraitLoader.ReadInfo(mem, view, out addr, out size);
+                if (characterData != 0)
+                    PortraitLoader.ReadInfo(mem, characterData, out addr, out size);
+                else
+                {
+                    if (portraitView == null)
+                        portraitView = ctx.CreateCharacterView(mem, info);
+                    PortraitLoader.ReadInfo(mem, portraitView, out addr, out size);
+                }
 
                 if (!card.MatchesPortrait(addr, size, info.Name))
                 {
                     card.SetPortrait(PortraitLoader.LoadBitmap(mem, addr, size), addr, size, info.Name);
                 }
+            }
+        }
+
+        public void ApplyLiveSnapshot(LiveSnapshot snapshot, NameMap names)
+        {
+            if (snapshot == null || snapshot.Characters == null ||
+                snapshot.Characters.Count == 0)
+                return;
+
+            Dictionary<int, LiveCharacterState> bySeat =
+                new Dictionary<int, LiveCharacterState>();
+            Dictionary<uint, LiveCharacterState> byPointer =
+                new Dictionary<uint, LiveCharacterState>();
+            Dictionary<uint, LiveCharacterState> byNpcData =
+                new Dictionary<uint, LiveCharacterState>();
+            Dictionary<uint, LiveCharacterState> byActivity =
+                new Dictionary<uint, LiveCharacterState>();
+
+            foreach (LiveCharacterState state in snapshot.Characters)
+            {
+                if (state == null) continue;
+                if (state.Character != 0)
+                    byPointer[state.Character] = state;
+                if (state.Seat >= 0 && state.Seat <= 24 && !bySeat.ContainsKey(state.Seat))
+                    bySeat[state.Seat] = state;
+                if (state.NpcData != 0)
+                    byNpcData[state.NpcData] = state;
+                if (state.Activity != 0)
+                    byActivity[state.Activity] = state;
+            }
+
+            foreach (KeyValuePair<int, ClassRosterCard> pair in cards)
+            {
+                LiveCharacterState state;
+                if (!bySeat.TryGetValue(pair.Key, out state)) continue;
+
+                string actionText = state.ActionId >= 0
+                    ? ActionName(names, state.ActionId) : "-";
+                string locationText = state.Location >= 0
+                    ? LocationName(names, state.Location) : "-";
+                string moodText = state.MoodAction >= 0
+                    ? state.MoodAction.ToString() : "-";
+                string targetText = TargetText(names, state, byNpcData, byActivity, byPointer);
+
+                pair.Value.SetLive(actionText, targetText, locationText, moodText);
             }
         }
 
@@ -355,6 +474,44 @@ namespace AA2Trainer
             return text;
         }
 
+        private static string TargetText(NameMap names, LiveCharacterState state,
+            Dictionary<uint, LiveCharacterState> byNpcData,
+            Dictionary<uint, LiveCharacterState> byActivity,
+            Dictionary<uint, LiveCharacterState> byPointer)
+        {
+            LiveCharacterState target = null;
+
+            if (state.NpcTarget != 0)
+            {
+                if (!byNpcData.TryGetValue(state.NpcTarget, out target))
+                    byPointer.TryGetValue(state.NpcTarget, out target);
+            }
+
+            if (target == null && state.ReffTo != 0)
+            {
+                if (!byActivity.TryGetValue(state.ReffTo, out target))
+                    byPointer.TryGetValue(state.ReffTo, out target);
+            }
+
+            if (target == null)
+                return (state.NpcTarget != 0 || state.ReffTo != 0) ? "NPC" : "";
+
+            string text = target.Seat >= 0
+                ? target.Seat.ToString("D2") + " " + target.Name
+                : target.Name;
+
+            if (target.Location > 0)
+            {
+                string locationName = names == null ? null :
+                    names.Get("LOCATION", target.Location);
+                if (string.IsNullOrEmpty(locationName))
+                    locationName = target.Location.ToString();
+                text += " -> " + locationName;
+            }
+
+            return text;
+        }
+
         private static int? ReadLocation(GameMemory mem, uint character)
         {
             uint? status = mem.ReadU32(character + 0xF6C);
@@ -405,6 +562,7 @@ namespace AA2Trainer
         private uint lastPortraitSize;
         private string lastPortraitName;
         private DateTime lastDoubleClick;
+        private string lastStatusTooltip = "";
 
         private static readonly Font HeartFont = new Font("Segoe UI Symbol", 21F, FontStyle.Bold);
 
@@ -647,21 +805,50 @@ namespace AA2Trainer
 
             nameLabel.Text = string.IsNullOrEmpty(name) ? "(unnamed)" : name;
             nameLabel.ForeColor = Color.FromArgb(30, 30, 30);
-            personalityLabel.Text = personality == null ? "" : personality;
-            actionLabel.Text = "Action: " + action;
-            targetLabel.Text = string.IsNullOrEmpty(target) ? "" : "Target: " + target;
-            locationLabel.Text = "Loc: " + location;
-            moodLabel.Text = "Mood: " + mood;
-            statusLabel.Text = status == null ? "" : status;
+            SetText(personalityLabel, personality == null ? "" : personality);
+            SetDetail(actionLabel, "Action: " + action);
+            SetDetail(targetLabel, string.IsNullOrEmpty(target) ? "" : "Target: " + target);
+            SetDetail(locationLabel, "Loc: " + location);
+            SetDetail(moodLabel, "Mood: " + mood);
 
-            tooltip.SetToolTip(statusLabel, statusTooltip);
-            tooltip.SetToolTip(actionLabel, actionLabel.Text);
-            tooltip.SetToolTip(targetLabel, targetLabel.Text);
-            tooltip.SetToolTip(locationLabel, locationLabel.Text);
-            tooltip.SetToolTip(moodLabel, moodLabel.Text);
+            string nextStatus = status == null ? "" : status;
+            string nextStatusTip = statusTooltip == null ? "" : statusTooltip;
+            if (statusLabel.Text != nextStatus || lastStatusTooltip != nextStatusTip)
+            {
+                statusLabel.Text = nextStatus;
+                lastStatusTooltip = nextStatusTip;
+                tooltip.SetToolTip(statusLabel, string.IsNullOrEmpty(nextStatusTip) ? null : nextStatusTip);
+            }
 
             SetHandCursor(true);
             ApplyBackColor();
+        }
+
+        /// <summary>
+        /// Updates only the fast-changing roster fields. The full refresh
+        /// remains responsible for names, personality, relationships, and
+        /// portraits.
+        /// </summary>
+        public void SetLive(string action, string target, string location, string mood)
+        {
+            if (Character == null) return;
+
+            SetDetail(actionLabel, "Action: " + action);
+            SetDetail(targetLabel, string.IsNullOrEmpty(target) ? "" : "Target: " + target);
+            SetDetail(locationLabel, "Loc: " + location);
+            SetDetail(moodLabel, "Mood: " + mood);
+        }
+
+        private static void SetText(Label label, string text)
+        {
+            if (label.Text != text) label.Text = text;
+        }
+
+        private void SetDetail(Label label, string text)
+        {
+            if (label.Text == text) return;
+            label.Text = text;
+            tooltip.SetToolTip(label, string.IsNullOrEmpty(text) ? null : text);
         }
 
         public void SetEmpty()
@@ -686,6 +873,7 @@ namespace AA2Trainer
             locationLabel.Text = "";
             moodLabel.Text = "";
             statusLabel.Text = "";
+            lastStatusTooltip = "";
             tooltip.SetToolTip(statusLabel, null);
             tooltip.SetToolTip(actionLabel, null);
             tooltip.SetToolTip(targetLabel, null);
@@ -724,8 +912,9 @@ namespace AA2Trainer
                 color = selected ? Color.FromArgb(232, 241, 255) : Color.White;
             }
 
-            BackColor = color;
-            if (statusLabel != null) statusLabel.BackColor = color;
+            if (BackColor != color) BackColor = color;
+            if (statusLabel != null && statusLabel.BackColor != color)
+                statusLabel.BackColor = color;
         }
 
         private void SetHandCursor(bool hand)

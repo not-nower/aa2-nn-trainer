@@ -46,6 +46,34 @@ namespace AA2Trainer
             size = ReadUInt(mem, view, "PotraitSize");
         }
 
+        /// <summary>
+        /// Direct read of the four portrait fields on the character-data block
+        /// (ThumbSize/Addr at +0x28/+0x2C, PotraitSize/Addr at +0x30/+0x34).
+        /// Used by the live roster path so it can avoid definition traces.
+        /// </summary>
+        public static void ReadInfo(GameMemory mem, uint characterData,
+            out uint address, out uint size)
+        {
+            address = 0;
+            size = 0;
+            if (characterData == 0) return;
+
+            byte[] block = mem.ReadBytes(characterData + 0x28, 0x10);
+            if (block == null || block.Length < 0x10) return;
+
+            uint thumbSize = BitConverter.ToUInt32(block, 0x00);
+            uint thumbAddr = BitConverter.ToUInt32(block, 0x04);
+            if (thumbAddr != 0 && thumbSize > 0 && mem.IsPlausiblePointer(thumbAddr))
+            {
+                address = thumbAddr;
+                size = thumbSize;
+                return;
+            }
+
+            address = BitConverter.ToUInt32(block, 0x0C);
+            size = BitConverter.ToUInt32(block, 0x08);
+        }
+
         public static void ReadFullInfo(GameMemory mem, GameContext view,
             out uint address, out uint size)
         {
