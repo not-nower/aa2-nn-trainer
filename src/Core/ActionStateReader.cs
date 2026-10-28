@@ -66,9 +66,12 @@ namespace AA2Trainer
         public int Room = -1;
         public int ActionId = -1;
         public int MovementType = -1;
+        public int Location = -1;
+        public byte Gender;
         public byte AnimLocked;
         public byte Loading;
         public byte InConversation;
+        public byte Talking;
 
         public bool IsBusy
         {
@@ -166,6 +169,10 @@ namespace AA2Trainer
             s.Activity = activity.Value;
             s.NpcData = mem.ReadU32(character + 0xF58) ?? 0;
 
+            uint? characterData = mem.ReadU32(character + 0x28);
+            if (characterData.HasValue && characterData.Value != 0)
+                s.Gender = mem.ReadU8(characterData.Value + 0x3C) ?? 0;
+
             if (s.NpcData != 0)
             {
                 uint? room = mem.ReadU32(s.NpcData + 0x1F4);
@@ -173,11 +180,18 @@ namespace AA2Trainer
                     s.Room = mem.ReadI32(room.Value + 0x14) ?? -1;
             }
 
-            s.ActionId = mem.ReadI32(s.Activity + 0x40) ?? -1;
-            s.MovementType = mem.ReadI32(s.Activity + 0x3C) ?? -1;
-            s.AnimLocked = mem.ReadU8(s.Activity + 0x14) ?? 0;
-            s.Loading = mem.ReadU8(s.Activity + 0x15) ?? 0;
-            s.InConversation = mem.ReadU8(s.Activity + 0x19) ?? 0;
+            // One block read covers busy flags, talking, movement, action, and
+            // location. Offsets are relative to activity + 0x14.
+            byte[] block = mem.ReadBytes(activity.Value + 0x14, 0x40);
+            if (block == null) return null;
+
+            s.AnimLocked = block[0x00];
+            s.Loading = block[0x01];
+            s.InConversation = block[0x05];
+            s.Talking = block[0x07];
+            s.MovementType = BitConverter.ToInt32(block, 0x28);
+            s.ActionId = BitConverter.ToInt32(block, 0x2C);
+            s.Location = BitConverter.ToInt32(block, 0x34);
             return s;
         }
 

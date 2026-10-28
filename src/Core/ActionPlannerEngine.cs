@@ -177,9 +177,11 @@ namespace AA2Trainer
                     }
                 }
 
-                CharacterState current = ReadState(actor, roster) ?? before;
+                CharacterSummary current = ReadSummary(actor);
+                uint activity = current != null && current.Activity != 0
+                    ? current.Activity : before.Activity;
                 string message;
-                if (!hook.Queue(current, parameters, out message))
+                if (!hook.Queue(activity, parameters, out message))
                 {
                     Log(log, "  [" + attempt + "] queue failed: " + message,
                         PlannerLogLevel.Error);
@@ -218,7 +220,7 @@ namespace AA2Trainer
                         "] still pending after 2s (hits=" + hook.HitCount() +
                         ").", PlannerLogLevel.Warning);
                     if (verbose)
-                        LogPlannerNotTicking(ReadState(actor, roster), log);
+                        LogPlannerNotTicking(ReadSummary(actor), log);
 
                     if (keepRepeating) Thread.Sleep(1500);
                     else if (attempt < maxAttempts) Thread.Sleep(800);
@@ -311,7 +313,7 @@ namespace AA2Trainer
             {
                 if (Cancelled(cancelled)) return false;
 
-                CharacterState s = ReadState(actor, roster);
+                CharacterSummary s = ReadSummary(actor);
                 if (s != null && IsIdle(s))
                 {
                     stable++;
@@ -344,7 +346,7 @@ namespace AA2Trainer
             return false;
         }
 
-        private static bool IsIdle(CharacterState s)
+        private static bool IsIdle(CharacterSummary s)
         {
             if (s == null) return false;
             if (s.AnimLocked != 0 || s.Loading != 0 || s.InConversation != 0)
@@ -360,7 +362,7 @@ namespace AA2Trainer
             while (DateTime.UtcNow < end)
             {
                 if (Cancelled(cancelled)) return false;
-                CharacterState s = ReadState(actor, roster);
+                CharacterSummary s = ReadSummary(actor);
                 if (s != null)
                 {
                     if (parameters.MovementType == ActionParams.MoveToRoomType)
@@ -380,7 +382,7 @@ namespace AA2Trainer
             return false;
         }
 
-        private void LogPlannerNotTicking(CharacterState s,
+        private void LogPlannerNotTicking(CharacterSummary s,
             Action<string, PlannerLogLevel> log)
         {
             if (s == null)
@@ -423,16 +425,18 @@ namespace AA2Trainer
 
             uint act = s.Activity;
             byte[] minusOne = BitConverter.GetBytes(-1);
+            bool ok = true;
+            string writeError = null;
 
-            mem.WriteBytes(act + 0x40, minusOne);
-            mem.WriteBytes(act + 0x3C, BitConverter.GetBytes(0));
-            mem.WriteBytes(act + 0x15, new byte[] { 0 });
-            mem.WriteBytes(act + 0x19, new byte[] { 0 });
-            mem.WriteBytes(act + 0x1A, new byte[] { 0 });
-            mem.WriteBytes(act + 0x1B, new byte[] { 0 });
-            mem.WriteBytes(act + 0x38, BitConverter.GetBytes(0));
-            mem.WriteBytes(act + 0x44, minusOne);
-            mem.WriteBytes(act + 0x48, minusOne);
+            ok &= WriteStop(act + 0x40, minusOne, ref writeError);
+            ok &= WriteStop(act + 0x3C, BitConverter.GetBytes(0), ref writeError);
+            ok &= WriteStop(act + 0x15, new byte[] { 0 }, ref writeError);
+            ok &= WriteStop(act + 0x19, new byte[] { 0 }, ref writeError);
+            ok &= WriteStop(act + 0x1A, new byte[] { 0 }, ref writeError);
+            ok &= WriteStop(act + 0x1B, new byte[] { 0 }, ref writeError);
+            ok &= WriteStop(act + 0x38, BitConverter.GetBytes(0), ref writeError);
+            ok &= WriteStop(act + 0x44, minusOne, ref writeError);
+            ok &= WriteStop(act + 0x48, minusOne, ref writeError);
 
             uint descriptor = s.Descriptor;
             if (descriptor != 0)
@@ -447,20 +451,35 @@ namespace AA2Trainer
                         ? (mem.ReadU32(first + 4) ?? 0) : 0;
                     if (holder != 0)
                     {
-                        mem.WriteBytes(holder + baseAddress + 0x130,
-                            BitConverter.GetBytes(0));
-                        mem.WriteBytes(holder + baseAddress + 0x158,
-                            BitConverter.GetBytes(0u));
+                        ok &= WriteStop(holder + baseAddress + 0x130,
+                            BitConverter.GetBytes(0), ref writeError);
+                        ok &= WriteStop(holder + baseAddress + 0x158,
+                            BitConverter.GetBytes(0u), ref writeError);
                     }
                 }
             }
 
             if (s.NpcData != 0)
-                mem.WriteBytes(s.NpcData + 0x26C, BitConverter.GetBytes(0u));
+                ok &= WriteStop(s.NpcData + 0x26C, BitConverter.GetBytes(0u),
+                    ref writeError);
+
+            if (!ok)
+            {
+                message = "Stopping the action partially failed: " +
+                    (writeError ?? "unknown write error");
+                return false;
+            }
 
             message = "cleared action, status, loading, conversation flags, " +
                 "refto, room target, walk target, and NPC target";
             return true;
+        }
+
+        private bool WriteStop(uint address, byte[] data, ref string error)
+        {
+            if (mem.WriteBytes(address, data)) return true;
+            if (string.IsNullOrEmpty(error)) error = mem.WriteError;
+            return false;
         }
 
         public string Describe(CharacterState s)

@@ -43,6 +43,8 @@ namespace AA2Trainer
         private const int DataOffset = 0x200;
         private const int ParamsOffset = DataOffset + 0x08;
         private const int PendingOffset = DataOffset + 0x04;
+        private const int ParamsSize = 28;
+        private const int QueueBlockSize = ParamsOffset - DataOffset + ParamsSize;
         private const int HitCountOffset = DataOffset + 0x40;
         private const int PageSize = 0x1000;
 
@@ -263,19 +265,40 @@ namespace AA2Trainer
         public bool Queue(CharacterState actor, ActionParams parameters,
             out string message)
         {
+            if (actor == null)
+            {
+                message = "The actor has no activity block.";
+                return false;
+            }
+            return Queue(actor.Activity, parameters, out message);
+        }
+
+        /// <summary>
+        /// Queues an action using only the actor's activity pointer. This lets
+        /// the live planner use the lightweight state summary instead of the
+        /// full descriptor/walk-target read.
+        /// </summary>
+        public bool Queue(uint actorActivity, ActionParams parameters,
+            out string message)
+        {
             message = null;
             if (!installed)
             {
                 message = "The planner hook is not installed.";
                 return false;
             }
-            if (actor == null || actor.Activity == 0)
+            if (actorActivity == 0)
             {
                 message = "The actor has no activity block.";
                 return false;
             }
+            if (parameters == null)
+            {
+                message = "The action parameters are missing.";
+                return false;
+            }
 
-            uint ai = mem.ReadU32(actor.Activity + 0xEC) ?? 0;
+            uint ai = mem.ReadU32(actorActivity + 0xEC) ?? 0;
             if (ai == 0)
             {
                 message = "The AI wrapper is unreadable.";
@@ -289,12 +312,22 @@ namespace AA2Trainer
                 return false;
             }
 
-            // Disarm, write params and key, then arm. The handler only reads the
-            // params when pending == 1.
+            // Disarm first, then write key, pending (still zero) and params as
+            // one block. Pending stays zero for the whole data write, so the
+            // handler cannot observe a partially written parameter block.
             if (!mem.WriteRawBytes(page + PendingOffset,
-                    BitConverter.GetBytes(0u)) ||
-                !mem.WriteRawBytes(page + ParamsOffset, parameters.ToBytes()) ||
-                !mem.WriteRawBytes(page + DataOffset, BitConverter.GetBytes(key)))
+                BitConverter.GetBytes(0u)))
+            {
+                message = "Disarming the queued action failed: " + mem.WriteError;
+                return false;
+            }
+
+            byte[] data = new byte[QueueBlockSize];
+            Buffer.BlockCopy(BitConverter.GetBytes(key), 0, data, 0, 4);
+            Buffer.BlockCopy(parameters.ToBytes(), 0, data,
+                ParamsOffset - DataOffset, ParamsSize);
+
+            if (!mem.WriteRawBytes(page + DataOffset, data))
             {
                 message = "Writing the queued action failed: " + mem.WriteError;
                 return false;

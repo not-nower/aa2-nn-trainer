@@ -25,7 +25,7 @@ namespace AA2Trainer
         private volatile bool cancelRequested;
         private bool suppressHook;
         private bool suppressSelection;
-        private string rosterSignature = "";
+        private int rosterVersion = -1;
         private NameMap choiceNames;
         private readonly List<CharacterInfo> rosterSnapshot =
             new List<CharacterInfo>();
@@ -42,7 +42,7 @@ namespace AA2Trainer
         private ComboBox actionCombo;
         private ComboBox roomCombo;
         private Label roomGuardLabel;
-        private Button talkButton;
+        private Button actionButton;
         private Button roomButton;
         private Button stopButton;
         private Button cancelButton;
@@ -301,10 +301,10 @@ namespace AA2Trainer
             row.Padding = new Padding(0, 4, 0, 0);
             row.Margin = new Padding(0);
 
-            talkButton = MakeButton("Talk", 72, TalkButton_Click);
+            actionButton = MakeButton("Action", 76, ActionButton_Click);
             stopButton = MakeButton("Stop action", 100, StopButton_Click);
             cancelButton = MakeButton("Cancel retry", 100, CancelButton_Click);
-            row.Controls.Add(talkButton);
+            row.Controls.Add(actionButton);
             row.Controls.Add(stopButton);
             row.Controls.Add(cancelButton);
 
@@ -446,16 +446,16 @@ namespace AA2Trainer
                 engine = new ActionPlannerEngine(memory);
             }
 
-            string signature = BuildRosterSignature(context);
-            if (actorChanged || signature != rosterSignature)
+            if (actorChanged || context.RosterVersion != rosterVersion)
             {
-                rosterSignature = signature;
+                rosterVersion = context.RosterVersion;
                 PopulateChoices();
             }
 
             UpdateActorLabel();
             SetWriteAllowed(canWrite);
             EnsureChoiceLists();
+            UpdateControls();
             UpdateHookStatus();
             UpdateStateTimer();
             UpdateStateNow();
@@ -503,7 +503,7 @@ namespace AA2Trainer
             selected = null;
             names = null;
             rosterSnapshot.Clear();
-            rosterSignature = "";
+            rosterVersion = -1;
             suppressSelection = true;
             if (targetCombo != null) targetCombo.Items.Clear();
             if (aboutCombo != null) aboutCombo.Items.Clear();
@@ -515,18 +515,6 @@ namespace AA2Trainer
             UpdateHookStatus();
             UpdateControls();
             PlannerActiveChanged?.Invoke(false);
-        }
-
-        private static string BuildRosterSignature(GameContext context)
-        {
-            if (context == null || context.Characters == null) return "";
-            string s = "";
-            foreach (CharacterInfo c in context.Characters)
-            {
-                if (c == null) continue;
-                s += c.Pointer.ToString("X") + ":" + c.Seat + ":" + c.Name + "|";
-            }
-            return s;
         }
 
         private void PopulateChoices()
@@ -779,7 +767,7 @@ namespace AA2Trainer
             roomCombo.Enabled = editable;
             bool hasAction = SelectedActionId() >= 0;
             roomButton.Enabled = editable && SelectedRoomId() >= 0;
-            talkButton.Enabled = editable && hasAction;
+            actionButton.Enabled = editable && hasAction;
             retryCheck.Enabled = editable;
             waitCheck.Enabled = editable;
             keepCheck.Enabled = editable;
@@ -808,24 +796,37 @@ namespace AA2Trainer
                 return;
             }
 
-            IList<CharacterInfo> roster = ctx.Characters;
-            CharacterState actorState = engine.ReadState(selected, roster);
-            actorStateLabel.Text = "Actor: " + StateText(actorState);
+            CharacterSummary actorState = engine.ReadSummary(selected);
+            actorStateLabel.Text = "Actor: " + CharacterLabel(selected) +
+                "  |  " + StateText(actorState);
 
             CharacterInfo target = SelectedTarget();
-            CharacterState targetState = target == null
-                ? null : engine.ReadState(target, roster);
+            CharacterSummary targetState = target == null
+                ? null : engine.ReadSummary(target);
             targetStateLabel.Text = target == null
                 ? "Target: none"
-                : "Target: " + StateText(targetState);
+                : "Target: " + CharacterLabel(target) + "  |  " +
+                  StateText(targetState);
 
             UpdateRoomGuard(actorState, targetState);
         }
 
-        private string StateText(CharacterState s)
+        private static string CharacterLabel(CharacterInfo info)
+        {
+            if (info == null) return "(none)";
+            string seat = info.Seat >= 0 ? info.Seat.ToString("D2") + " " : "";
+            return seat + (string.IsNullOrEmpty(info.Name)
+                ? "(unnamed)" : info.Name) +
+                (info.IsPlayer ? " [PC]" : "");
+        }
+
+        private string StateText(CharacterSummary s)
         {
             if (s == null) return "unreadable";
-            return "room " + s.Room +
+            string room = s.Room < 0
+                ? "?"
+                : s.Room + " (" + LocationName(s.Room) + ")";
+            return "room " + room +
                 "  |  " + ActionPlannerEngine.MovementName(s.MovementType) +
                 " (" + s.MovementType + ")" +
                 "  |  action " + ShortActionName(s.ActionId) +
@@ -834,8 +835,8 @@ namespace AA2Trainer
                 (s.Talking != 0 ? "  |  talking" : "");
         }
 
-        private void UpdateRoomGuard(CharacterState actorState,
-            CharacterState targetState)
+        private void UpdateRoomGuard(CharacterSummary actorState,
+            CharacterSummary targetState)
         {
             if (roomGuardLabel == null) return;
             if (selected == null)
@@ -979,7 +980,7 @@ namespace AA2Trainer
             return engine != null && engine.HookInstalled;
         }
 
-        private ActionParams BuildTalkParams(out string error)
+        private ActionParams BuildTargetParams(out string error)
         {
             error = null;
             int action = SelectedActionId();
@@ -992,12 +993,11 @@ namespace AA2Trainer
             CharacterInfo target = SelectedTarget();
             if (target == null)
             {
-                error = "Choose a target for Talk.";
+                error = "Choose a target for this action.";
                 return null;
             }
 
-            IList<CharacterInfo> roster = ctx.Characters;
-            CharacterState targetState = engine.ReadState(target, roster);
+            CharacterSummary targetState = engine.ReadSummary(target);
             if (targetState == null || targetState.Activity == 0)
             {
                 error = "Target activity is unreadable.";
@@ -1009,7 +1009,7 @@ namespace AA2Trainer
             CharacterInfo about = SelectedAbout();
             if (about != null)
             {
-                CharacterState aboutState = engine.ReadState(about, roster);
+                CharacterSummary aboutState = engine.ReadSummary(about);
                 if (aboutState == null || aboutState.Activity == 0)
                 {
                     error = "About-target activity is unreadable.";
@@ -1020,14 +1020,14 @@ namespace AA2Trainer
             return p;
         }
 
-        private void TalkButton_Click(object sender, EventArgs e)
+        private void ActionButton_Click(object sender, EventArgs e)
         {
             if (running || selected == null) return;
             if (!GateForWrite()) return;
             if (!EnsureHook()) return;
 
             string error;
-            ActionParams p = BuildTalkParams(out error);
+            ActionParams p = BuildTargetParams(out error);
             if (p == null)
             {
                 AppendLog(error, PlannerLogLevel.Error);
@@ -1036,7 +1036,7 @@ namespace AA2Trainer
 
             CharacterInfo target = SelectedTarget();
             CharacterInfo about = SelectedAbout();
-            string label = "Talk " + ShortActionName(p.ActionId) +
+            string label = "Action " + ShortActionName(p.ActionId) +
                 " -> " + (target == null ? "?" : target.Name);
             if (about != null) label += " about " + about.Name;
             StartRun(p, label);

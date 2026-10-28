@@ -74,10 +74,8 @@ namespace AA2Trainer
             }
             uint selectedPointer = ctx.Selected.Pointer;
 
-            string signature = "";
-            foreach (CharacterInfo info in ctx.Characters)
-                signature += info.Pointer.ToString("X") + ":" + info.Seat.ToString() + ":" + info.Name + "|";
-            if (signature == lastSeatSignature && seatList.Items.Count > 0)
+            int version = ctx.RosterVersion;
+            if (version == lastSeatVersion && seatList.Items.Count > 0)
             {
                 suppressSeatEvent = true;
                 try
@@ -101,7 +99,7 @@ namespace AA2Trainer
                 return;
             }
             HideHoverPortrait();
-            lastSeatSignature = signature;
+            lastSeatVersion = version;
 
             suppressSeatEvent = true;
             seatList.BeginUpdate();

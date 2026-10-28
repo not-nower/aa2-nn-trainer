@@ -81,21 +81,6 @@ namespace AA2Trainer
     {
         public const int RecordSize = 0x58;
 
-        private static readonly string[] PointLabels =
-        {
-            "Love points", "Like points", "Dislike points", "Hate points"
-        };
-
-        private static readonly string[] CountLabels =
-        {
-            "Love count", "Like count", "Dislike count", "Hate count"
-        };
-
-        private static readonly string[] LevelLabels =
-        {
-            "Love level", "Like level", "Dislike level", "Hate level"
-        };
-
         /// <summary>
         /// Returns one row per classmate, excluding the selected character.
         /// Pairs without a record are returned with HasRecord=false so the UI
@@ -411,21 +396,42 @@ namespace AA2Trainer
                 return false;
             }
 
+            bool pointsDiffer = false;
+            bool statsDiffer = false;
             for (int f = 0; f < 4; f++)
             {
-                if (current.Points[f] != points[f] &&
-                    !MemoryWriter.TryWriteInt32(mem, current.Address + 0x04 + (uint)(f * 4),
-                        points[f], PointLabels[f], out error))
-                    return false;
+                if (current.Points[f] != points[f]) pointsDiffer = true;
+                if (current.Counts[f] != counts[f] ||
+                    current.Levels[f] != levels[f]) statsDiffer = true;
+            }
 
-                if (current.Counts[f] != counts[f] &&
-                    !MemoryWriter.TryWriteInt32(mem, current.Address + 0x24 + (uint)(f * 4),
-                        counts[f], CountLabels[f], out error))
+            // Counts (0x24) and levels (0x34) are contiguous, and points
+            // occupy a separate 16-byte window at 0x04. Writing each window as
+            // one verified block keeps the freeze loop from doing up to twelve
+            // write/readback pairs per tick.
+            if (pointsDiffer)
+            {
+                byte[] block = new byte[16];
+                for (int f = 0; f < 4; f++)
+                    Buffer.BlockCopy(BitConverter.GetBytes(points[f]),
+                        0, block, f * 4, 4);
+                if (!MemoryWriter.TryWriteBlock(mem, current.Address + 0x04,
+                    block, "Points", out error))
                     return false;
+            }
 
-                if (current.Levels[f] != levels[f] &&
-                    !MemoryWriter.TryWriteInt32(mem, current.Address + 0x34 + (uint)(f * 4),
-                        levels[f], LevelLabels[f], out error))
+            if (statsDiffer)
+            {
+                byte[] block = new byte[32];
+                for (int f = 0; f < 4; f++)
+                {
+                    Buffer.BlockCopy(BitConverter.GetBytes(counts[f]),
+                        0, block, f * 4, 4);
+                    Buffer.BlockCopy(BitConverter.GetBytes(levels[f]),
+                        0, block, 16 + f * 4, 4);
+                }
+                if (!MemoryWriter.TryWriteBlock(mem, current.Address + 0x24,
+                    block, "Counts/levels", out error))
                     return false;
             }
 

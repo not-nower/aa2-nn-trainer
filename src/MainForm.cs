@@ -110,7 +110,7 @@ namespace AA2Trainer
         private bool resizeHiddenDebugTabs;
         private string namesRoot;
         private int selectedGender;
-        private string lastSeatSignature;
+        private int lastSeatVersion = -1;
         private string lastOutfitChoiceSignature;
         private int lastSaveViewerSeat = -1;
         private uint lastPortraitAddr;
@@ -932,6 +932,7 @@ namespace AA2Trainer
         {
             StopLiveReader();
             livePending = null;
+            liveAppliedSnapshot = null;
             liveAppliedSequence = 0;
             if (liveReader != null)
             {
@@ -950,7 +951,7 @@ namespace AA2Trainer
             if (hair != null) hair.Clear();
             if (outfits != null) outfits.Clear();
             if (optionsControl != null) optionsControl.Clear();
-            lastSeatSignature = null;
+            lastSeatVersion = -1;
             profile = null;
             health = null;
             writesAllowed = false;
@@ -981,11 +982,15 @@ namespace AA2Trainer
             }
 
             // The roster can use one cheap raw snapshot instead of evaluating
-            // every action/target definition chain. Other tabs do not need it.
+            // every action/target definition chain. Reuse the snapshot the live
+            // poller already applied when it is still current, so the 1 s
+            // refresh does not duplicate a full roster read on the UI thread.
             if (live == null && tabs.SelectedIndex == 0 && liveReader != null)
             {
                 PublishLiveRoster();
-                live = liveReader.Read();
+                live = liveAppliedSnapshot;
+                if (live == null || live.Generation != liveGeneration)
+                    live = liveReader.Read();
             }
 
             switch (tabs.SelectedIndex)

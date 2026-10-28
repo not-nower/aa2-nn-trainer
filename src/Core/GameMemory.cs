@@ -31,6 +31,12 @@ namespace AA2Trainer
         private IntPtr handle = IntPtr.Zero;
         private Process process;
 
+        // Reused by the scalar readers so a hot read path does not allocate a
+        // tiny array per field. One buffer per thread keeps the UI thread and
+        // the live poller from sharing scratch memory.
+        [ThreadStatic]
+        private static byte[] scalarBuffer;
+
         private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
         public bool Attach()
@@ -206,6 +212,33 @@ namespace AA2Trainer
         {
             bytes = ReadBytes(address, count);
             return bytes != null;
+        }
+
+        /// <summary>
+        /// Reads up to four bytes into the per-thread scratch buffer. The
+        /// returned array is only valid until the next scalar read on the same
+        /// thread, so callers must copy the value immediately.
+        /// </summary>
+        private bool ReadScalar(uint address, int count, out byte[] buffer)
+        {
+            buffer = null;
+            if (!IsAttached || count <= 0 || count > 4) return false;
+
+            byte[] scratch = scalarBuffer;
+            if (scratch == null)
+            {
+                scratch = new byte[4];
+                scalarBuffer = scratch;
+            }
+
+            IntPtr read;
+            if (!ReadProcessMemory(handle, new IntPtr(unchecked((int)address)),
+                    scratch, new IntPtr(count), out read))
+                return false;
+            if (read.ToInt64() != count) return false;
+
+            buffer = scratch;
+            return true;
         }
 
         public bool WriteBytes(uint address, byte[] data)
@@ -388,32 +421,37 @@ namespace AA2Trainer
 
         public byte? ReadU8(uint address)
         {
-            byte[] b = ReadBytes(address, 1);
-            return b == null ? (byte?)null : b[0];
+            byte[] b;
+            if (!ReadScalar(address, 1, out b)) return null;
+            return b[0];
         }
 
         public ushort? ReadU16(uint address)
         {
-            byte[] b = ReadBytes(address, 2);
-            return b == null ? (ushort?)null : BitConverter.ToUInt16(b, 0);
+            byte[] b;
+            if (!ReadScalar(address, 2, out b)) return null;
+            return (ushort)(b[0] | (b[1] << 8));
         }
 
         public uint? ReadU32(uint address)
         {
-            byte[] b = ReadBytes(address, 4);
-            return b == null ? (uint?)null : BitConverter.ToUInt32(b, 0);
+            byte[] b;
+            if (!ReadScalar(address, 4, out b)) return null;
+            return (uint)(b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24));
         }
 
         public int? ReadI32(uint address)
         {
-            byte[] b = ReadBytes(address, 4);
-            return b == null ? (int?)null : BitConverter.ToInt32(b, 0);
+            byte[] b;
+            if (!ReadScalar(address, 4, out b)) return null;
+            return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
         }
 
         public float? ReadFloat(uint address)
         {
-            byte[] b = ReadBytes(address, 4);
-            return b == null ? (float?)null : BitConverter.ToSingle(b, 0);
+            byte[] b;
+            if (!ReadScalar(address, 4, out b)) return null;
+            return BitConverter.ToSingle(b, 0);
         }
 
         public string ReadAnsiString(uint address, int maxBytes)

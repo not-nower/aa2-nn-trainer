@@ -14,6 +14,7 @@ namespace AA2Trainer
         private int liveBusy;
         private int liveUiQueued;
         private LiveSnapshot livePending;
+        private LiveSnapshot liveAppliedSnapshot;
         private long liveAppliedSequence;
         private long liveGeneration;
         private volatile bool liveEnabled = true;
@@ -132,6 +133,7 @@ namespace AA2Trainer
             liveEnabled = false;
             StopLiveReader();
             livePending = null;
+            liveAppliedSnapshot = null;
             liveAppliedSequence = 0;
             Interlocked.Exchange(ref liveUiQueued, 0);
             if (liveReader != null)
@@ -228,6 +230,7 @@ namespace AA2Trainer
                 if (snapshot.Sequence <= liveAppliedSequence) return;
 
                 liveAppliedSequence = snapshot.Sequence;
+                liveAppliedSnapshot = snapshot;
 
                 if (tabs == null) return;
                 if (tabs.SelectedIndex == 0)

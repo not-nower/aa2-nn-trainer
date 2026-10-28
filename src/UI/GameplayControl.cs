@@ -22,6 +22,12 @@ namespace AA2Trainer
         private LoverControl lover;
         private PromisesControl promises;
 
+        private GameMemory cachedMem;
+        private GameContext cachedCtx;
+        private CharacterInfo cachedSelected;
+        private NameMap cachedNames;
+        private bool cachedWriteAllowed;
+
         public GameplayControl()
         {
             DoubleBuffered = true;
@@ -109,26 +115,64 @@ namespace AA2Trainer
             };
             promisesPage.Controls.Add(promises);
             tabs.TabPages.Add(promisesPage);
+            tabs.SelectedIndexChanged += delegate { RefreshActiveTab(); };
             Controls.Add(tabs);
+        }
+
+        /// <summary>
+        /// Refreshes only the visible sub-tab. Hidden pages keep their last
+        /// write-gate state and are refreshed when they are selected.
+        /// </summary>
+        private void RefreshActiveTab()
+        {
+            if (tabs == null || cachedMem == null || cachedCtx == null ||
+                cachedSelected == null)
+                return;
+
+            switch (tabs.SelectedIndex)
+            {
+                case 0:
+                    if (actionPlanner != null)
+                        actionPlanner.SetTarget(cachedMem, cachedCtx,
+                            cachedSelected, cachedNames, cachedWriteAllowed);
+                    break;
+                case 1:
+                    if (relationship != null)
+                        relationship.SetTarget(cachedMem, cachedCtx,
+                            cachedSelected, cachedNames, cachedWriteAllowed);
+                    break;
+                case 2:
+                    if (behaviorHistory != null)
+                        behaviorHistory.SetTarget(cachedMem, cachedCtx,
+                            cachedSelected);
+                    break;
+                case 3:
+                    if (lover != null)
+                        lover.SetTarget(cachedMem, cachedCtx, cachedSelected,
+                            cachedWriteAllowed);
+                    break;
+                case 4:
+                    if (promises != null)
+                        promises.SetTarget(cachedMem, cachedCtx, cachedSelected,
+                            cachedNames);
+                    break;
+            }
         }
 
         public void SetTarget(GameMemory mem, GameContext ctx, CharacterInfo selected,
             NameMap names, bool writeAllowed)
         {
-            if (actionPlanner != null)
-                actionPlanner.SetTarget(mem, ctx, selected, names, writeAllowed);
-            if (relationship != null)
-                relationship.SetTarget(mem, ctx, selected, names, writeAllowed);
-            if (behaviorHistory != null)
-                behaviorHistory.SetTarget(mem, ctx, selected);
-            if (lover != null)
-                lover.SetTarget(mem, ctx, selected, writeAllowed);
-            if (promises != null)
-                promises.SetTarget(mem, ctx, selected, names);
+            cachedMem = mem;
+            cachedCtx = ctx;
+            cachedSelected = selected;
+            cachedNames = names;
+            cachedWriteAllowed = writeAllowed;
+            RefreshActiveTab();
         }
 
         public void SetWriteAllowed(bool allowed)
         {
+            cachedWriteAllowed = allowed;
             if (actionPlanner != null) actionPlanner.SetWriteAllowed(allowed);
             if (relationship != null) relationship.SetWriteAllowed(allowed);
             if (behaviorHistory != null) behaviorHistory.SetWriteAllowed(allowed);
@@ -159,48 +203,16 @@ namespace AA2Trainer
 
         public void Clear()
         {
+            cachedMem = null;
+            cachedCtx = null;
+            cachedSelected = null;
+            cachedNames = null;
+            cachedWriteAllowed = false;
             if (actionPlanner != null) actionPlanner.Clear();
             if (relationship != null) relationship.Clear();
             if (behaviorHistory != null) behaviorHistory.Clear();
             if (lover != null) lover.Clear();
             if (promises != null) promises.Clear();
-        }
-
-        private static TabPage BuildPlaceholderPage(string title, string description)
-        {
-            TabPage page = new TabPage(title);
-            page.BackColor = Color.FromArgb(248, 249, 251);
-
-            TableLayoutPanel root = new TableLayoutPanel();
-            root.Dock = DockStyle.Fill;
-            root.ColumnCount = 1;
-            root.RowCount = 3;
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            root.Padding = new Padding(16, 8, 16, 8);
-            page.Controls.Add(root);
-
-            Label heading = new Label();
-            heading.Dock = DockStyle.Fill;
-            heading.TextAlign = ContentAlignment.BottomCenter;
-            heading.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            heading.ForeColor = Color.FromArgb(45, 50, 60);
-            heading.Text = title;
-            root.Controls.Add(heading, 0, 0);
-
-            Label subtext = new Label();
-            subtext.AutoSize = true;
-            subtext.Anchor = AnchorStyles.None;
-            subtext.MaximumSize = new Size(620, 0);
-            subtext.TextAlign = ContentAlignment.TopCenter;
-            subtext.Font = new Font("Segoe UI", 9F);
-            subtext.ForeColor = Color.Gray;
-            subtext.Text = description;
-            root.Controls.Add(subtext, 0, 1);
-
-            return page;
         }
     }
 }
