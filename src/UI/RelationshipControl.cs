@@ -1968,7 +1968,7 @@ namespace AA2Trainer
             uint address;
             uint size;
             GameContext view = ctx.CreateCharacterView(mem, source);
-            PortraitLoader.ReadFullInfo(mem, view, out address, out size);
+            PortraitLoader.ReadInfo(mem, view, out address, out size);
 
             if (detailPortrait != null && portraitPointer == source.Pointer &&
                 portraitAddress == address && portraitSize == size)

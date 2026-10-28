@@ -371,8 +371,8 @@ namespace AA2Trainer
         private static string RelationshipLevelText(RelationshipSnapshot relation)
         {
             if (relation == null) return "-";
-            return "L" + relation.LoveCount + "  K" + relation.LikeCount +
-                   "  D" + relation.DislikeCount + "  H" + relation.HateCount;
+            return "\u2665" + relation.LoveCount + " \u25CF" + relation.LikeCount +
+                   " \u25BC" + relation.DislikeCount + " \u2715" + relation.HateCount;
         }
 
         private static string RelationshipLevelTooltip(RelationshipSnapshot relation)
@@ -712,6 +712,7 @@ namespace AA2Trainer
             statusLabel = new Label();
             statusLabel.Dock = DockStyle.Fill;
             statusLabel.AutoSize = false;
+            statusLabel.AutoEllipsis = true;
             statusLabel.TextAlign = ContentAlignment.MiddleLeft;
             statusLabel.Font = statusFont;
             statusLabel.ForeColor = Color.FromArgb(72, 76, 86);

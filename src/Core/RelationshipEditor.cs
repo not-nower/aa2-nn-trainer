@@ -53,6 +53,26 @@ namespace AA2Trainer
     }
 
     /// <summary>
+    /// One classmate's ordered feeling history toward the selected character.
+    /// History is oldest first, newest last, and contains only feeling codes
+    /// (0 Love, 1 Like, 2 Dislike, 3 Hate). No timestamps or action names are
+    /// stored by the game.
+    /// </summary>
+    public sealed class RelationshipHistoryRow
+    {
+        public CharacterInfo Source;
+        public bool HasRecord;
+        public int[] History = new int[0];
+        public int Latest = -1;
+        public int LatestLevel = -1;
+
+        public int Count
+        {
+            get { return History == null ? 0 : History.Length; }
+        }
+    }
+
+    /// <summary>
     /// Reads and writes the compact 0x58-byte relationship records. Incoming
     /// means: for every classmate, find that classmate's record whose target is
     /// the selected character's seat.
@@ -114,6 +134,71 @@ namespace AA2Trainer
                 return string.Compare(na, nb, StringComparison.OrdinalIgnoreCase);
             });
             return list;
+        }
+
+        /// <summary>
+        /// Returns one row per classmate with that classmate's ordered feeling
+        /// history toward the target. Pairs without a record are included with
+        /// HasRecord=false so the UI can show empty history slots.
+        /// </summary>
+        public static List<RelationshipHistoryRow> ReadIncomingHistory(GameMemory mem,
+            GameContext ctx, CharacterInfo target)
+        {
+            List<RelationshipHistoryRow> list = new List<RelationshipHistoryRow>();
+            if (mem == null || ctx == null || target == null) return list;
+            if (target.Seat < 0 || target.Seat > 24) return list;
+
+            foreach (CharacterInfo source in ctx.Characters)
+            {
+                if (source == null || source.Pointer == target.Pointer) continue;
+
+                RelationshipHistoryRow row = new RelationshipHistoryRow();
+                row.Source = source;
+
+                RelationshipRecord record = FindRecord(mem, source.Pointer, target.Seat);
+                if (record != null)
+                {
+                    row.HasRecord = true;
+                    ReadHistory(mem, record, row);
+                }
+                list.Add(row);
+            }
+
+            list.Sort(delegate (RelationshipHistoryRow a, RelationshipHistoryRow b)
+            {
+                int sa = a.Source == null ? 99 : a.Source.Seat;
+                int sb = b.Source == null ? 99 : b.Source.Seat;
+                int c = sa.CompareTo(sb);
+                if (c != 0) return c;
+                string na = a.Source == null ? "" : a.Source.Name;
+                string nb = b.Source == null ? "" : b.Source.Name;
+                return string.Compare(na, nb, StringComparison.OrdinalIgnoreCase);
+            });
+            return list;
+        }
+
+        private static void ReadHistory(GameMemory mem, RelationshipRecord record,
+            RelationshipHistoryRow row)
+        {
+            if (record.HistoryCount <= 0 || record.HistoryStart == 0) return;
+
+            int take = Math.Min(record.HistoryCount, 30);
+            uint start = record.HistoryStart +
+                (uint)((record.HistoryCount - take) * 4);
+            byte[] data = mem.ReadBytes(start, take * 4);
+            if (data == null) return;
+
+            int[] history = new int[take];
+            for (int i = 0; i < take; i++)
+                history[i] = BitConverter.ToInt32(data, i * 4);
+
+            row.History = history;
+            int last = history[take - 1];
+            if (last >= 0 && last <= 3)
+            {
+                row.Latest = last;
+                row.LatestLevel = record.Levels[last];
+            }
         }
 
         public static RelationshipRecord FindRecord(GameMemory mem, uint sourcePointer,
@@ -196,6 +281,119 @@ namespace AA2Trainer
         /// requested; its address is re-read so a reallocated history array is
         /// handled safely.
         /// </summary>
+        /// <summary>
+        /// Changes one existing feeling event. Counts are adjusted by −1/+1 so
+        /// the LLDH tally keeps matching the edited history. Empty slots are
+        /// not created; the history length is unchanged.
+        /// </summary>
+        public static bool TryWriteHistory(GameMemory mem, uint sourcePointer,
+            int targetSeat, int displayIndex, int feeling, out string error)
+        {
+            error = null;
+            if (feeling < 0 || feeling > 3)
+            {
+                error = "Unknown feeling value.";
+                return false;
+            }
+
+            RelationshipRecord record = FindRecord(mem, sourcePointer, targetSeat);
+            if (record == null)
+            {
+                error = "The relationship record is no longer available.";
+                return false;
+            }
+
+            int take = Math.Min(record.HistoryCount, 30);
+            if (displayIndex < 0 || displayIndex >= take)
+            {
+                error = "There is no history event at this position.";
+                return false;
+            }
+
+            int absoluteIndex = record.HistoryCount - take + displayIndex;
+            uint address = record.HistoryStart + (uint)(absoluteIndex * 4);
+            int? oldFeeling = mem.ReadI32(address);
+            if (!oldFeeling.HasValue)
+            {
+                error = "The history event is unreadable.";
+                return false;
+            }
+            if (oldFeeling.Value == feeling) return true;
+
+            if (!MemoryWriter.TryWriteInt32(mem, address, feeling,
+                "Feeling event", out error))
+                return false;
+
+            int[] counts = new int[4];
+            int[] points = new int[4];
+            int[] levels = new int[4];
+            Array.Copy(record.Counts, counts, 4);
+            Array.Copy(record.Points, points, 4);
+            Array.Copy(record.Levels, levels, 4);
+
+            if (oldFeeling.Value >= 0 && oldFeeling.Value <= 3 &&
+                counts[oldFeeling.Value] > 0)
+                counts[oldFeeling.Value]--;
+            counts[feeling]++;
+
+            if (!TryWrite(mem, record, counts, points, levels, -1, false, out error))
+            {
+                error = "History event changed, but the counts update failed: " + error;
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Sets every existing history event to one feeling. Counts are
+        /// rewritten from the history length; points and levels are unchanged.
+        /// </summary>
+        public static bool TryWriteHistoryAll(GameMemory mem, uint sourcePointer,
+            int targetSeat, int feeling, out string error)
+        {
+            error = null;
+            if (feeling < 0 || feeling > 3)
+            {
+                error = "Unknown feeling value.";
+                return false;
+            }
+
+            RelationshipRecord record = FindRecord(mem, sourcePointer, targetSeat);
+            if (record == null)
+            {
+                error = "The relationship record is no longer available.";
+                return false;
+            }
+            if (record.HistoryCount <= 0 || record.HistoryStart == 0)
+            {
+                error = "There is no history to update.";
+                return false;
+            }
+
+            byte[] buffer = new byte[record.HistoryCount * 4];
+            byte[] one = BitConverter.GetBytes(feeling);
+            for (int i = 0; i < record.HistoryCount; i++)
+                Buffer.BlockCopy(one, 0, buffer, i * 4, 4);
+
+            if (!MemoryWriter.TryWriteBlock(mem, record.HistoryStart, buffer,
+                "Feeling history", out error))
+                return false;
+
+            int[] counts = new int[4];
+            int[] points = new int[4];
+            int[] levels = new int[4];
+            counts[feeling] = record.HistoryCount;
+            Array.Copy(record.Points, points, 4);
+            Array.Copy(record.Levels, levels, 4);
+
+            if (!TryWrite(mem, record, counts, points, levels, -1, false, out error))
+            {
+                error = "History was changed, but the counts update failed: " + error;
+                return false;
+            }
+            return true;
+        }
+
         public static bool TryWrite(GameMemory mem, RelationshipRecord current,
             int[] counts, int[] points, int[] levels, int latest, bool writeLatest,
             out string error)

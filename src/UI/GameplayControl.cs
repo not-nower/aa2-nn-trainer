@@ -17,6 +17,7 @@ namespace AA2Trainer
 
         private TabControl tabs;
         private RelationshipControl relationship;
+        private BehaviorHistoryControl behaviorHistory;
 
         public GameplayControl()
         {
@@ -52,8 +53,17 @@ namespace AA2Trainer
             relationshipPage.Controls.Add(relationship);
             tabs.TabPages.Add(relationshipPage);
 
-            tabs.TabPages.Add(BuildPlaceholderPage("Behavior History",
-                "Recent behavior and action history will be added here."));
+            TabPage behaviorPage = new TabPage("Behavior History");
+            behaviorPage.BackColor = Color.FromArgb(248, 249, 251);
+            behaviorHistory = new BehaviorHistoryControl();
+            behaviorHistory.Dock = DockStyle.Fill;
+            behaviorHistory.ConfirmWriteAllowed = delegate
+            {
+                return ConfirmWriteAllowed == null || ConfirmWriteAllowed();
+            };
+            behaviorPage.Controls.Add(behaviorHistory);
+            tabs.TabPages.Add(behaviorPage);
+
             tabs.TabPages.Add(BuildPlaceholderPage("Lover",
                 "Lover status and related controls will be added here."));
             tabs.TabPages.Add(BuildPlaceholderPage("Promises",
@@ -66,16 +76,20 @@ namespace AA2Trainer
         {
             if (relationship != null)
                 relationship.SetTarget(mem, ctx, selected, names, writeAllowed);
+            if (behaviorHistory != null)
+                behaviorHistory.SetTarget(mem, ctx, selected);
         }
 
         public void SetWriteAllowed(bool allowed)
         {
             if (relationship != null) relationship.SetWriteAllowed(allowed);
+            if (behaviorHistory != null) behaviorHistory.SetWriteAllowed(allowed);
         }
 
         public void Clear()
         {
             if (relationship != null) relationship.Clear();
+            if (behaviorHistory != null) behaviorHistory.Clear();
         }
 
         private static TabPage BuildPlaceholderPage(string title, string description)
