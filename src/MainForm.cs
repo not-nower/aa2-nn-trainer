@@ -63,6 +63,7 @@ namespace AA2Trainer
         private Dictionary<string, Label> sessionKv;
 
         private ClassRosterControl roster;
+        private GameplayControl gameplay;
         private CharacterDataControl characterData;
         private TraitsControl traits;
         private BodyControl body;
@@ -214,6 +215,7 @@ namespace AA2Trainer
             FormClosing += delegate
             {
                 ClearLiveState();
+                if (gameplay != null) gameplay.Clear();
                 refreshTimer.Stop();
                 healthTimer.Stop();
                 filterTimer.Stop();
@@ -581,6 +583,7 @@ namespace AA2Trainer
             };
 
             tabs.TabPages.Add(BuildRosterTab());
+            tabs.TabPages.Add(BuildGameplayTab());
             tabs.TabPages.Add(BuildCharacterEditorTab());
             tabs.TabPages.Add(BuildSaveViewerTab());
             tabs.TabPages.Add(BuildOptionTab());
@@ -812,6 +815,7 @@ namespace AA2Trainer
             if (hair != null) hair.SetWriteAllowed(writesAllowed);
             if (outfits != null) outfits.SetWriteAllowed(writesAllowed);
             if (optionsControl != null) optionsControl.SetWriteAllowed(writesAllowed);
+            if (gameplay != null) gameplay.SetWriteAllowed(writesAllowed);
             UpdateScheduleGate();
         }
 
@@ -935,6 +939,7 @@ namespace AA2Trainer
             UpdateWindowTitle();
             seatList.Items.Clear();
             if (roster != null) roster.Clear();
+            if (gameplay != null) gameplay.Clear();
             if (characterData != null) characterData.Clear();
             if (traits != null) traits.Clear();
             if (body != null) body.Clear();
@@ -961,6 +966,7 @@ namespace AA2Trainer
             if (!mem.IsAttached || ctx.Selected == null)
             {
                 if (roster != null) roster.Clear();
+                if (gameplay != null) gameplay.Clear();
                 if (characterData != null) characterData.Clear();
                 if (traits != null) traits.Clear();
                 if (body != null) body.Clear();
@@ -986,6 +992,10 @@ namespace AA2Trainer
                         roster.RefreshRoster(mem, ctx, ctx.Selected, names, live);
                     break;
                 case 1:
+                    if (gameplay != null)
+                        gameplay.SetTarget(mem, ctx, ctx.Selected, names, writesAllowed);
+                    break;
+                case 2:
                     if (characterEditorTabs != null && characterEditorTabs.SelectedIndex == 0 &&
                         characterData != null)
                     {
@@ -1030,7 +1040,7 @@ namespace AA2Trainer
                         outfits.SetTarget(mem, ctx.Selected, writesAllowed);
                     }
                     break;
-                case 2:
+                case 3:
                     if (saveViewer != null)
                     {
                         RefreshSaveViewer();
@@ -1039,11 +1049,11 @@ namespace AA2Trainer
                         if (ctx.Selected != null) saveViewer.SetSelectedSeat(ctx.Selected.Seat);
                     }
                     break;
-                case 3:
+                case 4:
                     if (optionsControl != null)
                         optionsControl.SetTarget(mem, ctx, writesAllowed);
                     break;
-                case 4:
+                case 5:
                     RefreshDebugTabValues();
                     break;
             }

@@ -223,7 +223,7 @@ namespace AA2Trainer
 
             // Keep whichever editor sub-tab was last open; only the top-level
             // tab changes.
-            if (tabs != null) tabs.SelectedIndex = 1; // Character Editor
+            if (tabs != null) tabs.SelectedIndex = 2; // Character Editor
             RefreshCurrentTabValues();
         }
 

@@ -1,0 +1,258 @@
+using System;
+using System.Collections.Generic;
+
+namespace AA2Trainer
+{
+    /// <summary>
+    /// One incoming relationship record: the source character's view of the
+    /// selected target. Points are partial progress toward the next count;
+    /// counts are the latest-30 window; levels are the game's cached Lots/Some/Low.
+    /// </summary>
+    public sealed class RelationshipRecord
+    {
+        public CharacterInfo Source;
+        public int TargetSeat = -1;
+        public uint Address;
+        public bool HasRecord;
+
+        public readonly int[] Points = new int[4];
+        public readonly int[] Counts = new int[4];
+        public readonly int[] Levels = new int[4];
+
+        public int Latest = -1;
+        public int HistoryCount;
+        public uint HistoryStart;
+        public uint HistoryEnd;
+
+        public int SumCounts
+        {
+            get { return Counts[0] + Counts[1] + Counts[2] + Counts[3]; }
+        }
+
+        public int LatestLevel
+        {
+            get { return Latest >= 0 && Latest < 4 ? Levels[Latest] : -1; }
+        }
+
+        public RelationshipRecord Clone()
+        {
+            RelationshipRecord copy = new RelationshipRecord();
+            copy.Source = Source;
+            copy.TargetSeat = TargetSeat;
+            copy.Address = Address;
+            copy.HasRecord = HasRecord;
+            Array.Copy(Points, copy.Points, 4);
+            Array.Copy(Counts, copy.Counts, 4);
+            Array.Copy(Levels, copy.Levels, 4);
+            copy.Latest = Latest;
+            copy.HistoryCount = HistoryCount;
+            copy.HistoryStart = HistoryStart;
+            copy.HistoryEnd = HistoryEnd;
+            return copy;
+        }
+    }
+
+    /// <summary>
+    /// Reads and writes the compact 0x58-byte relationship records. Incoming
+    /// means: for every classmate, find that classmate's record whose target is
+    /// the selected character's seat.
+    /// </summary>
+    public static class RelationshipEditor
+    {
+        public const int RecordSize = 0x58;
+
+        private static readonly string[] PointLabels =
+        {
+            "Love points", "Like points", "Dislike points", "Hate points"
+        };
+
+        private static readonly string[] CountLabels =
+        {
+            "Love count", "Like count", "Dislike count", "Hate count"
+        };
+
+        private static readonly string[] LevelLabels =
+        {
+            "Love level", "Like level", "Dislike level", "Hate level"
+        };
+
+        /// <summary>
+        /// Returns one row per classmate, excluding the selected character.
+        /// Pairs without a record are returned with HasRecord=false so the UI
+        /// can show "No record yet" instead of hiding them.
+        /// </summary>
+        public static List<RelationshipRecord> ReadIncoming(GameMemory mem,
+            GameContext ctx, CharacterInfo target)
+        {
+            List<RelationshipRecord> list = new List<RelationshipRecord>();
+            if (mem == null || ctx == null || target == null) return list;
+            if (target.Seat < 0 || target.Seat > 24) return list;
+
+            foreach (CharacterInfo source in ctx.Characters)
+            {
+                if (source == null || source.Pointer == target.Pointer) continue;
+
+                RelationshipRecord record = FindRecord(mem, source.Pointer, target.Seat);
+                if (record == null)
+                {
+                    record = new RelationshipRecord();
+                    record.TargetSeat = target.Seat;
+                    record.HasRecord = false;
+                }
+                record.Source = source;
+                list.Add(record);
+            }
+
+            list.Sort(delegate (RelationshipRecord a, RelationshipRecord b)
+            {
+                int sa = a.Source == null ? 99 : a.Source.Seat;
+                int sb = b.Source == null ? 99 : b.Source.Seat;
+                int c = sa.CompareTo(sb);
+                if (c != 0) return c;
+                string na = a.Source == null ? "" : a.Source.Name;
+                string nb = b.Source == null ? "" : b.Source.Name;
+                return string.Compare(na, nb, StringComparison.OrdinalIgnoreCase);
+            });
+            return list;
+        }
+
+        public static RelationshipRecord FindRecord(GameMemory mem, uint sourcePointer,
+            int targetSeat)
+        {
+            if (mem == null || !mem.IsAttached) return null;
+            if (sourcePointer == 0 || targetSeat < 0 || targetSeat > 24) return null;
+
+            uint? more = mem.ReadU32(sourcePointer + 0xF64);
+            if (!more.HasValue || more.Value == 0) return null;
+
+            uint? start = mem.ReadU32(more.Value + 0x16A18);
+            uint? end = mem.ReadU32(more.Value + 0x16A1C);
+            if (!start.HasValue || !end.HasValue) return null;
+            if (start.Value == 0 || end.Value <= start.Value) return null;
+
+            long bytes = (long)end.Value - (long)start.Value;
+            long count = bytes / RecordSize;
+            if (count <= 0 || count > 64) return null;
+
+            byte[] block = mem.ReadBytes(start.Value, (int)(count * RecordSize));
+            if (block == null) return null;
+
+            for (int i = 0; i < count; i++)
+            {
+                int offset = i * RecordSize;
+                if (BitConverter.ToInt32(block, offset) != targetSeat) continue;
+
+                RelationshipRecord record = new RelationshipRecord();
+                record.TargetSeat = targetSeat;
+                record.Address = start.Value + (uint)offset;
+                record.HasRecord = true;
+
+                for (int f = 0; f < 4; f++)
+                {
+                    record.Points[f] = BitConverter.ToInt32(block, offset + 0x04 + f * 4);
+                    record.Counts[f] = BitConverter.ToInt32(block, offset + 0x24 + f * 4);
+                    record.Levels[f] = BitConverter.ToInt32(block, offset + 0x34 + f * 4);
+                }
+
+                uint historyStart = BitConverter.ToUInt32(block, offset + 0x18);
+                uint historyEnd = BitConverter.ToUInt32(block, offset + 0x1C);
+                record.HistoryStart = historyStart;
+                record.HistoryEnd = historyEnd;
+
+                long historyBytes = (long)historyEnd - (long)historyStart;
+                long historyCount = historyBytes > 0 ? historyBytes / 4 : 0;
+                if (historyCount < 0 || historyCount > 256) historyCount = 0;
+                record.HistoryCount = (int)historyCount;
+
+                if (record.HistoryCount > 0)
+                {
+                    int? latest = mem.ReadI32(historyEnd - 4);
+                    if (latest.HasValue && latest.Value >= 0 && latest.Value <= 3)
+                        record.Latest = latest.Value;
+                }
+
+                return record;
+            }
+            return null;
+        }
+
+        public static bool TryWrite(GameMemory mem, uint sourcePointer, int targetSeat,
+            int[] counts, int[] points, int[] levels, int latest, bool writeLatest,
+            out string error)
+        {
+            RelationshipRecord current = FindRecord(mem, sourcePointer, targetSeat);
+            if (current == null)
+            {
+                error = "The relationship record is no longer available.";
+                return false;
+            }
+            return TryWrite(mem, current, counts, points, levels, latest, writeLatest,
+                out error);
+        }
+
+        /// <summary>
+        /// Writes only values that differ from the freshly read record, and
+        /// reads each one back. The newest history entry is written only when
+        /// requested; its address is re-read so a reallocated history array is
+        /// handled safely.
+        /// </summary>
+        public static bool TryWrite(GameMemory mem, RelationshipRecord current,
+            int[] counts, int[] points, int[] levels, int latest, bool writeLatest,
+            out string error)
+        {
+            error = null;
+            if (current == null || !current.HasRecord)
+            {
+                error = "No relationship record is loaded.";
+                return false;
+            }
+            if (counts == null || points == null || levels == null ||
+                counts.Length < 4 || points.Length < 4 || levels.Length < 4)
+            {
+                error = "The relationship values are incomplete.";
+                return false;
+            }
+
+            for (int f = 0; f < 4; f++)
+            {
+                if (current.Points[f] != points[f] &&
+                    !MemoryWriter.TryWriteInt32(mem, current.Address + 0x04 + (uint)(f * 4),
+                        points[f], PointLabels[f], out error))
+                    return false;
+
+                if (current.Counts[f] != counts[f] &&
+                    !MemoryWriter.TryWriteInt32(mem, current.Address + 0x24 + (uint)(f * 4),
+                        counts[f], CountLabels[f], out error))
+                    return false;
+
+                if (current.Levels[f] != levels[f] &&
+                    !MemoryWriter.TryWriteInt32(mem, current.Address + 0x34 + (uint)(f * 4),
+                        levels[f], LevelLabels[f], out error))
+                    return false;
+            }
+
+            if (!writeLatest || latest < 0) return true;
+
+            uint? historyStart = mem.ReadU32(current.Address + 0x18);
+            uint? historyEnd = mem.ReadU32(current.Address + 0x1C);
+            if (!historyStart.HasValue || !historyEnd.HasValue ||
+                historyStart.Value == 0 || historyEnd.Value <= historyStart.Value ||
+                historyEnd.Value < 4)
+            {
+                error = "There is no history entry to update.";
+                return false;
+            }
+
+            int? currentLatest = mem.ReadI32(historyEnd.Value - 4);
+            if (!currentLatest.HasValue)
+            {
+                error = "The newest history entry is unreadable.";
+                return false;
+            }
+            if (currentLatest.Value == latest) return true;
+
+            return MemoryWriter.TryWriteInt32(mem, historyEnd.Value - 4, latest,
+                "Latest feeling", out error);
+        }
+    }
+}

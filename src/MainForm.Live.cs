@@ -89,7 +89,7 @@ namespace AA2Trainer
         {
             if (tabs == null) return false;
             if (tabs.SelectedIndex == 0) return true;
-            if (tabs.SelectedIndex == 1 && characterEditorTabs != null &&
+            if (tabs.SelectedIndex == 2 && characterEditorTabs != null &&
                 characterEditorTabs.SelectedIndex == 0)
                 return true;
             return false;
@@ -235,7 +235,7 @@ namespace AA2Trainer
                     if (roster != null)
                         roster.ApplyLiveSnapshot(snapshot, names);
                 }
-                else if (tabs.SelectedIndex == 1 && characterEditorTabs != null &&
+                else if (tabs.SelectedIndex == 2 && characterEditorTabs != null &&
                          characterEditorTabs.SelectedIndex == 0 && characterData != null)
                 {
                     characterData.ApplyLiveStatus(snapshot.SelectedStatus);
