@@ -5,9 +5,8 @@ using System.Windows.Forms;
 namespace AA2Trainer
 {
     /// <summary>
-    /// Gameplay features. Relationship is implemented; the other pages remain
-    /// placeholders until the action planner, behavior history, lover controls,
-    /// and promises are implemented.
+    /// Gameplay features. Relationship, Behavior History, Lover and Promises
+    /// are implemented; Action/Planner remains a placeholder.
     /// </summary>
     public sealed class GameplayControl : UserControl
     {
@@ -18,6 +17,8 @@ namespace AA2Trainer
         private TabControl tabs;
         private RelationshipControl relationship;
         private BehaviorHistoryControl behaviorHistory;
+        private LoverControl lover;
+        private PromisesControl promises;
 
         public GameplayControl()
         {
@@ -64,10 +65,35 @@ namespace AA2Trainer
             behaviorPage.Controls.Add(behaviorHistory);
             tabs.TabPages.Add(behaviorPage);
 
-            tabs.TabPages.Add(BuildPlaceholderPage("Lover",
-                "Lover status and related controls will be added here."));
-            tabs.TabPages.Add(BuildPlaceholderPage("Promises",
-                "Promise tracking and related controls will be added here."));
+            TabPage loverPage = new TabPage("Lover");
+            loverPage.BackColor = Color.FromArgb(248, 249, 251);
+            lover = new LoverControl();
+            lover.Dock = DockStyle.Fill;
+            lover.ConfirmWriteAllowed = delegate
+            {
+                return ConfirmWriteAllowed == null || ConfirmWriteAllowed();
+            };
+            lover.OpenCharacterRequested += delegate(object sender,
+                CharacterSelectedEventArgs e)
+            {
+                if (CharacterActivated != null)
+                    CharacterActivated(this, e);
+            };
+            loverPage.Controls.Add(lover);
+            tabs.TabPages.Add(loverPage);
+
+            TabPage promisesPage = new TabPage("Promises");
+            promisesPage.BackColor = Color.FromArgb(248, 249, 251);
+            promises = new PromisesControl();
+            promises.Dock = DockStyle.Fill;
+            promises.OpenCharacterRequested += delegate(object sender,
+                CharacterSelectedEventArgs e)
+            {
+                if (CharacterActivated != null)
+                    CharacterActivated(this, e);
+            };
+            promisesPage.Controls.Add(promises);
+            tabs.TabPages.Add(promisesPage);
             Controls.Add(tabs);
         }
 
@@ -78,18 +104,25 @@ namespace AA2Trainer
                 relationship.SetTarget(mem, ctx, selected, names, writeAllowed);
             if (behaviorHistory != null)
                 behaviorHistory.SetTarget(mem, ctx, selected);
+            if (lover != null)
+                lover.SetTarget(mem, ctx, selected, writeAllowed);
+            if (promises != null)
+                promises.SetTarget(mem, ctx, selected, names);
         }
 
         public void SetWriteAllowed(bool allowed)
         {
             if (relationship != null) relationship.SetWriteAllowed(allowed);
             if (behaviorHistory != null) behaviorHistory.SetWriteAllowed(allowed);
+            if (lover != null) lover.SetWriteAllowed(allowed);
         }
 
         public void Clear()
         {
             if (relationship != null) relationship.Clear();
             if (behaviorHistory != null) behaviorHistory.Clear();
+            if (lover != null) lover.Clear();
+            if (promises != null) promises.Clear();
         }
 
         private static TabPage BuildPlaceholderPage(string title, string description)
