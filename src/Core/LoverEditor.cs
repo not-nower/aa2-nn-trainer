@@ -112,6 +112,67 @@ namespace AA2Trainer
                 "Lover days", out error);
         }
 
+        /// <summary>
+        /// Sets or clears both directions of a lover pair. When setting, each
+        /// side keeps an existing nonzero day count; a zero count becomes 1.
+        /// When clearing, both day counters are reset to zero.
+        /// </summary>
+        public static bool TryWriteMutualLovers(GameMemory mem, CharacterInfo first,
+            CharacterInfo second, bool lovers, out string error)
+        {
+            error = null;
+            if (mem == null || first == null || second == null)
+            {
+                error = "The pair is no longer available.";
+                return false;
+            }
+            if (!ValidatePair(first, second.Seat, out error)) return false;
+            if (!ValidatePair(second, first.Seat, out error)) return false;
+            if (first.Pointer == second.Pointer)
+            {
+                error = "A character cannot be their own lover.";
+                return false;
+            }
+
+            byte? firstDays = mem.ReadU8(first.Pointer + DaysOffset +
+                (uint)second.Seat);
+            byte? secondDays = mem.ReadU8(second.Pointer + DaysOffset +
+                (uint)first.Seat);
+
+            List<string> errors = new List<string>();
+            string writeError;
+            if (!TryWriteLover(mem, first, second.Seat, lovers, out writeError))
+                errors.Add(writeError);
+            if (!TryWriteLover(mem, second, first.Seat, lovers, out writeError))
+                errors.Add(writeError);
+
+            if (lovers)
+            {
+                if (firstDays.HasValue && firstDays.Value == 0 &&
+                    !TryWriteDays(mem, first, second.Seat, 1, out writeError))
+                    errors.Add(writeError);
+                if (secondDays.HasValue && secondDays.Value == 0 &&
+                    !TryWriteDays(mem, second, first.Seat, 1, out writeError))
+                    errors.Add(writeError);
+            }
+            else
+            {
+                if (firstDays.HasValue && firstDays.Value != 0 &&
+                    !TryWriteDays(mem, first, second.Seat, 0, out writeError))
+                    errors.Add(writeError);
+                if (secondDays.HasValue && secondDays.Value != 0 &&
+                    !TryWriteDays(mem, second, first.Seat, 0, out writeError))
+                    errors.Add(writeError);
+            }
+
+            if (errors.Count > 0)
+            {
+                error = string.Join(" ", errors.ToArray());
+                return false;
+            }
+            return true;
+        }
+
         public static bool TryWriteCompatibility(GameMemory mem, CharacterInfo source,
             int targetSeat, int compatibility, out string error)
         {

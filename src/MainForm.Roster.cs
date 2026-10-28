@@ -21,6 +21,12 @@ namespace AA2Trainer
             roster.CharacterClicked += Roster_CharacterClicked;
             roster.CharacterActivated += Roster_CharacterActivated;
             roster.PlayRequested += Roster_PlayRequested;
+            roster.RelationshipActionRequested += Roster_RelationshipActionRequested;
+            roster.IsRelationshipFrozen = delegate(uint pointer, int targetSeat)
+            {
+                return gameplay != null &&
+                    gameplay.IsRelationshipFrozen(pointer, targetSeat);
+            };
             page.Controls.Add(roster);
             return page;
         }
@@ -268,6 +274,103 @@ namespace AA2Trainer
             PopulateSeats();
             RefreshCurrentTabValues();
             SetSummaryText("Now playing: " + info.Name);
+        }
+
+        private void Roster_RelationshipActionRequested(object sender,
+            RosterRelationshipEventArgs e)
+        {
+            if (e == null || e.Source == null || e.Target == null ||
+                !mem.IsAttached)
+                return;
+
+            CharacterInfo source = ctx.FindByPointer(e.Source.Pointer);
+            if (source == null) source = e.Source;
+            CharacterInfo target = ctx.FindByPointer(e.Target.Pointer);
+            if (target == null) target = e.Target;
+
+            if (source.Pointer == target.Pointer) return;
+            if (target.Seat < 0 || target.Seat > 24)
+            {
+                SetSummaryText("The selected character has no class seat.");
+                return;
+            }
+            if (gameplay == null)
+            {
+                SetSummaryText("The relationship editor is not available.");
+                return;
+            }
+
+            RunHealthCheck();
+            if (!writesAllowed || !mem.CanWrite)
+            {
+                MessageBox.Show(this,
+                    "The write gate is locked. Wait for a clean pointer check before changing this relationship.",
+                    "Relationship", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            bool ok;
+            string error;
+            string summary;
+            switch (e.Action)
+            {
+                case RosterRelationshipAction.SetLove:
+                    ok = gameplay.ApplyRelationshipFeeling(mem, source, target, 0,
+                        writesAllowed, out error);
+                    summary = "Set " + source.Name + "'s Love toward " +
+                        target.Name + " to 30.";
+                    break;
+                case RosterRelationshipAction.SetLike:
+                    ok = gameplay.ApplyRelationshipFeeling(mem, source, target, 1,
+                        writesAllowed, out error);
+                    summary = "Set " + source.Name + "'s Like toward " +
+                        target.Name + " to 30.";
+                    break;
+                case RosterRelationshipAction.SetDislike:
+                    ok = gameplay.ApplyRelationshipFeeling(mem, source, target, 2,
+                        writesAllowed, out error);
+                    summary = "Set " + source.Name + "'s Dislike toward " +
+                        target.Name + " to 30.";
+                    break;
+                case RosterRelationshipAction.SetHate:
+                    ok = gameplay.ApplyRelationshipFeeling(mem, source, target, 3,
+                        writesAllowed, out error);
+                    summary = "Set " + source.Name + "'s Hate toward " +
+                        target.Name + " to 30.";
+                    break;
+                case RosterRelationshipAction.SetLover:
+                    ok = LoverEditor.TryWriteMutualLovers(mem, source, target,
+                        true, out error);
+                    summary = "Made " + source.Name + " and " + target.Name +
+                        " lovers.";
+                    break;
+                case RosterRelationshipAction.BreakUp:
+                    ok = LoverEditor.TryWriteMutualLovers(mem, source, target,
+                        false, out error);
+                    summary = "Broke up " + source.Name + " and " + target.Name + ".";
+                    break;
+                case RosterRelationshipAction.ToggleFreeze:
+                    bool frozen = gameplay.IsRelationshipFrozen(source.Pointer,
+                        target.Seat);
+                    ok = gameplay.SetRelationshipFrozen(mem, source, target,
+                        !frozen, writesAllowed, out error);
+                    summary = frozen
+                        ? "Unfroze " + source.Name + " toward " + target.Name + "."
+                        : "Froze " + source.Name + " toward " + target.Name + ".";
+                    break;
+                default:
+                    return;
+            }
+
+            if (!ok)
+            {
+                MessageBox.Show(this, error ?? "The relationship change failed.",
+                    "Relationship", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            RefreshCurrentTabValues();
+            SetSummaryText(summary);
         }
 
         private void SyncSeatList(CharacterInfo info)

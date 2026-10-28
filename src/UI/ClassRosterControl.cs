@@ -17,6 +17,32 @@ namespace AA2Trainer
         }
     }
 
+    public enum RosterRelationshipAction
+    {
+        SetLover,
+        BreakUp,
+        SetLove,
+        SetLike,
+        SetDislike,
+        SetHate,
+        ToggleFreeze
+    }
+
+    public sealed class RosterRelationshipEventArgs : EventArgs
+    {
+        public CharacterInfo Source { get; private set; }
+        public CharacterInfo Target { get; private set; }
+        public RosterRelationshipAction Action { get; private set; }
+
+        public RosterRelationshipEventArgs(CharacterInfo source, CharacterInfo target,
+            RosterRelationshipAction action)
+        {
+            Source = source;
+            Target = target;
+            Action = action;
+        }
+    }
+
     public sealed class ClassRosterControl : UserControl
     {
         // Visual classroom, left-to-right columns. Seat numbering runs
@@ -37,6 +63,8 @@ namespace AA2Trainer
         public event EventHandler<CharacterSelectedEventArgs> CharacterClicked;
         public event EventHandler<CharacterSelectedEventArgs> CharacterActivated;
         public event EventHandler<CharacterSelectedEventArgs> PlayRequested;
+        public event EventHandler<RosterRelationshipEventArgs> RelationshipActionRequested;
+        public Func<uint, int, bool> IsRelationshipFrozen { get; set; }
 
         public ClassRosterControl()
         {
@@ -70,6 +98,12 @@ namespace AA2Trainer
                     card.Click += Card_Click;
                     card.DoubleClicked += Card_DoubleClicked;
                     card.PlayClicked += Card_PlayClicked;
+                    card.RelationshipActionClicked += Card_RelationshipActionClicked;
+                    card.FrozenLookup = delegate(uint pointer, int targetSeat)
+                    {
+                        return IsRelationshipFrozen != null &&
+                            IsRelationshipFrozen(pointer, targetSeat);
+                    };
                     cards[seat] = card;
                     grid.Controls.Add(card, c, r);
                 }
@@ -229,6 +263,8 @@ namespace AA2Trainer
                 string statusText = "";
                 string statusTooltip = "";
                 bool isLover = false;
+                bool otherIsLover = false;
+                bool hasRelationship = false;
                 if (selected != null)
                 {
                     if (selected.Pointer == info.Pointer)
@@ -242,12 +278,22 @@ namespace AA2Trainer
                         statusText = RelationshipLevelText(relation);
                         statusTooltip = RelationshipLevelTooltip(relation);
                         isLover = relation != null && relation.IsLover;
+                        hasRelationship = relation != null;
+                        if (selected.Pointer != 0 && info.Seat >= 0 && info.Seat <= 24)
+                        {
+                            byte? reverse = mem.ReadU8(selected.Pointer +
+                                LoverEditor.LoverOffset + (uint)info.Seat);
+                            otherIsLover = reverse.HasValue && reverse.Value != 0;
+                        }
                     }
                 }
 
                 card.SetCharacter(info, info.Name, personalityText, actionText,
                     targetText, locationText, moodText, statusText, statusTooltip,
                     gender.HasValue ? gender.Value : -1, isLover, info.IsPlayer);
+                card.ContextTarget = selected;
+                card.HasRelationship = hasRelationship;
+                card.OtherIsLover = otherIsLover;
                 card.SetSelected(selected != null && selected.Pointer == info.Pointer);
 
                 uint addr;
@@ -359,6 +405,14 @@ namespace AA2Trainer
             if (card == null || card.Character == null) return;
             if (PlayRequested != null)
                 PlayRequested(this, new CharacterSelectedEventArgs(card.Character));
+        }
+
+        private void Card_RelationshipActionClicked(object sender,
+            RosterRelationshipEventArgs e)
+        {
+            if (e == null || e.Source == null || e.Target == null) return;
+            if (RelationshipActionRequested != null)
+                RelationshipActionRequested(this, e);
         }
 
         private static int? ReadInt(GameMemory mem, GameContext view, string name)
@@ -527,8 +581,13 @@ namespace AA2Trainer
     {
         public int Seat { get; private set; }
         public CharacterInfo Character { get; private set; }
+        public CharacterInfo ContextTarget { get; set; }
+        public bool HasRelationship { get; set; }
+        public bool OtherIsLover { get; set; }
+        public Func<uint, int, bool> FrozenLookup { get; set; }
         public event EventHandler DoubleClicked;
         public event EventHandler PlayClicked;
+        public event EventHandler<RosterRelationshipEventArgs> RelationshipActionClicked;
 
         private readonly Label seatLabel;
         private readonly Label badgeLabel;
@@ -543,6 +602,13 @@ namespace AA2Trainer
         private readonly ToolTip tooltip;
         private readonly ContextMenuStrip contextMenu;
         private readonly ToolStripMenuItem playItem;
+        private readonly ToolStripMenuItem setLoverItem;
+        private readonly ToolStripMenuItem breakUpItem;
+        private readonly ToolStripMenuItem setLoveItem;
+        private readonly ToolStripMenuItem setLikeItem;
+        private readonly ToolStripMenuItem setDislikeItem;
+        private readonly ToolStripMenuItem setHateItem;
+        private readonly ToolStripMenuItem freezeItem;
 
         private readonly Font seatFont;
         private readonly Font badgeFont;
@@ -591,6 +657,43 @@ namespace AA2Trainer
             DoubleClick += delegate { RaiseDoubleClicked(); };
 
             contextMenu = new ContextMenuStrip();
+            contextMenu.ShowItemToolTips = true;
+
+            setLoverItem = new ToolStripMenuItem("Set Lover");
+            setLoverItem.Click += delegate
+            {
+                RaiseRelationshipAction(RosterRelationshipAction.SetLover);
+            };
+            contextMenu.Items.Add(setLoverItem);
+
+            breakUpItem = new ToolStripMenuItem("Break Up");
+            breakUpItem.Click += delegate
+            {
+                RaiseRelationshipAction(RosterRelationshipAction.BreakUp);
+            };
+            contextMenu.Items.Add(breakUpItem);
+
+            contextMenu.Items.Add(new ToolStripSeparator());
+
+            setLoveItem = AddRelationshipItem("Set Love",
+                RosterRelationshipAction.SetLove);
+            setLikeItem = AddRelationshipItem("Set Like",
+                RosterRelationshipAction.SetLike);
+            setDislikeItem = AddRelationshipItem("Set Dislike",
+                RosterRelationshipAction.SetDislike);
+            setHateItem = AddRelationshipItem("Set Hate",
+                RosterRelationshipAction.SetHate);
+
+            freezeItem = new ToolStripMenuItem("Freeze Relationship");
+            freezeItem.ToolTipText = "Restore this relationship every 100 ms";
+            freezeItem.Click += delegate
+            {
+                RaiseRelationshipAction(RosterRelationshipAction.ToggleFreeze);
+            };
+            contextMenu.Items.Add(freezeItem);
+
+            contextMenu.Items.Add(new ToolStripSeparator());
+
             playItem = new ToolStripMenuItem("Play this character");
             playItem.Click += delegate { RaisePlayClicked(); };
             contextMenu.Items.Add(playItem);
@@ -750,13 +853,53 @@ namespace AA2Trainer
             }
         }
 
+        private ToolStripMenuItem AddRelationshipItem(string text,
+            RosterRelationshipAction action)
+        {
+            ToolStripMenuItem item = new ToolStripMenuItem(text);
+            item.Click += delegate { RaiseRelationshipAction(action); };
+            contextMenu.Items.Add(item);
+            return item;
+        }
+
         private void ContextMenu_Opening(object sender, CancelEventArgs e)
         {
             bool hasCharacter = Character != null;
             bool isPlayer = hasCharacter && Character.IsPlayer;
+            bool validPair = hasCharacter && ContextTarget != null &&
+                ContextTarget.Seat >= 0 && ContextTarget.Seat <= 24 &&
+                ContextTarget.Pointer != Character.Pointer;
+
+            bool frozen = false;
+            if (validPair && FrozenLookup != null)
+                frozen = FrozenLookup(Character.Pointer, ContextTarget.Seat);
+
+            setLoverItem.Enabled = validPair && !(isLover && OtherIsLover);
+            breakUpItem.Enabled = validPair && (isLover || OtherIsLover);
+
+            bool hasRecord = validPair && HasRelationship;
+            setLoveItem.Enabled = hasRecord;
+            setLikeItem.Enabled = hasRecord;
+            setDislikeItem.Enabled = hasRecord;
+            setHateItem.Enabled = hasRecord;
+            freezeItem.Enabled = hasRecord;
+            freezeItem.Checked = hasRecord && frozen;
+
             playItem.Enabled = hasCharacter && !isPlayer;
             playItem.Text = isPlayer ? "Already the player character" : "Play this character";
             e.Cancel = !hasCharacter;
+        }
+
+        private void RaiseRelationshipAction(RosterRelationshipAction action)
+        {
+            if (Character == null || ContextTarget == null) return;
+            if (ContextTarget.Seat < 0 || ContextTarget.Seat > 24) return;
+            if (ContextTarget.Pointer == Character.Pointer) return;
+            if (RelationshipActionClicked != null)
+            {
+                RelationshipActionClicked(this, new RosterRelationshipEventArgs(
+                    Character, ContextTarget, action));
+            }
         }
 
         private void RaisePlayClicked()
@@ -855,6 +998,9 @@ namespace AA2Trainer
         public void SetEmpty()
         {
             Character = null;
+            ContextTarget = null;
+            HasRelationship = false;
+            OtherIsLover = false;
             selected = false;
             gender = -1;
             if (isLover)

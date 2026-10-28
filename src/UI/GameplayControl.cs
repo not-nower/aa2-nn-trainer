@@ -117,6 +117,28 @@ namespace AA2Trainer
             if (lover != null) lover.SetWriteAllowed(allowed);
         }
 
+        public bool ApplyRelationshipFeeling(GameMemory mem, CharacterInfo source,
+            CharacterInfo target, int feeling, bool canWrite, out string error)
+        {
+            error = "The relationship editor is unavailable.";
+            return relationship != null && relationship.ApplyRosterFeeling(mem,
+                source, target, feeling, canWrite, out error);
+        }
+
+        public bool IsRelationshipFrozen(uint sourcePointer, int targetSeat)
+        {
+            return relationship != null &&
+                relationship.IsRosterFrozen(sourcePointer, targetSeat);
+        }
+
+        public bool SetRelationshipFrozen(GameMemory mem, CharacterInfo source,
+            CharacterInfo target, bool frozen, bool canWrite, out string error)
+        {
+            error = "The relationship editor is unavailable.";
+            return relationship != null && relationship.SetRosterFrozen(mem,
+                source, target, frozen, canWrite, out error);
+        }
+
         public void Clear()
         {
             if (relationship != null) relationship.Clear();

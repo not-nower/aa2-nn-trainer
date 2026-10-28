@@ -881,6 +881,129 @@ namespace AA2Trainer
             SetStatus("Select a character in the left list.", false);
         }
 
+        /// <summary>
+        /// Applies one feeling to a source-to-target pair from outside this
+        /// tab, using the same counts/points/levels/latest rules as the row
+        /// context menu. The frozen snapshot is updated when the pair is
+        /// frozen, so the new values are the ones that get restored.
+        /// </summary>
+        public bool ApplyRosterFeeling(GameMemory memory, CharacterInfo source,
+            CharacterInfo target, int feeling, bool canWrite, out string error)
+        {
+            error = null;
+            if (memory == null || source == null || target == null ||
+                source.Pointer == 0 || target.Pointer == 0)
+            {
+                error = "The pair is no longer available.";
+                return false;
+            }
+            if (source.Pointer == target.Pointer)
+            {
+                error = "A character cannot have a relationship with themselves.";
+                return false;
+            }
+            if (target.Seat < 0 || target.Seat > 24)
+            {
+                error = "The target has no class seat.";
+                return false;
+            }
+            if (feeling < 0 || feeling > 3)
+            {
+                error = "Unknown feeling.";
+                return false;
+            }
+            if (!canWrite)
+            {
+                error = "The write gate is locked.";
+                return false;
+            }
+
+            mem = memory;
+            writeAllowed = canWrite;
+
+            RelationshipRecord record = RelationshipEditor.FindRecord(mem,
+                source.Pointer, target.Seat);
+            if (record == null)
+            {
+                error = "No relationship record exists for this pair.";
+                return false;
+            }
+            record.Source = source;
+            return ApplyFeeling(record, feeling, out error);
+        }
+
+        public bool IsRosterFrozen(uint sourcePointer, int targetSeat)
+        {
+            if (sourcePointer == 0 || targetSeat < 0 || targetSeat > 24)
+                return false;
+            return freezes.ContainsKey(Key(sourcePointer, targetSeat));
+        }
+
+        /// <summary>
+        /// Starts or stops a freeze for a source-to-target pair without
+        /// changing the tab's selected character. This is the same freeze
+        /// dictionary and timer used by the Relationship tab.
+        /// </summary>
+        public bool SetRosterFrozen(GameMemory memory, CharacterInfo source,
+            CharacterInfo target, bool frozen, bool canWrite, out string error)
+        {
+            error = null;
+            if (memory == null || source == null || target == null ||
+                source.Pointer == 0 || target.Pointer == 0)
+            {
+                error = "The pair is no longer available.";
+                return false;
+            }
+            if (source.Pointer == target.Pointer)
+            {
+                error = "A character cannot have a relationship with themselves.";
+                return false;
+            }
+            if (target.Seat < 0 || target.Seat > 24)
+            {
+                error = "The target has no class seat.";
+                return false;
+            }
+            if (frozen && !canWrite)
+            {
+                error = "The write gate is locked.";
+                return false;
+            }
+
+            mem = memory;
+            writeAllowed = canWrite;
+
+            string key = Key(source.Pointer, target.Seat);
+            if (!frozen)
+            {
+                if (freezes.Remove(key))
+                {
+                    StopFreezeTimerIfEmpty();
+                    UpdateFrozenLabels();
+                    UpdateRowFrozenMarks();
+                    UpdateEditorEnabled();
+                }
+                return true;
+            }
+
+            if (freezes.ContainsKey(key)) return true;
+
+            RelationshipRecord record = RelationshipEditor.FindRecord(mem,
+                source.Pointer, target.Seat);
+            if (record == null)
+            {
+                error = "No relationship record exists for this pair.";
+                return false;
+            }
+            record.Source = source;
+            freezes[key] = new FrozenEntry(record, target.Name);
+            StartFreezeTimer();
+            UpdateFrozenLabels();
+            UpdateRowFrozenMarks();
+            UpdateEditorEnabled();
+            return true;
+        }
+
         private void UpdateHeader()
         {
             if (targetLabel == null) return;
