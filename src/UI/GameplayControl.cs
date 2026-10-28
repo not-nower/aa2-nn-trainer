@@ -5,16 +5,18 @@ using System.Windows.Forms;
 namespace AA2Trainer
 {
     /// <summary>
-    /// Gameplay features. Relationship, Behavior History, Lover and Promises
-    /// are implemented; Action/Planner remains a placeholder.
+    /// Gameplay features. Action/Planner, Relationship, Behavior History,
+    /// Lover and Promises are implemented.
     /// </summary>
     public sealed class GameplayControl : UserControl
     {
         public event EventHandler<CharacterSelectedEventArgs> CharacterActivated;
+        public event Action<bool> PlannerActiveChanged;
 
         public Func<bool> ConfirmWriteAllowed { get; set; }
 
         private TabControl tabs;
+        private ActionPlannerControl actionPlanner;
         private RelationshipControl relationship;
         private BehaviorHistoryControl behaviorHistory;
         private LoverControl lover;
@@ -34,8 +36,21 @@ namespace AA2Trainer
             tabs = new TabControl();
             tabs.Dock = DockStyle.Fill;
             tabs.Padding = new Point(12, 6);
-            tabs.TabPages.Add(BuildPlaceholderPage("Action/Planner",
-                "Action controls and the action planner will be added here."));
+            TabPage actionPage = new TabPage("Action/Planner");
+            actionPage.BackColor = Color.FromArgb(248, 249, 251);
+            actionPlanner = new ActionPlannerControl();
+            actionPlanner.Dock = DockStyle.Fill;
+            actionPlanner.ConfirmWriteAllowed = delegate
+            {
+                return ConfirmWriteAllowed == null || ConfirmWriteAllowed();
+            };
+            actionPlanner.PlannerActiveChanged += delegate(bool active)
+            {
+                if (PlannerActiveChanged != null)
+                    PlannerActiveChanged(active);
+            };
+            actionPage.Controls.Add(actionPlanner);
+            tabs.TabPages.Add(actionPage);
 
             TabPage relationshipPage = new TabPage("Relationship");
             relationshipPage.BackColor = Color.FromArgb(248, 249, 251);
@@ -100,6 +115,8 @@ namespace AA2Trainer
         public void SetTarget(GameMemory mem, GameContext ctx, CharacterInfo selected,
             NameMap names, bool writeAllowed)
         {
+            if (actionPlanner != null)
+                actionPlanner.SetTarget(mem, ctx, selected, names, writeAllowed);
             if (relationship != null)
                 relationship.SetTarget(mem, ctx, selected, names, writeAllowed);
             if (behaviorHistory != null)
@@ -112,6 +129,7 @@ namespace AA2Trainer
 
         public void SetWriteAllowed(bool allowed)
         {
+            if (actionPlanner != null) actionPlanner.SetWriteAllowed(allowed);
             if (relationship != null) relationship.SetWriteAllowed(allowed);
             if (behaviorHistory != null) behaviorHistory.SetWriteAllowed(allowed);
             if (lover != null) lover.SetWriteAllowed(allowed);
@@ -141,6 +159,7 @@ namespace AA2Trainer
 
         public void Clear()
         {
+            if (actionPlanner != null) actionPlanner.Clear();
             if (relationship != null) relationship.Clear();
             if (behaviorHistory != null) behaviorHistory.Clear();
             if (lover != null) lover.Clear();

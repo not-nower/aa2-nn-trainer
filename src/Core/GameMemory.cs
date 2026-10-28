@@ -13,6 +13,10 @@ namespace AA2Trainer
         public const uint PROCESS_VM_OPERATION = 0x0008;
         public const uint PROCESS_QUERY_INFORMATION = 0x0400;
         private const uint PAGE_READWRITE = 0x04;
+        private const uint PAGE_EXECUTE_READWRITE = 0x40;
+        private const uint MEM_COMMIT = 0x1000;
+        private const uint MEM_RESERVE = 0x2000;
+        private const uint MEM_RELEASE = 0x8000;
 
         public int Pid { get; private set; }
         public string ProcessName { get; private set; }
@@ -249,6 +253,139 @@ namespace AA2Trainer
             return true;
         }
 
+        /// <summary>
+        /// Writes memory without changing its protection. Used for the
+        /// executable planner-hook page, which must stay executable while the
+        /// game may be running the handler.
+        /// </summary>
+        public bool WriteRawBytes(uint address, byte[] data)
+        {
+            WriteError = null;
+            if (!IsAttached)
+            {
+                WriteError = "The game is not attached.";
+                return false;
+            }
+            if (!CanWrite)
+            {
+                WriteError = string.IsNullOrEmpty(WriteError)
+                    ? "The process handle was opened read-only."
+                    : WriteError;
+                return false;
+            }
+            if (data == null || data.Length == 0)
+            {
+                WriteError = "Nothing to write.";
+                return false;
+            }
+
+            IntPtr written;
+            bool ok = WriteProcessMemory(handle,
+                new IntPtr(unchecked((int)address)), data,
+                new IntPtr(data.Length), out written);
+            if (!ok || written.ToInt64() != data.Length)
+            {
+                int error = ok ? 0 : Marshal.GetLastWin32Error();
+                WriteError = "WriteProcessMemory failed" +
+                    (error != 0 ? " (error " + error + ")" : "") +
+                    " at 0x" + address.ToString("X8") + ".";
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Patches executable memory with PAGE_EXECUTE_READWRITE, verifies the
+        /// bytes, and restores the original protection. The page stays
+        /// executable for the whole write, so another game thread cannot hit a
+        /// non-executable code page during the patch.
+        /// </summary>
+        public bool WriteCodeBytes(uint address, byte[] data)
+        {
+            WriteError = null;
+            if (!IsAttached)
+            {
+                WriteError = "The game is not attached.";
+                return false;
+            }
+            if (!CanWrite)
+            {
+                WriteError = string.IsNullOrEmpty(WriteError)
+                    ? "The process handle was opened read-only."
+                    : WriteError;
+                return false;
+            }
+            if (data == null || data.Length == 0)
+            {
+                WriteError = "Nothing to write.";
+                return false;
+            }
+
+            IntPtr target = new IntPtr(unchecked((int)address));
+            uint oldProtect;
+            if (!VirtualProtectEx(handle, target, (UIntPtr)data.Length,
+                PAGE_EXECUTE_READWRITE, out oldProtect))
+            {
+                WriteError = "VirtualProtectEx failed (error " +
+                    Marshal.GetLastWin32Error() + ") at 0x" +
+                    address.ToString("X8") + ".";
+                return false;
+            }
+
+            IntPtr written;
+            bool ok = WriteProcessMemory(handle, target, data,
+                new IntPtr(data.Length), out written);
+            int writeError = ok ? 0 : Marshal.GetLastWin32Error();
+
+            byte[] check = ok ? ReadBytes(address, data.Length) : null;
+            bool verified = check != null && check.Length == data.Length;
+            if (verified)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    if (check[i] != data[i])
+                    {
+                        verified = false;
+                        break;
+                    }
+                }
+            }
+
+            uint ignored;
+            VirtualProtectEx(handle, target, (UIntPtr)data.Length,
+                oldProtect, out ignored);
+
+            if (!ok || written.ToInt64() != data.Length)
+            {
+                WriteError = "WriteProcessMemory failed" +
+                    (writeError != 0 ? " (error " + writeError + ")" : "") +
+                    " at 0x" + address.ToString("X8") + ".";
+                return false;
+            }
+            if (!verified)
+            {
+                WriteError = "Code patch verification failed at 0x" +
+                    address.ToString("X8") + ".";
+                return false;
+            }
+            return true;
+        }
+
+        public uint Allocate(int size)
+        {
+            if (!IsAttached || !CanWrite || size <= 0) return 0;
+            IntPtr result = VirtualAllocEx(handle, IntPtr.Zero, new IntPtr(size),
+                MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+            return (uint)result.ToInt64();
+        }
+
+        public void Free(uint address)
+        {
+            if (!IsAttached || !CanWrite || address == 0) return;
+            VirtualFreeEx(handle, new IntPtr(unchecked((int)address)),
+                IntPtr.Zero, MEM_RELEASE);
+        }
+
         public byte? ReadU8(uint address)
         {
             byte[] b = ReadBytes(address, 1);
@@ -339,6 +476,14 @@ namespace AA2Trainer
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool VirtualProtectEx(IntPtr process, IntPtr address,
             UIntPtr size, uint newProtect, out uint oldProtect);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr VirtualAllocEx(IntPtr process, IntPtr address,
+            IntPtr size, uint allocationType, uint protect);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool VirtualFreeEx(IntPtr process, IntPtr address,
+            IntPtr size, uint freeType);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CloseHandle(IntPtr handle);

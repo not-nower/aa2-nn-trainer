@@ -18,6 +18,10 @@ namespace AA2Trainer
                 return writesAllowed && mem.CanWrite;
             };
             gameplay.CharacterActivated += Gameplay_CharacterActivated;
+            gameplay.PlannerActiveChanged += delegate(bool active)
+            {
+                PlannerActive = active;
+            };
             page.Controls.Add(gameplay);
             return page;
         }

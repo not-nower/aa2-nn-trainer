@@ -844,6 +844,7 @@ namespace AA2Trainer
             if (!TryRefreshContext())
             {
                 StopLiveReader();
+                if (gameplay != null) gameplay.Clear();
                 mem.Detach();
                 ShowNotAttached("Class data is not loaded.");
                 return;
@@ -891,6 +892,7 @@ namespace AA2Trainer
                 if (!TryRefreshContext())
                 {
                     StopLiveReader();
+                    if (gameplay != null) gameplay.Clear();
                     mem.Detach();
                     ShowNotAttached("Class data is not loaded.");
                     return;
@@ -911,6 +913,7 @@ namespace AA2Trainer
             if (!TryRefreshContext())
             {
                 StopLiveReader();
+                if (gameplay != null) gameplay.Clear();
                 mem.Detach();
                 ShowNotAttached("Class data is not loaded.");
                 return;
