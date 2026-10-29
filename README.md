@@ -30,12 +30,16 @@ Fully vibe coded.
 
 ## Quick start
 
-1. Start AA2Play and load a class/save.
-2. Run `AA2Trainer.exe` as administrator.
-3. The trainer attaches automatically. Use the ↻ button to re-attach or refresh.
-4. Select a character in Class Seats or the roster.
-5. Use the tabs to view or edit the selected character.
-6. For Action/Planner, enter free roam, select an actor and target, then run the action.
+1. Download the latest `AA2Trainer-v*-win-x86.zip` from the
+   [Releases page](https://github.com/not-nower/aa2-nn-trainer/releases/latest)
+   and extract it. The zip contains `AA2Trainer.exe`, its `.config`, `LICENSE`,
+   and a short readme.
+2. Start AA2Play and load a class/save.
+3. Run `AA2Trainer.exe` as administrator.
+4. The trainer attaches automatically. Use the ↻ button to re-attach or refresh.
+5. Select a character in Class Seats or the roster.
+6. Use the tabs to view or edit the selected character.
+7. For Action/Planner, enter free roam, select an actor and target, then run the action.
 
 ## Name tables
 
