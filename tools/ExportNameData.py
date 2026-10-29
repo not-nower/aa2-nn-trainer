@@ -36,7 +36,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--input",
-        default=r"E:\Game\Etc\AA2Again\ReiEdit\XML",
+        default=r"path\to\ReiEdit\XML",
         help="ReiEdit XML folder",
     )
     parser.add_argument(

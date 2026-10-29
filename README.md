@@ -3,6 +3,12 @@
 Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
 
+> **Save safety:** this tool writes to game memory and can rewrite class save
+> files. Back up your saves first. Import/Replace writes a timestamped `.bak`
+> next to the save before changing it, but that is a convenience, not a
+> guarantee. Memory edits are lost unless you save in-game, and editing is only
+> tested against AA2Play 2.0.1. Use at your own risk.
+
 ## Features
 
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
@@ -110,3 +116,8 @@ running-app caveat.
 - **Ahrie** — original AA2Trainer; inspiration and reference for the game's memory structures.
 - **AAUnlimited Contributors** — [AAUnlimited](https://github.com/aa2g/AA2Unlimited); module/trigger format, planner entry, and modding framework.
 - **geneishouko** — [AA2QtEdit](https://github.com/geneishouko/AA2QtEdit); used as a reference for save and card data handling.
+- **usagirei** — [ReiEdit](https://github.com/usagirei/ReiEdit-AA2); XML name tables used to generate `NameData.tsv`.
+
+## License
+
+GNU General Public License v3.0 — see [LICENSE](LICENSE).
