@@ -73,8 +73,20 @@ namespace AA2Trainer
             characterEditorTabs.TabPages.Add(BuildFaceTab());
             characterEditorTabs.TabPages.Add(BuildHairTab());
             characterEditorTabs.TabPages.Add(BuildOutfitsTab());
+            characterEditorTabs.TabPages.Add(BuildImportReplaceTab());
 
             page.Controls.Add(characterEditorTabs);
+            return page;
+        }
+
+        private TabPage BuildImportReplaceTab()
+        {
+            TabPage page = new TabPage("Import/Replace");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            ImportReplaceControl importReplace = new ImportReplaceControl();
+            importReplace.Dock = DockStyle.Fill;
+            page.Controls.Add(importReplace);
             return page;
         }
 
@@ -173,7 +185,6 @@ namespace AA2Trainer
             UpdateOverview();
             RefreshCurrentTabValues();
             SetSummary();
-            RefreshSaveViewer();
         }
 
         private Dictionary<string, List<CharacterChoice>> BuildBodyChoices()

@@ -71,7 +71,6 @@ namespace AA2Trainer
         private HairControl hair;
         private OutfitsControl outfits;
         private OptionsControl optionsControl;
-        private SaveViewerControl saveViewer;
         private FieldGridControl personalGrid;
         private FieldGridControl relationGrid;
         private FieldGridControl activityGrid;
@@ -106,18 +105,17 @@ namespace AA2Trainer
         private bool resizeHiddenOutfits;
         private bool resizeHiddenOptions;
         private bool resizeHiddenRoster;
-        private bool resizeHiddenSaveViewer;
         private bool resizeHiddenDebugTabs;
         private string namesRoot;
         private int selectedGender;
         private int lastSeatVersion = -1;
         private string lastOutfitChoiceSignature;
-        private int lastSaveViewerSeat = -1;
         private uint lastPortraitAddr;
         private uint lastPortraitSize;
 
         private const string AppTitle = "NN's AA2 Trainer";
-        private const string DetachedTitle = AppTitle + " - not attached";
+        private static readonly string DetachedTitle =
+            AppTitle + " v" + AppInfo.Version + " - not attached";
 
         private static readonly string[] PersonalityNames = new string[]
         {
@@ -346,11 +344,6 @@ namespace AA2Trainer
                 resizeHiddenRoster = true;
                 roster.Visible = false;
             }
-            if (saveViewer != null && saveViewer.Visible)
-            {
-                resizeHiddenSaveViewer = true;
-                saveViewer.Visible = false;
-            }
             if (debugTabs != null && debugTabs.Visible)
             {
                 resizeHiddenDebugTabs = true;
@@ -430,15 +423,6 @@ namespace AA2Trainer
                 {
                     roster.Visible = true;
                     roster.PerformLayout();
-                }
-            }
-            if (resizeHiddenSaveViewer)
-            {
-                resizeHiddenSaveViewer = false;
-                if (saveViewer != null)
-                {
-                    saveViewer.Visible = true;
-                    saveViewer.PerformLayout();
                 }
             }
             if (resizeHiddenDebugTabs)
@@ -585,7 +569,6 @@ namespace AA2Trainer
             tabs.TabPages.Add(BuildRosterTab());
             tabs.TabPages.Add(BuildGameplayTab());
             tabs.TabPages.Add(BuildCharacterEditorTab());
-            tabs.TabPages.Add(BuildSaveViewerTab());
             tabs.TabPages.Add(BuildOptionTab());
             tabs.TabPages.Add(BuildDebugTab());
 
@@ -627,7 +610,6 @@ namespace AA2Trainer
                 UpdateOverview();
                 RefreshCurrentTabValues();
                 SetSummary();
-                RefreshSaveViewer();
             }
         }
 
@@ -852,7 +834,6 @@ namespace AA2Trainer
 
             EnsureNamesLoaded();
             UpdateSelectedGender();
-            RefreshSaveViewer();
             RunHealthCheck();
             PopulateSeats();
             BuildAllDefinitions();
@@ -960,8 +941,6 @@ namespace AA2Trainer
             ClearOverview();
             UpdateHealthUi();
             SetSummaryText(string.IsNullOrEmpty(reason) ? "Not attached." : "Not attached: " + reason);
-            lastSaveViewerSeat = -1;
-            RefreshSaveViewer();
         }
 
         private void RefreshCurrentTabValues(LiveSnapshot live = null)
@@ -1049,19 +1028,10 @@ namespace AA2Trainer
                     }
                     break;
                 case 3:
-                    if (saveViewer != null)
-                    {
-                        RefreshSaveViewer();
-                        saveViewer.SetGameRoot(GetGameRoot());
-                        saveViewer.SetLiveCharacters(ctx.Characters);
-                        if (ctx.Selected != null) saveViewer.SetSelectedSeat(ctx.Selected.Seat);
-                    }
-                    break;
-                case 4:
                     if (optionsControl != null)
                         optionsControl.SetTarget(mem, ctx, writesAllowed);
                     break;
-                case 5:
+                case 4:
                     RefreshDebugTabValues();
                     break;
             }
@@ -1078,7 +1048,17 @@ namespace AA2Trainer
 
         private void UpdateWindowTitle()
         {
-            string title = mem.IsAttached ? AppTitle + " - " + GameExeName() : DetachedTitle;
+            string title;
+            if (mem.IsAttached)
+            {
+                title = AppTitle + " v" + AppInfo.Version + " - " + GameExeName();
+                if (!string.IsNullOrEmpty(mem.GameVersion))
+                    title += " (" + mem.GameVersion + ")";
+            }
+            else
+            {
+                title = DetachedTitle;
+            }
             if (Text != title) Text = title;
             UpdateAttachButton();
         }

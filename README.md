@@ -7,8 +7,7 @@ Fully vibe coded.
 
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
 - **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises.
-- **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits.
-- **Save Viewer** — read-only class save inspector.
+- **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Replace (offline save/card replacer with side-by-side card-face previews).
 - **Option** — trainer live-refresh settings plus game System/Sound/Additional options.
 - **Debug** — pointer/definition browser and filters.
 - **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
@@ -56,7 +55,6 @@ running-app caveat.
   - `MainForm.CharacterEditor.cs` — Character Editor tab and sub-tabs
   - `MainForm.Gameplay.cs` — Gameplay tab wiring
   - `MainForm.Options.cs` — Option tab wiring
-  - `MainForm.SaveViewer.cs` — Save Viewer tab wiring
   - `MainForm.Debug.cs` — Debug tab, grids and filters
   - `MainForm.Live.cs` — background live poller and adaptive refresh
   - `MainForm.TopPanel.cs` — top summary, schedule header, clock and freeze
@@ -73,7 +71,7 @@ running-app caveat.
     - `LoverControl.cs` — Lover
     - `PromisesControl.cs` — Promises
     - `OptionsControl.cs` — Option editor
-    - `SaveViewerControl.cs` — Save Viewer
+    - `ImportReplaceControl.cs` — offline save/card replacer
     - `FieldGridControl.cs` — reusable debug field grid
     - `PortraitLoader.cs` — portrait image loading
     - `DashboardData.cs`, `DisplayText.cs` — definition lookup and display text
@@ -87,11 +85,14 @@ running-app caveat.
     - `RelationshipData.cs`, `RelationshipEditor.cs`, `LoverEditor.cs`, `PromiseReader.cs` — relationship data
     - `ActionParams.cs`, `ActionStateReader.cs`, `ActionPlannerEngine.cs`, `PlannerHook.cs` — Action/Planner and planner hook
     - `AauModuleReader.cs` — read-only AAU module list parser
-    - `SaveData.cs` — class save parser
+    - `CardFields.cs` — card edit-data field definitions
+    - `CardSnapshot.cs` — card PNG/edit-data parser
+    - `ClassSaveFile.cs` — class save parser/writer
     - `PlayerSwitch.cs` — play-as helper
   - `Data/`
     - `NameData.tsv` — action, location, personality and name tables
     - `TraitEffects.tsv` — trait effect tooltip text
+    - `CardFields.tsv` — card edit-data field table
 - `tools/ExportNameData.py` — regenerates `NameData.tsv` from ReiEdit XML
 - `build.ps1` — stops a running trainer, then builds x86 `bin/AA2Trainer.exe`
 - `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 project

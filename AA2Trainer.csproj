@@ -7,6 +7,7 @@
     <Prefer32Bit>true</Prefer32Bit>
     <AssemblyName>AA2Trainer</AssemblyName>
     <RootNamespace>AA2Trainer</RootNamespace>
+    <Version>0.2.0</Version>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
@@ -36,6 +37,8 @@
                       LogicalName="AA2Trainer.NameData.tsv" />
     <EmbeddedResource Include="src\Data\TraitEffects.tsv"
                       LogicalName="AA2Trainer.TraitEffects.tsv" />
+    <EmbeddedResource Include="src\Data\CardFields.tsv"
+                      LogicalName="AA2Trainer.CardFields.tsv" />
   </ItemGroup>
 
 </Project>

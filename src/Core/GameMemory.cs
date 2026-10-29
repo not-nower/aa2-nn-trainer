@@ -21,6 +21,7 @@ namespace AA2Trainer
         public int Pid { get; private set; }
         public string ProcessName { get; private set; }
         public string GamePath { get; private set; }
+        public string GameVersion { get; private set; }
         public uint ModuleBase { get; private set; }
         public uint ModuleSize { get; private set; }
         public bool IsAttached { get { return handle != IntPtr.Zero; } }
@@ -55,6 +56,7 @@ namespace AA2Trainer
                 Pid = process.Id;
                 ProcessName = process.ProcessName;
                 try { GamePath = process.MainModule.FileName; } catch { GamePath = null; }
+                GameVersion = AppInfo.FileVersion(GamePath);
 
                 CanWrite = false;
                 WriteError = null;
@@ -115,6 +117,7 @@ namespace AA2Trainer
             Pid = 0;
             ProcessName = null;
             GamePath = null;
+            GameVersion = null;
             ModuleBase = 0;
             ModuleSize = 0;
             CanWrite = false;

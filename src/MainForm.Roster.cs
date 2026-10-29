@@ -407,7 +407,6 @@ namespace AA2Trainer
             UpdateOverview();
             RefreshCurrentTabValues();
             SetSummary();
-            RefreshSaveViewer();
         }
 
         private void SeatList_MouseMove(object sender, MouseEventArgs e)
