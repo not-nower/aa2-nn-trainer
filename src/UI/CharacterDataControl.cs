@@ -116,7 +116,18 @@ namespace AA2Trainer
         private Button revertButton;
         private Label gateLabel;
         private Label statusLabel;
+        private DataGridView modulesGrid;
+        private Label modulesStatusLabel;
+        private LinkLabel modulesRefreshLink;
+        private AauModuleReadResult modulesResult;
+        private uint modulesCharacterPointer;
+        private bool modulesCacheValid;
+        private DateTime modulesRetryUtc = DateTime.MinValue;
         private ToolTip tooltip;
+
+        private const string ModulesTooltip =
+            "AAU modules are stored in the character card and loaded with the class. " +
+            "Use AA2Edit to change them, then reload the character.";
 
         public CharacterDataControl()
         {
@@ -295,6 +306,105 @@ namespace AA2Trainer
 
             attributesGroup.Controls.Add(attributesTable);
             left.Controls.Add(attributesGroup, 0, 2);
+
+            GroupBox modulesGroup = new GroupBox();
+            modulesGroup.Text = "Modules (AAU, read-only)";
+            modulesGroup.Dock = DockStyle.Fill;
+            modulesGroup.Padding = new Padding(10, 4, 10, 4);
+            modulesGroup.Margin = new Padding(0, 4, 0, 0);
+
+            TableLayoutPanel modulesTable = new TableLayoutPanel();
+            modulesTable.Dock = DockStyle.Fill;
+            modulesTable.ColumnCount = 1;
+            modulesTable.RowCount = 2;
+            modulesTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            modulesTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            modulesTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            modulesTable.Margin = new Padding(0);
+
+            TableLayoutPanel modulesHeader = new TableLayoutPanel();
+            modulesHeader.Dock = DockStyle.Fill;
+            modulesHeader.ColumnCount = 2;
+            modulesHeader.RowCount = 1;
+            modulesHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            modulesHeader.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            modulesHeader.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            modulesHeader.Margin = new Padding(0);
+
+            modulesStatusLabel = new Label();
+            modulesStatusLabel.Dock = DockStyle.Fill;
+            modulesStatusLabel.AutoSize = false;
+            modulesStatusLabel.AutoEllipsis = true;
+            modulesStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
+            modulesStatusLabel.Font = new Font("Segoe UI", 8F);
+            modulesStatusLabel.ForeColor = Color.DimGray;
+            modulesStatusLabel.Margin = new Padding(0);
+            modulesStatusLabel.Text = "No AAU modules";
+            modulesHeader.Controls.Add(modulesStatusLabel, 0, 0);
+
+            modulesRefreshLink = new LinkLabel();
+            modulesRefreshLink.Text = "Refresh";
+            modulesRefreshLink.AutoSize = true;
+            modulesRefreshLink.Font = new Font("Segoe UI", 8F);
+            modulesRefreshLink.Margin = new Padding(6, 2, 0, 0);
+            modulesRefreshLink.LinkClicked += delegate
+            {
+                modulesCacheValid = false;
+                RefreshModules();
+            };
+            modulesHeader.Controls.Add(modulesRefreshLink, 1, 0);
+
+            modulesTable.Controls.Add(modulesHeader, 0, 0);
+
+            modulesGrid = new ModuleGrid();
+            modulesGrid.Dock = DockStyle.Fill;
+            modulesGrid.BackgroundColor = Color.White;
+            modulesGrid.BorderStyle = BorderStyle.FixedSingle;
+            modulesGrid.RowHeadersVisible = false;
+            modulesGrid.AllowUserToAddRows = false;
+            modulesGrid.AllowUserToDeleteRows = false;
+            modulesGrid.AllowUserToResizeRows = false;
+            modulesGrid.ReadOnly = true;
+            modulesGrid.MultiSelect = false;
+            modulesGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            modulesGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            modulesGrid.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            modulesGrid.ColumnHeadersHeight = 26;
+            modulesGrid.ColumnHeadersHeightSizeMode =
+                DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            modulesGrid.EnableHeadersVisualStyles = false;
+            modulesGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(240, 241, 244);
+            modulesGrid.ColumnHeadersDefaultCellStyle.SelectionBackColor =
+                Color.FromArgb(240, 241, 244);
+            modulesGrid.ColumnHeadersDefaultCellStyle.SelectionForeColor =
+                Color.FromArgb(30, 30, 30);
+            modulesGrid.ColumnHeadersDefaultCellStyle.Font =
+                new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            modulesGrid.DefaultCellStyle.Font = new Font("Segoe UI", 9F);
+            modulesGrid.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
+            modulesGrid.ClipboardCopyMode =
+                DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            modulesGrid.Margin = new Padding(0);
+
+            DataGridViewTextBoxColumn moduleName = new DataGridViewTextBoxColumn();
+            moduleName.HeaderText = "Module";
+            moduleName.FillWeight = 35F;
+            moduleName.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            moduleName.ReadOnly = true;
+            moduleName.SortMode = DataGridViewColumnSortMode.NotSortable;
+            modulesGrid.Columns.Add(moduleName);
+
+            DataGridViewTextBoxColumn moduleDescription = new DataGridViewTextBoxColumn();
+            moduleDescription.HeaderText = "Description";
+            moduleDescription.FillWeight = 65F;
+            moduleDescription.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            moduleDescription.ReadOnly = true;
+            moduleDescription.SortMode = DataGridViewColumnSortMode.NotSortable;
+            modulesGrid.Columns.Add(moduleDescription);
+
+            modulesTable.Controls.Add(modulesGrid, 0, 1);
+            modulesGroup.Controls.Add(modulesTable);
+            left.Controls.Add(modulesGroup, 0, 3);
 
             GroupBox academicGroup = new GroupBox();
             academicGroup.Text = "Academic";
@@ -508,6 +618,11 @@ namespace AA2Trainer
             tooltip = new ToolTip();
             tooltip.SetToolTip(gateLabel,
                 "Edits are written only when the known game build and all pointer checks pass.");
+            tooltip.SetToolTip(modulesStatusLabel, ModulesTooltip);
+            tooltip.SetToolTip(modulesGrid,
+                "Read-only list of AAU modules stored in this character's card data.");
+            tooltip.SetToolTip(modulesRefreshLink,
+                "Re-read the module list from the character card.");
             tooltip.SetToolTip(firstNameBox, "First name shown in the class roster.");
             tooltip.SetToolTip(lastNameBox, "Last name shown in the class roster.");
             tooltip.SetToolTip(profileBox,
@@ -712,6 +827,7 @@ namespace AA2Trainer
                 }
             }
 
+            RefreshModules();
             UpdateGate();
         }
 
@@ -833,9 +949,151 @@ namespace AA2Trainer
             sexExperienceCheck.Checked = false;
             analExperienceCheck.Checked = false;
             UpdateProfileBytes();
+            ClearModules();
 
             SetStatus("Attach to the game and select a character.", false);
             UpdateGate();
+        }
+
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Visible)
+            {
+                modulesCacheValid = false;
+                RefreshModules();
+            }
+        }
+
+        private void RefreshModules()
+        {
+            if (modulesGrid == null || modulesStatusLabel == null) return;
+            if (mem == null || !mem.IsAttached || character == null)
+            {
+                ClearModules();
+                return;
+            }
+
+            if (modulesCacheValid && modulesCharacterPointer == character.Pointer)
+                return;
+
+            DateTime now = DateTime.UtcNow;
+            if (modulesResult != null &&
+                modulesCharacterPointer == character.Pointer &&
+                now < modulesRetryUtc)
+            {
+                ApplyModules(modulesResult);
+                return;
+            }
+
+            AauModuleReadResult result = AauModuleReader.Read(mem, character.Pointer);
+            modulesResult = result;
+            modulesCharacterPointer = character.Pointer;
+            modulesCacheValid = result.Status != AauModuleStatus.Error;
+            modulesRetryUtc = result.Status == AauModuleStatus.Error
+                ? now.AddSeconds(3) : DateTime.MinValue;
+            ApplyModules(result);
+        }
+
+        private void ApplyModules(AauModuleReadResult result)
+        {
+            if (modulesGrid == null || modulesStatusLabel == null) return;
+
+            modulesGrid.SuspendLayout();
+            try
+            {
+                modulesGrid.Rows.Clear();
+                if (result != null)
+                {
+                    foreach (AauModuleInfo module in result.Modules)
+                    {
+                        int index = modulesGrid.Rows.Add();
+                        DataGridViewRow row = modulesGrid.Rows[index];
+                        row.Cells[0].Value = module.Name ?? "";
+                        row.Cells[1].Value = CleanModuleText(module.Description);
+                        row.Cells[0].ToolTipText = module.Name ?? "";
+                        row.Cells[1].ToolTipText = module.Description ?? "";
+                    }
+                }
+            }
+            finally
+            {
+                modulesGrid.ResumeLayout();
+            }
+
+            if (modulesRefreshLink != null)
+                modulesRefreshLink.Enabled = character != null;
+
+            if (result == null)
+            {
+                modulesStatusLabel.Text = "No AAU modules";
+                modulesStatusLabel.ForeColor = Color.DimGray;
+                SetModulesTooltip(ModulesTooltip);
+                return;
+            }
+
+            switch (result.Status)
+            {
+                case AauModuleStatus.Ok:
+                {
+                    int count = result.Modules.Count;
+                    modulesStatusLabel.Text = (count == 1
+                        ? "1 module" : count + " modules") +
+                        " \u00B7 read-only";
+                    modulesStatusLabel.ForeColor = Color.DimGray;
+                    SetModulesTooltip(ModulesTooltip);
+                    break;
+                }
+                case AauModuleStatus.NoAauData:
+                    modulesStatusLabel.Text = "No AAU card data";
+                    modulesStatusLabel.ForeColor = Color.DimGray;
+                    SetModulesTooltip(ModulesTooltip);
+                    break;
+                case AauModuleStatus.NoModules:
+                    modulesStatusLabel.Text = "No AAU modules";
+                    modulesStatusLabel.ForeColor = Color.DimGray;
+                    SetModulesTooltip(ModulesTooltip);
+                    break;
+                default:
+                    modulesStatusLabel.Text = "Module data unreadable";
+                    modulesStatusLabel.ForeColor = Color.Firebrick;
+                    SetModulesTooltip(string.IsNullOrEmpty(result.Error)
+                        ? "The AAU module list could not be read."
+                        : result.Error);
+                    break;
+            }
+        }
+
+        private void ClearModules()
+        {
+            modulesResult = null;
+            modulesCharacterPointer = 0;
+            modulesCacheValid = false;
+            modulesRetryUtc = DateTime.MinValue;
+
+            if (modulesGrid != null) modulesGrid.Rows.Clear();
+            if (modulesStatusLabel != null)
+            {
+                modulesStatusLabel.Text = "No AAU modules";
+                modulesStatusLabel.ForeColor = Color.DimGray;
+            }
+            if (modulesRefreshLink != null) modulesRefreshLink.Enabled = false;
+            SetModulesTooltip(ModulesTooltip);
+        }
+
+        private void SetModulesTooltip(string text)
+        {
+            if (tooltip != null && modulesStatusLabel != null)
+                tooltip.SetToolTip(modulesStatusLabel, text);
+        }
+
+        private static string CleanModuleText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            return text.Replace("\r\n", " ")
+                .Replace('\r', ' ')
+                .Replace('\n', ' ')
+                .Trim();
         }
 
         private void ApplyChanges()
@@ -1259,6 +1517,30 @@ namespace AA2Trainer
             if (statusLabel == null) return;
             statusLabel.Text = text ?? "";
             statusLabel.ForeColor = error ? Color.Firebrick : Color.DimGray;
+        }
+
+        /// <summary>
+        /// The default DataGridView wheel scroll moves three rows per notch,
+        /// which skips modules when descriptions make the rows tall. Move one
+        /// row at a time so every module is readable.
+        /// </summary>
+        private sealed class ModuleGrid : DataGridView
+        {
+            protected override void OnMouseWheel(MouseEventArgs e)
+            {
+                if (Rows.Count == 0 || e.Delta == 0) return;
+
+                int current = FirstDisplayedScrollingRowIndex;
+                if (current < 0) current = 0;
+
+                int notches = Math.Max(1, Math.Abs(e.Delta) / 120);
+                int next = e.Delta > 0 ? current - notches : current + notches;
+                if (next < 0) next = 0;
+                if (next >= Rows.Count) next = Rows.Count - 1;
+
+                if (next != current)
+                    FirstDisplayedScrollingRowIndex = next;
+            }
         }
 
         protected override void Dispose(bool disposing)
