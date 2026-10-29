@@ -22,6 +22,25 @@ namespace AA2Trainer
         public Func<bool> ConfirmWriteAllowed { get; set; }
         public event EventHandler<CharacterSelectedEventArgs> OpenCharacterRequested;
 
+        /// <summary>
+        /// True while a Days/Compatibility cell is in edit mode. The live
+        /// refresh pauses on this so typed input is never overwritten.
+        /// </summary>
+        public bool IsEditingCell
+        {
+            get { return grid != null && grid.IsCurrentCellInEditMode; }
+        }
+
+        /// <summary>
+        /// The grid itself must also be left alone whenever it owns focus:
+        /// rebuilding rows or toggling visibility would drop the selection the
+        /// user needs before the first keystroke starts an edit.
+        /// </summary>
+        private bool GridHasFocus
+        {
+            get { return grid != null && grid.ContainsFocus; }
+        }
+
         private readonly List<LoverEntry> entries = new List<LoverEntry>();
         private bool resettingColumns;
 
@@ -287,21 +306,28 @@ namespace AA2Trainer
             }
 
             bool targetChanged = target == null || target.Pointer != selected.Pointer;
+
+            // Never touch the grid, labels or column state while a cell is
+            // being edited or while the grid owns focus: reassigning them
+            // cancels the in-place edit or clears the selected cell.
+            if (IsEditingCell || GridHasFocus) return;
+
             mem = memory;
             ctx = context;
             target = selected;
             SetWriteAllowed(canWrite);
+            UpdateEditorState();
             UpdateHeader();
-
-            if (grid.IsCurrentCellInEditMode) return;
 
             RefreshTable(targetChanged);
         }
 
         public void SetWriteAllowed(bool allowed)
         {
+            if (writeAllowed == allowed) return;
+
             writeAllowed = allowed;
-            if (!allowed && grid != null && grid.IsCurrentCellInEditMode)
+            if (!allowed && IsEditingCell)
                 grid.CancelEdit();
             UpdateEditorState();
         }
@@ -454,19 +480,20 @@ namespace AA2Trainer
             string name = source == null || string.IsNullOrEmpty(source.Name)
                 ? "(unnamed)" : source.Name;
 
-            bool editing = skipEditedCell && grid.IsCurrentCellInEditMode;
-            int editRow = editing ? grid.CurrentCell.RowIndex : -1;
-            int editColumn = editing ? grid.CurrentCell.ColumnIndex : -1;
+            bool editingNow = skipEditedCell && grid.IsCurrentCellInEditMode;
+            int editRow = editingNow && grid.CurrentCell != null
+                ? grid.CurrentCell.RowIndex : -1;
 
-            if (!(editRow == row.Index && editColumn == 0))
+            // Leave the row being edited untouched so the editing control keeps
+            // its text. Tooltips can still be refreshed below.
+            if (editRow != row.Index)
+            {
                 row.Cells[0].Value = seat + name;
-            if (!(editRow == row.Index && editColumn == 1))
                 row.Cells[1].Value = entry.IsLover;
-            if (!(editRow == row.Index && editColumn == 2))
                 row.Cells[2].Value = entry.Days;
-            if (!(editRow == row.Index && editColumn == 3))
                 row.Cells[3].Value = entry.HasCompatibility
                     ? (object)entry.Compatibility : "\u2014";
+            }
 
             row.Cells[1].ToolTipText = entry.IsLover
                 ? "Lover toward the selected character. Click to clear."
@@ -479,7 +506,7 @@ namespace AA2Trainer
 
         private void ApplyFilter()
         {
-            if (grid == null) return;
+            if (grid == null || grid.IsCurrentCellInEditMode) return;
 
             string view = viewCombo == null || viewCombo.SelectedIndex < 0
                 ? "All" : viewCombo.SelectedItem as string;
@@ -577,7 +604,11 @@ namespace AA2Trainer
                 e.Cancel = true;
                 SetStatus("Days and Compatibility are read-only while the write gate is locked.",
                     true);
+                return;
             }
+
+            SetStatus("Editing " + grid.Columns[e.ColumnIndex].HeaderText.ToLowerInvariant() +
+                ". Enter to apply, Esc to cancel.", false);
         }
 
         private void Grid_CellEndEdit(object sender, DataGridViewCellEventArgs e)

@@ -862,6 +862,10 @@ namespace AA2Trainer
         {
             if (WindowState == FormWindowState.Minimized) return;
 
+            // An active in-place edit must not be refreshed underneath the
+            // user: rebuilding rows or toggling visibility cancels the edit.
+            if (gameplay != null && gameplay.IsEditingCell()) return;
+
             EnsureNamesLoaded();
             if (!mem.IsAttached)
             {

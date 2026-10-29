@@ -179,6 +179,15 @@ namespace AA2Trainer
             if (lover != null) lover.SetWriteAllowed(allowed);
         }
 
+        /// <summary>
+        /// True while an in-place grid edit is active. The live refresh pauses
+        /// so a timer tick cannot discard what the user is typing.
+        /// </summary>
+        public bool IsEditingCell()
+        {
+            return lover != null && lover.IsEditingCell;
+        }
+
         public bool ApplyRelationshipFeeling(GameMemory mem, CharacterInfo source,
             CharacterInfo target, int feeling, bool canWrite, out string error)
         {
