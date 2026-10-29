@@ -107,5 +107,5 @@ running-app caveat.
 ## Credits
 
 - **Ahrie** — original AA2Trainer; inspiration and reference for the game's memory structures.
-- **AAUnlimited Contributors** — AAUnlimited; module/trigger format, planner entry, and modding framework.
-- **geneishouko** — AA2QtEdit; used as a reference for save and card data handling.
+- **AAUnlimited Contributors** — [AAUnlimited](https://github.com/aa2g/AA2Unlimited); module/trigger format, planner entry, and modding framework.
+- **geneishouko** — [AA2QtEdit](https://github.com/geneishouko/AA2QtEdit); used as a reference for save and card data handling.
