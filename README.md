@@ -3,9 +3,38 @@
 Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
 
+## Features
+
+- **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
+- **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises.
+- **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits.
+- **Save Viewer** — read-only class save inspector.
+- **Option** — trainer live-refresh settings plus game System/Sound/Additional options.
+- **Debug** — pointer/definition browser and filters.
+- **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
+- **Live refresh** — adaptive background polling.
+
+## Requirements
+
+- Windows with .NET Framework 4.8.
+- x86 AA2Play, tested against version 2.0.1.
+- Run the trainer as administrator for reliable read/write access. Without it, the trainer may attach read-only.
+- A class/save loaded in AA2Play.
+- AAUnlimited is optional. It is needed for AAU modules and the AAU planner-entry hook mode.
+- Action/Planner actions require free roam/gameplay, not the class-load screen.
+
+## Quick start
+
+1. Start AA2Play and load a class/save.
+2. Run `AA2Trainer.exe` as administrator.
+3. The trainer attaches automatically. Use the ↻ button to re-attach or refresh.
+4. Select a character in Class Seats or the roster.
+5. Use the tabs to view or edit the selected character.
+6. For Action/Planner, enter free roam, select an actor and target, then run the action.
+
 ## Build
 
-Requires the .NET SDK 8 or newer (`dotnet --version`).
+Requires the .NET SDK 8 or newer (`dotnet --version`). End users only need .NET Framework 4.8.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build.ps1
@@ -13,8 +42,10 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 
 Output: `bin\AA2Trainer.exe` — x86, targeting .NET Framework 4.8.
 
-The project is `AA2Trainer.csproj`; you can also build it directly with
-`dotnet build -c Release`.
+`build.ps1` stops a running trainer before building. `-KeepRunning` opts out,
+but the build will fail while the trainer is running. The project is
+`AA2Trainer.csproj`; `dotnet build -c Release` also works, with the same
+running-app caveat.
 
 ## Layout
 
@@ -64,6 +95,14 @@ The project is `AA2Trainer.csproj`; you can also build it directly with
 - `tools/ExportNameData.py` — regenerates `NameData.tsv` from ReiEdit XML
 - `build.ps1` — stops a running trainer, then builds x86 `bin/AA2Trainer.exe`
 - `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 project
+
+## Troubleshooting
+
+- **Not attached / OpenProcess failed** — start AA2Play and run the trainer as administrator.
+- **Class data is not loaded** — load a save/class in AA2Play first.
+- **Action/Planner does nothing** — make sure you are in free roam, the actor is idle, and a valid target is selected. Check the planner log for the hook state.
+- **Build fails because the trainer is running** — `build.ps1` stops it automatically; `-KeepRunning` skips the stop, so close the trainer first.
+- **Crash** — `crash.log` is written next to `AA2Trainer.exe`.
 
 ## Credits
 
