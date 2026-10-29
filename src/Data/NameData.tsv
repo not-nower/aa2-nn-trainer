@@ -1,5 +1,6 @@
 # AA2 NN's Trainer name data
 # enum<TAB>id<TAB>name
+# Bundled from game XML set 2026-09-06
 ACTION_KEY	0	Encourage
 ACTION_KEY	1	Calm
 ACTION_KEY	2	Praise
@@ -100,10 +101,9 @@ ACTION_KEY	96	Someone had sex
 ACTION_KEY	97	I don't want you to get near...
 ACTION_KEY	98	Serves you right
 ACTION_KEY	99	Daily sex
+ACTION_KEY	101	Fuck Try
 ACTION_KEY	102	Follow me (Sex)
 ACTION_KEY	103	Date Greeting
-ACTION_KEY	114	Wind blows Skirt up
-ACTION_KEY	101	Fuck Try
 ACTION_KEY	105	Changing Cloth
 ACTION_KEY	106	Stalking
 ACTION_KEY	107	Staring afar
@@ -112,6 +112,7 @@ ACTION_KEY	109	To Exercise
 ACTION_KEY	110	To Club
 ACTION_KEY	112	Chat Break
 ACTION_KEY	113	H Break
+ACTION_KEY	114	Wind blows Skirt up
 ACTION_KEY	115	3P Testing
 ACTION_KEY	117	Let's All Fuck
 BREASTFIRMNESS	0	Soft
@@ -132,10 +133,556 @@ CLOTHES_F	4	Blazer
 CLOTHES_F	5	Naked
 CLOTHES_F	6	Underwear
 CLOTHES_F	7	Uniform 2
+CLOTHES_F	8	Long Sleeved Sailor Uniform
+CLOTHES_F	9	NoPantsu Sailor Uniform [Nail Polish]
+CLOTHES_F	10	Puffy Sleeved Sailor Uniform [Long Skirt]
+CLOTHES_F	11	Track Outfit
+CLOTHES_F	12	Spats Outfit
+CLOTHES_F	13	Long Sleeved Sailor Uniform [Pantyhose]
+CLOTHES_F	14	NoPantsu Blazer Uniform [Nail Polish]
+CLOTHES_F	15	Blazer Uniform [Pantyhose]
+CLOTHES_F	16	Leotard
+CLOTHES_F	17	Haruka's Racing Swimsuit
+CLOTHES_F	18	Tot Bunny Suit
+CLOTHES_F	19	Bunny Hostess Jacket
+CLOTHES_F	20	Pinafore (long skirt)
+CLOTHES_F	21	Sleeveless Uniform Blouse (Neapolitan ver)
+CLOTHES_F	22	Bikini I
+CLOTHES_F	24	Sleeveless Uniform Blouse (Miku ver)
+CLOTHES_F	25	Sleeveless Uniform Blouse (SeeU ver)
+CLOTHES_F	26	Topless Underwear
+CLOTHES_F	27	Basketball Shorts
+CLOTHES_F	28	Full Bodysuit
+CLOTHES_F	29	Ruffle Bikini
+CLOTHES_F	30	Microbikini
+CLOTHES_F	31	OL Blazer Type 2
+CLOTHES_F	32	OL Trench Coat
+CLOTHES_F	33	NoPantsu Sweater Uniform [Nail Polish]
+CLOTHES_F	34	OL Blouse Type 1 + Pants
+CLOTHES_F	35	Sweater Uniform [Pantyhose]
+CLOTHES_F	36	Bikini II
+CLOTHES_F	37	Tight Dress A [High Heels]
+CLOTHES_F	38	Tight Dress B [High Heels]
+CLOTHES_F	39	Bunny Suit [High Heels]
+CLOTHES_F	40	Kitty Lingerie
+CLOTHES_F	41	Koikatsu Kigurumi/Onesie
+CLOTHES_F	42	Sleeveless Sweater and Jeans
+CLOTHES_F	43	Thong
+CLOTHES_F	44	Cosplay Club
+CLOTHES_F	45	Winter Coat
+CLOTHES_F	46	Sleeveless Sweater and Skirt
+CLOTHES_F	47	Sailor Uniform [Pantyhose]
+CLOTHES_F	48	High-Cut Swimsuit
+CLOTHES_F	49	Short Sailor Uniform [Nail Polish]
+CLOTHES_F	50	NoPantsu Short Sailor Uniform [Nail Polish]
+CLOTHES_F	51	Casual Outfit [Nail Polish]
+CLOTHES_F	52	Casual Loose Sweater
+CLOTHES_F	53	NoPantsu Casual Outfit [Nail Polish]
+CLOTHES_F	54	Highschool DxD Uniform [long sleeves]
+CLOTHES_F	55	Highschool DxD Uniform [short sleeves]
+CLOTHES_F	56	Honey Select Waitress
+CLOTHES_F	57	Ruffle Top + Jeans Skirt
+CLOTHES_F	58	Cropped Tee & Frayed Shorts
+CLOTHES_F	59	Sailor Uniform [Spats]
+CLOTHES_F	60	Blazer Uniform [Spats]
+CLOTHES_F	61	Sweater Uniform [Spats]
+CLOTHES_F	62	Jersey Outfit
+CLOTHES_F	63	Jersey Outfit [Spats]
+CLOTHES_F	64	Maid Outfit
+CLOTHES_F	65	Playhome Apron
+CLOTHES_F	66	Blazer Uniform [Tie]
+CLOTHES_F	67	Blazer Uniform [Pantyhose - Tie]
+CLOTHES_F	68	NoPantsu Blazer Uniform [Nail Polish - Tie]
+CLOTHES_F	69	Teacher Blazer [Tight Skirt - Pantyhose - Tie]
+CLOTHES_F	70	Cropped Hoodie & Frayed Shorts
+CLOTHES_F	71	Sailor Uniform [Scarf]
+CLOTHES_F	72	Sailor Uniform [Pantyhose - Scarf]
+CLOTHES_F	73	Sweater Uniform [Ribbon]
+CLOTHES_F	74	Sweater Uniform [Pantyhose - Ribbon]
+CLOTHES_F	75	Blazer Uniform [Tie - Spats]
+CLOTHES_F	76	Jersey Outfit [Swimsuit]
+CLOTHES_F	77	FF7 Aerith Dress
+CLOTHES_F	78	Miko-kini
+CLOTHES_F	79	Sweater Uniform [Backpack - NoTie]
+CLOTHES_F	80	Sweater Uniform [Backpack - Pantyhose - NoTie]
+CLOTHES_F	81	Tight Dress A [Gloves - High Heels]
+CLOTHES_F	82	Tight Dress B [Gloves - High Heels]
+CLOTHES_F	83	Bunny Suit [Gloves - High Heels]
+CLOTHES_F	84	Shirt Dress
+CLOTHES_F	85	Maid Outfit [Gloves - Pantyhose - High Heels]
+CLOTHES_F	86	Office Lady Blazer
+CLOTHES_F	87	OL Blouse Type 1 + Pants
+CLOTHES_F	88	Blazer Uniform [Gloves - Tie]
+CLOTHES_F	89	Blazer Uniform [Gloves - Pantyhose - Tie]
+CLOTHES_F	90	Teacher Blazer [Gloves - Tight Skirt - Pantyhose - Tie]
+CLOTHES_F	91	Koikatsu Breezy Shorts
+CLOTHES_F	92	HEXA Gyaru
+CLOTHES_F	93	Nude [Gloves]
+CLOTHES_F	94	Underwear Only [Gloves]
+CLOTHES_F	95	Sweater Sailor
+CLOTHES_F	96	Sweater Sailor [Pantyhose]
+CLOTHES_F	97	Long Sleeved Sweater Uniform
+CLOTHES_F	98	Long Sleeved Sweater Uniform [Pantyhose]
+CLOTHES_F	99	Skimpy Teacher Blouse
+CLOTHES_F	102	Short Shirt
+CLOTHES_F	103	Topless Poncho
+CLOTHES_F	104	Yoga Pants + Bikini
+CLOTHES_F	105	Big Hoodie
+CLOTHES_F	106	[Yoga Pants + Jersey]
+CLOTHES_F	107	[Yoga Pants + Tank Top]
+CLOTHES_F	108	RP Uniform Tucked
+CLOTHES_F	109	RP Uniform Tucked [Pantyhose]
+CLOTHES_F	110	RP Uniform Tucked [Spats]
+CLOTHES_F	111	RP Uniform Untucked
+CLOTHES_F	112	RP Uniform Untucked [Pantyhose]
+CLOTHES_F	113	RP Uniform Untucked [Spats]
+CLOTHES_F	114	Long Sleeved Shirt
+CLOTHES_F	115	Guilty Gear Kuradoberi Jam
+CLOTHES_F	116	JG2Suita's T-Shirt
+CLOTHES_F	117	Bikini III [Variant I]
+CLOTHES_F	118	Bikini III [Variant II]
+CLOTHES_F	119	Bikini III [Variant III]
+CLOTHES_F	120	Denim Jacket + Skirt
+CLOTHES_F	121	Denim Jacket + Jeans
+CLOTHES_F	122	Frill Blazer Uniform [Small Ribbon - Laces]
+CLOTHES_F	125	Robe Dress
+CLOTHES_F	126	Long Sleeved RP Uniform Tucked
+CLOTHES_F	127	Long Sleeved RP Uniform Tucked [+ Pantyhose]
+CLOTHES_F	128	Long Sleeved RP Uniform Untucked
+CLOTHES_F	129	Long Sleeved RP Uniform Untucked [+ Pantyhose]
+CLOTHES_F	130	Cardigan+Jeans
+CLOTHES_F	131	Jumper+Sweater Dress
+CLOTHES_F	132	RP Uniform [untucked, no ribbon]
+CLOTHES_F	133	Sweater + Shorts
+CLOTHES_F	134	Sweater + Jeans
+CLOTHES_F	135	T-shirt + Hotpants
+CLOTHES_F	136	Tank Top + Jeans
+CLOTHES_F	137	Tank Top + Shorts
+CLOTHES_F	138	Tucked Shirt + HS Skirt
+CLOTHES_F	139	Tank Top + Skirt
+CLOTHES_F	140	Zzz's High Cut Kyoei + Hoodie
+CLOTHES_F	141	Sweater + Short Skirt
+CLOTHES_F	142	Sweater + Short Skirt + Pantyhose
+CLOTHES_F	143	Untucked Shirt + Jeans
+CLOTHES_F	144	Honey Select Gothic Dress
+CLOTHES_F	145	Secrossphere Jersey
+CLOTHES_F	146	Sweatpants
+CLOTHES_F	147	JK Hoodie
+CLOTHES_F	148	Cowgirl
+CLOTHES_F	149	JG2Suita's Open Blazer
+CLOTHES_F	150	Zzz's Highcut Kyoei
+CLOTHES_F	151	Zzz's Sling Bikini Himo 1
+CLOTHES_F	152	Zzz's Sling Bikini Himo 2
+CLOTHES_F	153	Honey Select Sister Habit
+CLOTHES_F	154	Chinese String Bikini
+CLOTHES_F	155	Zzz's Sailor Scarf
+CLOTHES_F	156	Zzz's Long Sleeve Sailor Scarf
+CLOTHES_F	157	Female Open Blazer [no dress shirt]
+CLOTHES_F	158	Closed Blazer [no dress shirt]
+CLOTHES_F	159	2chan Pregnant Body
+CLOTHES_F	160	Zzz's Tex (Felicia/Kenichi/Leaves)
+CLOTHES_F	161	Uppervolta Bodysuit (Reslot)
+CLOTHES_F	162	2chan China Dress (Reslot)
+CLOTHES_F	163	Uppervolta Bodysuit 2 (Reslot)
+CLOTHES_F	164	Kantoku Uniform [RP+tie]
+CLOTHES_F	165	Kantoku Uniform [RP+tie+no panties]
+CLOTHES_F	166	Ai Syoujou Casual Jeans
+CLOTHES_F	167	Ai Syoujou Jeans Hotpants
+CLOTHES_F	168	Honey Select Suspenders Dress
+CLOTHES_F	169	Dead or Alive Bikini w/ Ai Syoujou Sarong
+CLOTHES_F	170	Sailor One Piece
+CLOTHES_F	171	2chan Bunny Suit (Reslot)
+CLOTHES_F	172	2chan PPD Bikini (Reslot from 32)
+CLOTHES_F	173	PPD Towel
+CLOTHES_F	174	PPD China Dress
+CLOTHES_F	175	Danganronpa, Celestia [Frilly Blazer]
+CLOTHES_F	176	RP [Tucked + Tie]
+CLOTHES_F	177	RP [Unucked + Tie]
+CLOTHES_F	178	Honey Select Casual Dress
+CLOTHES_F	179	JS3F's Silent Majority + Sailor One Piece (combined slot)
+CLOTHES_F	180	Naked Apron [Modest]
+CLOTHES_F	181	Naked Apron [Bandaid/Pasties/Bikini]
+CLOTHES_F	182	Ika's Gyaru 1[reslot]
+CLOTHES_F	183	Ika's Gyaru 2[reslot]
+CLOTHES_F	184	Ika's Gyaru 3[reslot]
+CLOTHES_F	185	Ika's Summer Teacher [reslot]
+CLOTHES_F	186	Ika's Summer teacher [NoPan+NoBra] [reslot]
+CLOTHES_F	187	Ika's Policegirl [reslot]
+CLOTHES_F	188	Ika's Shimakaze [reslot]
+CLOTHES_F	189	HS Sweater Dress [+Remake]
+CLOTHES_F	190	Sourou's Camisole
+CLOTHES_F	191	Lacey Dress
+CLOTHES_F	192	Kitty Bikini
+CLOTHES_F	193	Open RP
+CLOTHES_F	194	Open RP [+Pantyhose]
+CLOTHES_F	195	Arc's Sweater 2
+CLOTHES_F	196	Arc's Sweater 2 [Pantyhose]
+CLOTHES_F	197	Dead or Alive 6 Jumper Skirt
+CLOTHES_F	198	PPD Sundress
+CLOTHES_F	199	Tohsaka Rin [Socks]
+CLOTHES_F	200	HS Naked Apron + HM Open Underwear
+CLOTHES_F	201	Honey Select Volleyball Outfit
+CLOTHES_F	202	2chan Magical Girl
+CLOTHES_F	203	2chan PPD Kimono/Yukata 1
+CLOTHES_F	204	2chan PPD Kimono/Yukata 2
+CLOTHES_F	205	2chan Miko Shrine Maiden
+CLOTHES_F	206	Open Sweater
+CLOTHES_F	207	Open Sweater [Pantyhose]
+CLOTHES_F	208	Open Sweater Vest
+CLOTHES_F	209	Open Sweater Vest [Pantyhose]
+CLOTHES_F	210	Long Sleeved Tie RP Uniform Tucked
+CLOTHES_F	211	Long Sleeved Tie RP Uniform Tucked [Pantyhose]
+CLOTHES_F	212	Tie Open RP
+CLOTHES_F	213	Tie Open RP [Pantyhose]
+CLOTHES_F	214	Hyouka OR Hyouka [Flat]
+CLOTHES_F	215	Hyouka [Pantyhose] OR Hyouka [Flat, Pantyhose]
+CLOTHES_F	216	Tucked Gym Outfit
+CLOTHES_F	217	Blazer Sweater Vest
+CLOTHES_F	218	Blazer Sweater Vest [Pantyhose]
+CLOTHES_F	219	Cardigan
+CLOTHES_F	220	Nurse
+CLOTHES_F	221	One Room, Yui (sweater w/ skirt)
+CLOTHES_F	222	2chan Fantasy Bodysuit A
+CLOTHES_F	223	2chan Fantasy Bodysuit B
+CLOTHES_F	224	2chan Angel Armor
+CLOTHES_F	225	2chan Demon Armor
+CLOTHES_F	226	2chan Punk Bodysuit
+CLOTHES_F	227	HaremMate Swimsuit 1 (Cross-top Bikini)
+CLOTHES_F	228	HaremMate Swimsuit 2 (Tiny Top and Thong)
+CLOTHES_F	229	HaremMate Swimsuit 3 (Panda)
+CLOTHES_F	230	Honey Select Tube Top
+CLOTHES_F	231	2chan IM Halloween
+CLOTHES_F	232	Koikatsu Idol
+CLOTHES_F	233	HaremMate Maid
+CLOTHES_F	234	Redline (Short T-shirt+Spats)
+CLOTHES_F	235	Lingerie
+CLOTHES_F	236	Leather Jacket
+CLOTHES_F	237	2chan Wedding Dress (Reslot)
+CLOTHES_F	238	Honey Select Leather Armor
+CLOTHES_F	239	Honey Select Hoodie Sweater+Jeans
+CLOTHES_F	240	Honey Select Sundress
+CLOTHES_F	241	Honey Select Overalls
+CLOTHES_F	242	Honey Select Casualwear (shorts+tanktop+shawl)
+CLOTHES_F	243	Honey Select Bikini+Hoodie
+CLOTHES_F	244	Honey Select Cardigan
+CLOTHES_F	245	Archetype Earth Dress
+CLOTHES_F	246	2chan Punk Bodysuit Casualwear
+CLOTHES_F	247	Lab Coat
+CLOTHES_F	248	Lab Coat [pantyhose]
+CLOTHES_F	249	Summer Nurse
+CLOTHES_F	250	Motorcycle Catsuit
+CLOTHES_F	251	SBPR Pirate
+CLOTHES_F	252	Honey Select Negligee
+CLOTHES_F	253	Pajamas
+CLOTHES_F	254	Haremmate Santa
+CLOTHES_F	255	Custom Heroine
+CLOTHES_F	260	Koikatsu Corset Dress [Sweater]
+CLOTHES_F	261	Koikatsu Corset Dress
+CLOTHES_F	262	HM Swimsuit 2 + AS Hotpants
+CLOTHES_F	263	Zipper Shirt + Denim Skirt
+CLOTHES_F	264	Zipper Shirt + Denim Skirt + Jacket
+CLOTHES_F	265	Zipper Shirt + Jeans
+CLOTHES_F	266	Zipper Shirt + Jeans + Jacket
+CLOTHES_F	267	MMD Mrs Claus
+CLOTHES_F	268	MMD Mrs Claus (Fuzzier)
+CLOTHES_F	269	MMD Santa Claus (Skirt)
+CLOTHES_F	270	MMD Santa Claus (Pants and Boots)
+CLOTHES_F	271	Sweatshorts
+CLOTHES_F	272	Chinese String Bikini Hostess Jacket
+CLOTHES_F	273	Pasties Hostess Jacket
+CLOTHES_F	274	Fluffy Bunny
+CLOTHES_F	275	Fluffy Bunny (Skimpy)
+CLOTHES_F	276	Bandaids
+CLOTHES_F	277	Heart Pasties
+CLOTHES_F	278	Sailor Uniform [Heart Pasties]
+CLOTHES_F	279	Gym Uniform [Heart Pasties]
+CLOTHES_F	280	Haruka's Swimsuit+Jersey
+CLOTHES_F	281	Haruka's Swimsuit+Sailor
+CLOTHES_F	282	Haruka's Sailor Uniform
+CLOTHES_F	283	Spy Ver. All
+CLOTHES_F	284	Spy Ver. No Gloves
+CLOTHES_F	285	Spy Ver. Shirtless
+CLOTHES_F	286	Spy Ver. Shirtless & No Gloves
+CLOTHES_F	288	JS3F Sailor One Piece (Re-reslot)
+CLOTHES_F	289	Sourou's Bodysuit (Reslot)
+CLOTHES_F	290	Sourou-ish Bodysuit (TEX)
+CLOTHES_F	291	Leather Jacket and Hot Pants [NoPan]
+CLOTHES_F	292	Leather Jacket and Hot Pants [NoPan, Stockings]
+CLOTHES_F	293	Lingerie [White version]
+CLOTHES_F	294	Alternative Blazer Recolor 1 [nopan]
+CLOTHES_F	295	Alternative Blazer Recolor 2 [nopan]
+CLOTHES_F	296	Alternative Blazer Recolor 3 [nopan]
+CLOTHES_F	297	Alternative Blazer Recolor 1
+CLOTHES_F	298	Alternative Blazer Recolor 2
+CLOTHES_F	299	Alternative Blazer Recolor 3
+CLOTHES_F	300	Fencer Jacket
+CLOTHES_F	301	Fencer Jacket and Skirt
+CLOTHES_F	302	Fencer Vest
+CLOTHES_F	303	Fencer Vest and Skirt
+CLOTHES_F	304	Pearl String (slot 200 edit)
+CLOTHES_F	305	Microbikini (transparent)
+CLOTHES_F	334	Highschool DxD Uniform [long sleeves][invisible]
+CLOTHES_F	335	Cropped Hoodie & Frayed Shorts [invisible]
+CLOTHES_F	336	HaremMate Swimsuit 2 (Tiny Top and Thong) [invisible]
+CLOTHES_F	337	PPD China Dress [short, gloves][invisible]
+CLOTHES_F	338	Characolle Alicesoft Ninjas
+CLOTHES_F	339	Honey Select Sweater Dress [NoPan]
+CLOTHES_F	340	Secrossphere Jersey [NoPan]
+CLOTHES_F	341	Office Lady Blazer [NoPan]
+CLOTHES_F	342	Casual Loose Sweater [NoPan]
+CLOTHES_F	343	Sailor One Piece [NoPan]
+CLOTHES_F	344	PPD Sundress [NoPan]
+CLOTHES_F	345	Big Hoodie [NoPan]
+CLOTHES_F	346	Shirt Dress [NoPan]
+CLOTHES_F	347	Short T-shirt [NoPan]
+CLOTHES_F	348	Pajamas [NoPan]
+CLOTHES_F	349	Honey Select Waitress [NoPan]
+CLOTHES_F	350	Ruffle Top + Jeans Skirt [NoPan]
+CLOTHES_F	351	Playhome Apron [NoPan]
+CLOTHES_F	352	Skimpy Teacher Blouse [NoPan]
+CLOTHES_F	353	Honey Select Sister Habit [NoPan]
+CLOTHES_F	354	Honey Select Suspenders Dress [NoPan]
+CLOTHES_F	355	Honey Select Casual Dress [NoPan]
+CLOTHES_F	356	Dead or Alive 6 Jumper Skirt [NoPan]
+CLOTHES_F	357	Zipper Shirt + Denim Skirt [NoPan]
+CLOTHES_F	358	Hyouka [NoPan]
+CLOTHES_F	359	RP Uniform Tucked [NoPan]
+CLOTHES_F	360	RP Uniform Untucked [NoPan]
+CLOTHES_F	361	Maid Outfit [Gloves - Pantyhose - High Heels][NoPan]
+CLOTHES_F	362	Sweatpants [NoPan]
+CLOTHES_F	363	China Dress [short+gloves][NoPan]
+CLOTHES_F	364	Leather Jacket [skirt][NoPan]
+CLOTHES_F	365	Honey Select Sundress [NoPan]
+CLOTHES_F	366	Sleeveless Sweater and Skirt [NoPan]
+CLOTHES_F	367	Denim Jacket + Skirt [NoPan]
+CLOTHES_F	368	Cropped Hoodie + Skirt [NoPan]
+CLOTHES_F	397	Banana
+CLOTHES_F	398	Ryuuge Kisaki (BA) China Dress Sling Bikini
+CLOTHES_F	399	Ryuuge Kisaki (BA) China Dress Sling Bikini [Jacket]
+CLOTHES_F	400	Dolljoints Nude
+CLOTHES_F	401	Dolljoints Underwear (Original)
+CLOTHES_F	402	Dolljoints Underwear (Append 1)
+CLOTHES_F	403	Dolljoints Underwear (Append 2)
+CLOTHES_F	404	Dolljoints Sailor Uniform
+CLOTHES_F	405	Dolljoints Gym Outfit
+CLOTHES_F	406	Dolljoints Swimsuit
+CLOTHES_F	407	Dolljoints Teacher Outfit
+CLOTHES_F	408	Dolljoints Ribbon Blazer
+CLOTHES_F	409	Dolljoints Sweatervest
+CLOTHES_F	500	2chan Nurse outfit (re-reslot)
+CLOTHES_F	526	Ruffle colorables dress + Boysh shorts
+CLOTHES_F	527	Jacket with Bikini bra
+CLOTHES_F	528	Long Shirt + ripped shorts
+CLOTHES_F	529	Long Shirt + shorts
+CLOTHES_F	530	Ruf, Ruff n Ruffles dress
+CLOTHES_F	531	Sleevles sweater + ruffle skirt
+CLOTHES_F	532	Jacket + tanktop + sweater skirt (shorts)
+CLOTHES_F	533	Jacket + tanktop (pants)
+CLOTHES_F	535	Pijamas now with pants
+CLOTHES_F	536	Officer Suit
+CLOTHES_F	537	Ripped Jeans Punk
+CLOTHES_F	538	Ripped Jeans Punk (shirtless)
+CLOTHES_F	539	Salarywoman Suit
+CLOTHES_F	540	Nahida swimsuit
+CLOTHES_F	541	Saphire Mercenary Outfit
+CLOTHES_F	542	Sport Jacket + Spats
+CLOTHES_F	543	Sport Jacket + Basketball Shorts
+CLOTHES_F	544	Sport Jacket + Jeans
+CLOTHES_F	545	Sport Jacket + Jeans Shorts
+CLOTHES_F	546	Micro Sleeveless Sweater + Jeans
+CLOTHES_F	547	Micro Jeans Sweater + Jeans Hotpants
+CLOTHES_F	548	Imperfect Helena Swimsuit
+CLOTHES_F	549	Imperfect Helena Outfit
+CLOTHES_F	550	Casual Double Sweater
+CLOTHES_F	551	RE4R Ashley Graham Blazer
+CLOTHES_F	552	Cropped Hoodie + Bodysuit
+CLOTHES_F	553	Ripped Jeans Punk + Skirt
+CLOTHES_F	554	Ripped Jeans Punk + Skirt (shirtless)
+CLOTHES_F	564	Royal One piece swimsuit
+CLOTHES_F	565	Royal One piece swimsuit (B.O.W (Inactive))
+CLOTHES_F	1147	147 Hoodie + 105 Shorts
+CLOTHES_F	1148	147 Hoodie + 105 Shorts + 120  Shirt
+CLOTHES_F	1171	170 Sailor One Piece (socks)
+CLOTHES_F	1216	H5 Nun
+CLOTHES_F	1251	Date A Live, Kurumi
+CLOTHES_F	1252	Date A Live, Tohka
+CLOTHES_F	1870	Pregnant Slave
+CLOTHES_F	1871	Rose Wedding Dress
+CLOTHES_F	1877	Cattle Bikini
+CLOTHES_F	1878	Cattle Bikini [Pregnant]
+CLOTHES_F	2000	Sailor Uniform [Pregnant]
+CLOTHES_F	2001	Gym Outfit [Pregnant]
+CLOTHES_F	2002	Swimsuit [Pregnant]
+CLOTHES_F	2003	Teacher Outfit [Pregnant]
+CLOTHES_F	2004	Ribbon Blazer [Pregnant]
+CLOTHES_F	2005	Nude [Pregnant]
+CLOTHES_F	2006	Append 1 Underwear Only [Pregnant]
+CLOTHES_F	2007	Sweatervest [Pregnant]
+CLOTHES_F	2008	High-Cut Swimsuit [Pregnant]
 CLOTHES_M	0	Uniform
 CLOTHES_M	1	Sports
 CLOTHES_M	2	Swimsuit
 CLOTHES_M	3	Naked
+CLOTHES_M	4	Gakuran
+CLOTHES_M	5	Yankee
+CLOTHES_M	6	No Pants Standard Uniform
+CLOTHES_M	7	No Pants Tracksuit
+CLOTHES_M	8	Open Blazer [original - jg2suita]
+CLOTHES_M	9	Open Blazer [recolorable]
+CLOTHES_M	10	Hawaiian [Blue]
+CLOTHES_M	11	Hawaiian [Red]
+CLOTHES_M	12	Casualboys Camo
+CLOTHES_M	13	Casualboys Tracksuit
+CLOTHES_M	14	Casualboys Unbuttoned
+CLOTHES_M	15	Colorable Bodysuit
+CLOTHES_M	16	Casualboys Light Jacket
+CLOTHES_M	17	Black Bodysuit
+CLOTHES_M	18	Casualboys Windbreaker
+CLOTHES_M	19	Fighters - Adventurer
+CLOTHES_M	20	Fighters - Traveller
+CLOTHES_M	21	Fighters - Pirate
+CLOTHES_M	22	Fighters - Karate
+CLOTHES_M	23	Dress Shirt [Kantoku+tie]
+CLOTHES_M	24	Gilgamesh
+CLOTHES_M	25	Secrossphere Gakuran
+CLOTHES_M	26	Hoodie
+CLOTHES_M	27	Schoolboys Untucked Rolled Sleeves
+CLOTHES_M	28	Schoolboys Untucked Rolled Sleeves + Tie
+CLOTHES_M	29	Schoolboys Untucked Long Sleeves
+CLOTHES_M	30	Schoolboys Untucked Long Sleeves + Tie
+CLOTHES_M	31	Schoolboys Cardigan
+CLOTHES_M	32	Schoolboys Cardigan + Ribbon
+CLOTHES_M	33	Schoolboys Jacket
+CLOTHES_M	34	Schoolboys Tucked Long Sleeves
+CLOTHES_M	35	Schoolboys Tucked Long Sleeves + Tie
+CLOTHES_M	36	Schoolboys Tucked Rolled Sleeves
+CLOTHES_M	37	Schoolboys Sweater [colorable]
+CLOTHES_M	38	SBPR Pirate
+CLOTHES_M	39	Casualboys Bunny Hoodie
+CLOTHES_M	40	Casualboys Hoodie
+CLOTHES_M	41	Trap Sailor Uniform
+CLOTHES_M	42	Trap Bloomers Uniform
+CLOTHES_M	43	Trap School Swimsuit
+CLOTHES_M	44	Trap China Dress
+CLOTHES_M	45	Casualboys Open Tracksuit
+CLOTHES_M	46	Shemale Sailor Uniform
+CLOTHES_M	47	Shemale Bloomers Uniform
+CLOTHES_M	48	Shemale School Swimsuit
+CLOTHES_M	49	Shemale Teacher Uniform
+CLOTHES_M	50	Shemale 2chan Bodysuit
+CLOTHES_M	51	Shemale 2chan Bodysuit N
+CLOTHES_M	52	Shemale 2chan China Dress
+CLOTHES_M	53	Dragonball Z, Vegeta Bad Man Shirt
+CLOTHES_M	54	Casualboys Idol
+CLOTHES_M	55	Orc Body
+CLOTHES_M	56	PPD Long Jacket
+CLOTHES_M	57	Casualboys Cargo Pants [colorable]
+CLOTHES_M	58	PPD Rave
+CLOTHES_M	59	PPD Laborer
+CLOTHES_M	60	PPD Slave
+CLOTHES_M	61	PPD Bunny Hoodie
+CLOTHES_M	62	PPD Waiter
+CLOTHES_M	63	Casualboys Knit Cardigan
+CLOTHES_M	64	Casualboys Preppy
+CLOTHES_M	65	Casualboys Skater Boy
+CLOTHES_M	66	Casualboys Prince
+CLOTHES_M	67	Casualboys Idol 2
+CLOTHES_M	68	Casualboys Fancy Vest 1
+CLOTHES_M	69	Casualboys Fancy Vest 2
+CLOTHES_M	70	Casualboys Fancy Vest 3
+CLOTHES_M	71	Casualboys Fancy Vest 4
+CLOTHES_M	72	Casualboys Fancy Shirt 1
+CLOTHES_M	73	Casualboys Fancy Shirt 2
+CLOTHES_M	74	Casualboys Fancy Shirt 3
+CLOTHES_M	75	Schoolboys Loose Dress Shirt
+CLOTHES_M	76	Schoolboys Unbuttoned [colorable]
+CLOTHES_M	77	Casualboys Tanktop and Cargo Shorts [colorable]
+CLOTHES_M	78	Casualboys Happi
+CLOTHES_M	79	Casualboys Judo Gi
+CLOTHES_M	80	Schoolboys Sailor Tie
+CLOTHES_M	81	Schoolboys Sweater 2
+CLOTHES_M	82	Male Sailor (Shorts)
+CLOTHES_M	83	Male Sailor (Long Pants)
+CLOTHES_M	84	Badge Blazer
+CLOTHES_M	85	Casualboys Idol (recolorable)
+CLOTHES_M	86	Belt-Adjusted Blazer
+CLOTHES_M	87	Koikatsu Bandit
+CLOTHES_M	88	Koikatsu Necromancer
+CLOTHES_M	89	Hoodie
+CLOTHES_M	90	Sweatervest
+CLOTHES_M	91	Cardigan
+CLOTHES_M	92	Cardigan Sailor Top
+CLOTHES_M	93	No Tie Open Blazer
+CLOTHES_M	94	Avery (precolored)
+CLOTHES_M	95	Avery (recolorable)
+CLOTHES_M	97	Boy Dress
+CLOTHES_M	98	Towel
+CLOTHES_M	99	Open Blazer [Black, no tie, Karma]
+CLOTHES_M	100	Open Blazer [White]
+CLOTHES_M	101	Open Blazer [Black]
+CLOTHES_M	102	Open Blazer [Lupin III red]
+CLOTHES_M	103	Open Blazer [Zebra Stripes + Purple Shirt]
+CLOTHES_M	104	Open Blazer [Leopard Print]
+CLOTHES_M	105	Open Blazer [Gundam Build Fighters, Meijin]
+CLOTHES_M	106	Open Blazer [Adachi]
+CLOTHES_M	107	Open Blazer [Persona 4 protagonist]
+CLOTHES_M	108	Open Blazer [Persona 3 protagonist]
+CLOTHES_M	109	Open Blazer [Jojo's Bizarre Adventure, Dio Brando]
+CLOTHES_M	110	Open Blazer [Jojo's Bizarre Adventure, Jonathan Joestar]
+CLOTHES_M	111	Jojo's Bizarre Adventure, DIO
+CLOTHES_M	112	Jojo's Bizarre Adventure, Kujo Jotaro
+CLOTHES_M	113	Varsity 1 (Chinese/Hello Kitty)
+CLOTHES_M	114	Varsity 2 (Star/Harley Quinn)
+CLOTHES_M	115	Chef Outfit
+CLOTHES_M	116	Open Blazer [Shiba Tatsuya]
+CLOTHES_M	117	Open Blazer [Silent Hill, James Sunderland]
+CLOTHES_M	118	Danganronpa, Naegi Makoto
+CLOTHES_M	119	Open Blazer [Jojo's Bizarre Adventure, Yoshikage Kira]
+CLOTHES_M	120	Dragonball Z, Perfect Cell
+CLOTHES_M	121	Baseball Uniform
+CLOTHES_M	122	Koikatsu Prince
+CLOTHES_M	123	Koikatsu Jacket
+CLOTHES_M	124	Koikatsu Golden Jacket
+CLOTHES_M	125	Koikatsu Military
+CLOTHES_M	126	Koikatsu Shirtless Golden Jacket
+CLOTHES_M	127	Koikatsu Shirtless Jacket
+CLOTHES_M	128	Koikatsu Happi
+CLOTHES_M	129	Koikatsu Shirtless Happi
+CLOTHES_M	130	Koikatsu Sportswear
+CLOTHES_M	131	Koikatsu Baseball Jersey
+CLOTHES_M	132	Koikatsu Soccer Jersey
+CLOTHES_M	133	Turtleneck Vest
+CLOTHES_M	134	Turtleneck Vest + Gloves
+CLOTHES_M	142	Endless Summer Swim Trunks
+CLOTHES_M	143	Endless Summer Open Shirt
+CLOTHES_M	144	Endless Summer Open Hoodie
+CLOTHES_M	145	Endless Summer Casual Shirt
+CLOTHES_M	146	Endless Summer Casual Hoodie
+CLOTHES_M	147	Closed Varsity
+CLOTHES_M	148	Varsity Sweater
+CLOTHES_M	149	Volleyball Outfit
+CLOTHES_M	150	Honey Select Casual V-Neck
+CLOTHES_M	151	Honey Select Swim Trunks
+CLOTHES_M	152	Boxers
+CLOTHES_M	159	Santa Outfit
+CLOTHES_M	160	Formal Vest
+CLOTHES_M	161	Oversized Denim Jacket
+CLOTHES_M	162	Layered Tucked Shirt
+CLOTHES_M	163	Eliot Hoodie
+CLOTHES_M	167	Hauberk Chainmail
+CLOTHES_M	168	Hauberk Isekai General
+CLOTHES_M	197	Sweater
+CLOTHES_M	198	Kimono Shirts
+CLOTHES_M	199	Leather Jacket
+CLOTHES_M	200	Business Suit
+CLOTHES_M	201	Male Pea Coat
+CLOTHES_M	202	Fundoshi
+CLOTHES_M	210	Kyrie Blazer [Purple and whimsical]
+CLOTHES_M	229	Male Pajamas
+CLOTHES_M	230	Knit
+CLOTHES_M	250	Kigurumi
+CLOTHES_M	251	Kigurumi (recolorable)
+CLOTHES_M	551	Jujutsu Kaisen Yuta
 CLUB	0	Club 1
 CLUB	1	Club 2
 CLUB	2	Club 3
@@ -210,10 +757,360 @@ FACETYPE_F	3	Face 4
 FACETYPE_F	4	Face 5
 FACETYPE_F	5	Face 6
 FACETYPE_F	6	Face 7
+FACETYPE_F	9	Face 1 Long A
+FACETYPE_F	10	Face 1 Long B
+FACETYPE_F	11	Face 1 Long C
+FACETYPE_F	12	Face 1 Long X
+FACETYPE_F	13	Face 1 Medium A
+FACETYPE_F	14	Face 1 Medium B
+FACETYPE_F	15	Face 1 Medium X
+FACETYPE_F	16	Face 1 Short A
+FACETYPE_F	17	Face 1 Short B
+FACETYPE_F	18	Face 1 Earless
+FACETYPE_F	20	wwc ddh1
+FACETYPE_F	21	wwc ddh1 e_e
+FACETYPE_F	22	wwc ddh2
+FACETYPE_F	23	wwc ddh3
+FACETYPE_F	24	wwc ddh4
+FACETYPE_F	25	wwc ddh5
+FACETYPE_F	26	wwc ddh6
+FACETYPE_F	27	wwc ddh9
+FACETYPE_F	28	wwc ddh10
+FACETYPE_F	29	wwc ddh11
+FACETYPE_F	30	wwc ddh12
+FACETYPE_F	31	wwc ddh13
+FACETYPE_F	32	wwc ddh14
+FACETYPE_F	33	wwc ddh15
+FACETYPE_F	34	Faceparts Face 8
+FACETYPE_F	35	Faceparts Face 9
+FACETYPE_F	36	Faceparts Face 10
+FACETYPE_F	37	Faceparts Face 11
+FACETYPE_F	38	Faceparts Face 12
+FACETYPE_F	39	Faceparts Face 13
+FACETYPE_F	40	Faceparts Face 14
+FACETYPE_F	41	Faceparts Face 15
+FACETYPE_F	42	Faceparts Face 16
+FACETYPE_F	59	Mitcher
+FACETYPE_F	60	Tuman Garie
+FACETYPE_F	61	Micha Jawkan
+FACETYPE_F	62	Rounded Face 11 Variant A
+FACETYPE_F	63	Rounded Face 13 Variant A
+FACETYPE_F	64	Rounded Face 1 Half Closed Variant
+FACETYPE_F	65	Rounded Face 8
+FACETYPE_F	66	Half-Closed Eyes Face 4 + DDH
+FACETYPE_F	67	Face 11 (Variant A) + Lower Iris + Extended highlight + Thinner eyebrows + DDH + Fixed lips V2
+FACETYPE_F	68	Face 11 + Thinner eyebrows
+FACETYPE_F	69	Face 11 + Thinner eyebrows + Lashes [Slightly] Angled Downward
+FACETYPE_F	70	Face 12 + Thinner eyebrows
+FACETYPE_F	71	Face 13 + Thinner eyebrows
+FACETYPE_F	72	Face 13 + Thinner eyebrows + Lashes [Slightly] Angled Downward
+FACETYPE_F	73	Face 11 (Variant A) + Thinner eyebrows
+FACETYPE_F	74	Face 13 (Variant A) + Thinner eyebrows
+FACETYPE_F	75	Face 11 + Thinner eyebrows + Jaw raised
+FACETYPE_F	76	Face 11 + Thinner eyebrows + Lashes [Slightly] Angled Downward + Jaw raised
+FACETYPE_F	77	Face 12 + Thinner eyebrows + Jaw raised
+FACETYPE_F	78	Face 13 + Thinner eyebrows + Jaw raised
+FACETYPE_F	79	Face 13 + Thinner eyebrows + Lashes [Slightly] Angled Downward + Jaw raised
+FACETYPE_F	80	Face 11 (Variant A) + Thinner eyebrows + Jaw raised
+FACETYPE_F	81	Face 13 (Variant A) + Thinner eyebrows + Jaw raised
+FACETYPE_F	82	Face 13 + Elf Ears
+FACETYPE_F	83	JS3F DDH 1
+FACETYPE_F	84	JS3F DDH 2
+FACETYPE_F	85	JS3F DDH 3
+FACETYPE_F	86	Rounded Face 1
+FACETYPE_F	87	Rounded Face 2
+FACETYPE_F	88	Rounded Face 3
+FACETYPE_F	89	Rounded Face 11
+FACETYPE_F	90	Rounded Face 12
+FACETYPE_F	91	Rounded Face 13
+FACETYPE_F	92	DDH 2 + Lowered Iris
+FACETYPE_F	93	DDH 6 + Lower Ears + Snaggletooth
+FACETYPE_F	94	Face 1 Snaggletooth
+FACETYPE_F	95	Face 2 Snaggletooth
+FACETYPE_F	96	Face 3 Snaggletooth
+FACETYPE_F	97	Face 4 Snaggletooth
+FACETYPE_F	98	Face 5 Snaggletooth
+FACETYPE_F	99	Face 6 Snaggletooth
+FACETYPE_F	100	Face 7 Snaggletooth
+FACETYPE_F	101	Face 8 Snaggletooth
+FACETYPE_F	102	Face 1 Vampire Teeth
+FACETYPE_F	103	Face 2 Vampire Teeth
+FACETYPE_F	104	Face 3 Vampire Teeth
+FACETYPE_F	105	Face 4 Vampire Teeth
+FACETYPE_F	106	Face 5 Vampire Teeth
+FACETYPE_F	107	Face 6 Vampire Teeth
+FACETYPE_F	108	Face 7 Vampire Teeth
+FACETYPE_F	109	Face 8 Vampire Teeth
+FACETYPE_F	110	Face 1 Vampire Teeth w/ Bottom
+FACETYPE_F	111	Face 2 Vampire Teeth w/ Bottom
+FACETYPE_F	112	Face 3 Vampire Teeth w/ Bottom
+FACETYPE_F	113	Face 4 Vampire Teeth w/ Bottom
+FACETYPE_F	114	Face 5 Vampire Teeth w/ Bottom
+FACETYPE_F	115	Face 6 Vampire Teeth w/ Bottom
+FACETYPE_F	116	Face 7 Vampire Teeth w/ Bottom
+FACETYPE_F	117	Face 8 Vampire Teeth w/ Bottom
+FACETYPE_F	118	Face 1 Shark Teeth
+FACETYPE_F	119	Face 2 Shark Teeth
+FACETYPE_F	120	Face 3 Shark Teeth
+FACETYPE_F	121	Face 4 Shark Teeth
+FACETYPE_F	122	Face 5 Shark Teeth
+FACETYPE_F	123	Face 6 Shark Teeth
+FACETYPE_F	124	Face 7 Shark Teeth
+FACETYPE_F	125	Face 8 Shark Teeth
+FACETYPE_F	126	Face 1 w/ Blush Sticker
+FACETYPE_F	127	Face 2 w/ Blush Sticker
+FACETYPE_F	128	Face 3 w/ Blush Sticker
+FACETYPE_F	129	Face 4 w/ Blush Sticker
+FACETYPE_F	130	Face 5 w/ Blush Sticker
+FACETYPE_F	131	Face 6 w/ Blush Sticker
+FACETYPE_F	132	Face 7 w/ Blush Sticker
+FACETYPE_F	133	Face 8 w/ Blush Sticker
+FACETYPE_F	134	Face 8
+FACETYPE_F	135	Round Face 1
+FACETYPE_F	136	Round Face 2
+FACETYPE_F	137	Round Face 3
+FACETYPE_F	138	Round Face 4
+FACETYPE_F	139	Round Face 5
+FACETYPE_F	140	Round Face 6
+FACETYPE_F	141	Round Face 7
+FACETYPE_F	142	DDH 1 Colorable Eyelashes Lowered Ears
+FACETYPE_F	143	DDH 2 Colorable Eyelashes Lowered Ears
+FACETYPE_F	144	DDH 3 Colorable Eyelashes Lowered Ears
+FACETYPE_F	145	DDH 4 Colorable Eyelashes Lowered Ears
+FACETYPE_F	146	DDH 5 Colorable Eyelashes Lowered Ears
+FACETYPE_F	147	DDH 6 Colorable Eyelashes Lowered Ears
+FACETYPE_F	148	Face 9 DDH Colorable Eyelashes Lowered Ears
+FACETYPE_F	149	Face 10 DDH Colorable Eyelashes Lowered Ears
+FACETYPE_F	150	Round Face 1 + ElfEars Long C + SC + Shark Teeth
+FACETYPE_F	151	Round Face 2 + ElfEars Long A + SC + Shark Teeth
+FACETYPE_F	152	JS3F DDH 1 [Black Eyelashes]
+FACETYPE_F	153	JS3F DDH 2 [Black Eyelashes]
+FACETYPE_F	154	JS3F DDH 3 [Black Eyelashes]
+FACETYPE_F	155	JS3F DDH 4 [Black Eyelashes]
+FACETYPE_F	156	JS3F DDH 5 [Black Eyelashes]
+FACETYPE_F	157	JS3F DDH 6 [Black Eyelashes]
+FACETYPE_F	158	JS3F DDH 6 + Vampire Teeth [Black Eyelashes]
+FACETYPE_F	159	Face 2 [Black Sclera]
+FACETYPE_F	160	Face 1 [Yellow Sclera]
+FACETYPE_F	161	Face 2 [Red Sclera]
+FACETYPE_F	162	Face 2 [Black Sclera + Elf Ears]
+FACETYPE_F	163	Face 1 [Colorable Eyelashes]
+FACETYPE_F	164	Face 2 [Colorable Eyelashes]
+FACETYPE_F	165	Face 3 [Colorable Eyelashes]
+FACETYPE_F	166	Face 4 [Colorable Eyelashes]
+FACETYPE_F	167	Face 5 [Colorable Eyelashes]
+FACETYPE_F	168	Face 6 [Colorable Eyelashes]
+FACETYPE_F	169	Face 7 [Colorable Eyelashes]
+FACETYPE_F	170	Face 8 [Colorable Eyelashes]
+FACETYPE_F	171	Face 1 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	172	Face 2 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	173	Face 3 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	174	Face 4 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	175	Face 5 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	176	Face 6 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	177	Face 7 Thicker Beauty Marks + Raised Jaw
+FACETYPE_F	178	Face 1 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	179	Face 2 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	180	Face 3 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	181	Face 4 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	182	Face 5 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	183	Face 6 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	184	Face 7 Thicker Beauty Marks - Double variant + Raised Jaw
+FACETYPE_F	185	Face 1 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	186	Face 2 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	187	Face 3 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	188	Face 4 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	189	Face 5 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	190	Face 6 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	191	Face 7 Thicker Beauty Marks - Tear variant + Raised Jaw
+FACETYPE_F	192	Face 11 + Thinner eyebrows + DDH
+FACETYPE_F	193	Face 11 + Thinner eyebrows + Lashes [Slightly] Angled Downward + DDH
+FACETYPE_F	194	Face 12 + Thinner eyebrows + DDH
+FACETYPE_F	195	Face 13 + Thinner eyebrows + DDH
+FACETYPE_F	196	Face 13 + Thinner eyebrows + Lashes [Slightly] Angled Downward + DDH
+FACETYPE_F	197	Face 11 (Variant A) + Thinner eyebrows + DDH
+FACETYPE_F	198	Face 13 (Variant A) + Thinner eyebrows + DDH
+FACETYPE_F	199	Face 1 No Blush
+FACETYPE_F	200	Face 2 No Blush
+FACETYPE_F	201	Face 3 No Blush
+FACETYPE_F	202	Face 4 No Blush
+FACETYPE_F	203	Face 5 No Blush
+FACETYPE_F	204	Face 6 No Blush
+FACETYPE_F	205	Face 7 No Blush
+FACETYPE_F	206	Face 8 Earless
+FACETYPE_F	207	Face 9 Earless
+FACETYPE_F	208	Face 10 Earless
+FACETYPE_F	209	DDH 1 Earless
+FACETYPE_F	210	DDH 3 Earless
+FACETYPE_F	211	DDH 3 Earless w/ Snaggletooth
+FACETYPE_F	212	Face 1 Colorable sclera
+FACETYPE_F	213	Face 2 Colorable sclera
+FACETYPE_F	214	Face 3 Colorable sclera
+FACETYPE_F	215	Face 4 Colorable sclera
+FACETYPE_F	216	Face 5 Colorable sclera
+FACETYPE_F	217	Face 6 Colorable sclera
+FACETYPE_F	218	Face 7 Colorable sclera
+FACETYPE_F	219	Face 9
+FACETYPE_F	220	Face 10
+FACETYPE_F	221	Face 9 + DDH
+FACETYPE_F	222	Face 10 + DDH
+FACETYPE_F	223	Face 9 + DDH + Lower ears
+FACETYPE_F	224	Face 10 + DDH + Lower ears
+FACETYPE_F	225	Face 9 + Thinner eyebrows
+FACETYPE_F	226	Face 10 + Thinner eyebrows
+FACETYPE_F	227	Face 9 + Thinner eyebrows + DDH
+FACETYPE_F	228	Face 10 + Thinner eyebrows + DDH
+FACETYPE_F	229	Face 1 + Lower ears
+FACETYPE_F	230	Face 2 + Lower ears
+FACETYPE_F	231	JS3F DDH 1 [Black Eyelashes] + Lower ears
+FACETYPE_F	232	JS3F DDH 6 [Black Eyelashes] + Lower ears
+FACETYPE_F	233	JS3F DDH 3 [Black Eyelashes] + Lower ears
+FACETYPE_F	234	Face 9 + Thinner eyebrows + DDH + Lower ears
+FACETYPE_F	235	Face 10 + Thinner eyebrows + DDH + Lower ears
+FACETYPE_F	236	Face 10 Vampire Teeth + Thinner eyebrows + DDH + Lower ears
+FACETYPE_F	237	JS3F DDH 1 [Black Eyelashes] + Short B
+FACETYPE_F	238	Face 9 + Thinner eyebrows + DDH + Short B
+FACETYPE_F	239	Face 9 + DDH + Medium B
+FACETYPE_F	240	DDH 1 + Dark red eyelashes + Lower ears + Higher nose
+FACETYPE_F	241	DDH 1 + Lower ears + Higher nose
+FACETYPE_F	242	Face 10 + DDH + Thinner eyebrows + Lower ears + Snaggletooth
+FACETYPE_F	243	Face 9 + DDH + Lower Ears + Long Lash + Flatter Sclera Texture
+FACETYPE_F	244	Face 10 + DDH + Lower Ears + Long Lash + Flatter Sclera Texture
+FACETYPE_F	245	Face 1 + DDH + Lower Ears + Higher Nose + Flatter Sclera Texture
+FACETYPE_F	246	Face 11 DDH No Bottom Lash + Custom Lash + Sclera Texture
+FACETYPE_F	247	Face 13 + Thinner eyebrows + DDH [Colorable Eyelashes]
+FACETYPE_F	248	JS3F DDH 2 + Perma Catface
+FACETYPE_F	249	Hole Face
+FACETYPE_F	250	Black Sclera - Face 10
+FACETYPE_F	251	Black Sclera - Face 10 DDH
+FACETYPE_F	252	Possessed - Face 10 DDH
+FACETYPE_F	253	Stitched Face [White]
+FACETYPE_F	254	Clock Eye
 FACETYPE_M	0	Face 1
 FACETYPE_M	1	Face 2
 FACETYPE_M	2	Face 3
 FACETYPE_M	3	Face 4
+FACETYPE_M	4	Face 1 Shark Teeth
+FACETYPE_M	5	Face 2 Shark Teeth
+FACETYPE_M	6	Face 3 Shark Teeth
+FACETYPE_M	7	Face 4 Shark Teeth
+FACETYPE_M	8	Face 1 Vampire Teeth
+FACETYPE_M	9	Face 2 Vampire Teeth
+FACETYPE_M	10	Face 3 Vampire Teeth
+FACETYPE_M	11	Face 4 Vampire Teeth
+FACETYPE_M	12	Face 1 Vampire Teeth + Bottom Fangs
+FACETYPE_M	13	Face 2 Vampire Teeth + Bottom Fangs
+FACETYPE_M	14	Face 3 Vampire Teeth + Bottom Fangs
+FACETYPE_M	15	Face 4 Vampire Teeth + Bottom Fangs
+FACETYPE_M	16	Face 1 Snaggletooth
+FACETYPE_M	17	Face 2 Snaggletooth
+FACETYPE_M	18	Face 3 Snaggletooth
+FACETYPE_M	19	Face 4 Snaggletooth
+FACETYPE_M	20	DeUglyOne Face
+FACETYPE_M	21	Face 1 Geass
+FACETYPE_M	22	Face 2 Geass
+FACETYPE_M	23	Face 3 Geass
+FACETYPE_M	24	Sasuke
+FACETYPE_M	25	Face 1 No Lower Lid
+FACETYPE_M	26	Face 1 Colorable Sclera
+FACETYPE_M	27	Face 2 Colorable Sclera
+FACETYPE_M	28	Face 3 Colorable Sclera
+FACETYPE_M	29	Face 4 Colorable Sclera
+FACETYPE_M	30	Face 1 Elf ears - Short A
+FACETYPE_M	31	Face 1 Elf ears - Short B
+FACETYPE_M	32	Face 1 Elf ears - Medium A
+FACETYPE_M	33	Face 1 Elf ears - Medium B
+FACETYPE_M	34	Face 1 Elf ears - Medium X
+FACETYPE_M	35	Face 1 Elf ears - Long A
+FACETYPE_M	36	Face 1 Elf ears - Long B
+FACETYPE_M	37	Face 1 Elf ears - Long C
+FACETYPE_M	38	Face 1 Elf ears - Long X
+FACETYPE_M	39	Face 1 Earless
+FACETYPE_M	40	Face 2 Elf ears - Short A
+FACETYPE_M	41	Face 2 Elf ears - Short B
+FACETYPE_M	42	Face 2 Elf ears - Medium A
+FACETYPE_M	43	Face 2 Elf ears - Medium B
+FACETYPE_M	44	Face 2 Elf ears - Medium X
+FACETYPE_M	45	Face 2 Elf ears - Long A
+FACETYPE_M	46	Face 2 Elf ears - Long B
+FACETYPE_M	47	Face 2 Elf ears - Long C
+FACETYPE_M	48	Face 2 Elf ears - Long X
+FACETYPE_M	49	Face 2 Earless
+FACETYPE_M	50	Face 3 Elf ears - Short A
+FACETYPE_M	51	Face 3 Elf ears - Short B
+FACETYPE_M	52	Face 3 Elf ears - Medium A
+FACETYPE_M	53	Face 3 Elf ears - Medium B
+FACETYPE_M	54	Face 3 Elf ears - Medium X
+FACETYPE_M	55	Face 3 Elf ears - Long A
+FACETYPE_M	56	Face 3 Elf ears - Long B
+FACETYPE_M	57	Face 3 Elf ears - Long C
+FACETYPE_M	58	Face 3 Elf ears - Long X
+FACETYPE_M	59	Face 3 Earless
+FACETYPE_M	60	Face 4 Elf ears - Short A
+FACETYPE_M	61	Face 4 Elf ears - Short B
+FACETYPE_M	62	Face 4 Elf ears - Medium A
+FACETYPE_M	63	Face 4 Elf ears - Medium B
+FACETYPE_M	64	Face 4 Elf ears - Medium X
+FACETYPE_M	65	Face 4 Elf ears - Long A
+FACETYPE_M	66	Face 4 Elf ears - Long B
+FACETYPE_M	67	Face 4 Elf ears - Long C
+FACETYPE_M	68	Face 4 Elf ears - Long X
+FACETYPE_M	69	Face 4 Earless
+FACETYPE_M	70	Face 1 Colorable Eyelashes
+FACETYPE_M	71	Face 2 Colorable Eyelashes
+FACETYPE_M	72	Face 3 Colorable Eyelashes
+FACETYPE_M	73	Face 4 Colorable Eyelashes
+FACETYPE_M	74	Face 1 No Brows
+FACETYPE_M	75	Face 2 No Brows
+FACETYPE_M	76	Face 3 No Brows
+FACETYPE_M	77	Face 4 No Brows
+FACETYPE_M	78	Face 1 No Blush
+FACETYPE_M	79	Face 2 No Blush
+FACETYPE_M	80	Face 3 No Blush
+FACETYPE_M	81	Face 4 No Blush
+FACETYPE_M	82	Face 1 Lower Ears
+FACETYPE_M	83	Face 2 Lower Ears
+FACETYPE_M	84	Face 3 Lower Ears
+FACETYPE_M	85	Face 4 Lower Ears
+FACETYPE_M	86	Seccom Masada
+FACETYPE_M	87	Male DDH
+FACETYPE_M	88	Orc
+FACETYPE_M	89	Green Orc
+FACETYPE_M	90	Faceless
+FACETYPE_M	91	Face 9
+FACETYPE_M	92	Face 10
+FACETYPE_M	93	Face 9 Raised Jaw
+FACETYPE_M	94	Face 10 Raised Jaw
+FACETYPE_M	100	Kyrie
+FACETYPE_M	101	Gilgamesh
+FACETYPE_M	103	Misc Male Face 103
+FACETYPE_M	104	Misc Male Face 104
+FACETYPE_M	105	Misc Male Face 105
+FACETYPE_M	106	Misc Male Face 106
+FACETYPE_M	107	Misc Male Face 107
+FACETYPE_M	108	Misc Male Face 108
+FACETYPE_M	109	Keit_Ikemen Default nose
+FACETYPE_M	110	Keit_Ikemen Default nose-Half eyes
+FACETYPE_M	111	Keit_Ikemen Turn up nose
+FACETYPE_M	112	Keit_Ikemen Turn up nose-Half eyes
+FACETYPE_M	113	Keit_Ikemen Pointy nose
+FACETYPE_M	114	Keit_Ikemen Pointy nose-Half eyes
+FACETYPE_M	115	Keit_Ikemen Roman nose
+FACETYPE_M	116	Keit_Ikemen Roman nose-Half eyes
+FACETYPE_M	120	Female-Male 1
+FACETYPE_M	121	Female-Male 2
+FACETYPE_M	122	Female-Male 3
+FACETYPE_M	123	Female-Male 4
+FACETYPE_M	124	Female-Male 9
+FACETYPE_M	125	Female-Male 11
+FACETYPE_M	126	Female-Male 13
+FACETYPE_M	127	Female-Male 5
+FACETYPE_M	128	Female-Male 8
+FACETYPE_M	129	Female-Male 10
+FACETYPE_M	130	Female-Male 12
+FACETYPE_M	131	Female-Male 14
+FACETYPE_M	132	Female-Male 15
+FACETYPE_M	133	Female-Male 16
 FEMALEFIGURE	0	Slim
 FEMALEFIGURE	1	Normal
 FEMALEFIGURE	2	Fat
@@ -227,6 +1124,48 @@ GLASSESTYPE	1	Type 1
 GLASSESTYPE	2	Type 2
 GLASSESTYPE	3	Type 3
 GLASSESTYPE	4	Type 4
+GLASSESTYPE	5	Colorable Headband
+GLASSESTYPE	6	Circle Rimmed Glasses
+GLASSESTYPE	7	Hipster Glasses
+GLASSESTYPE	8	Hipster Glasses w/ Shades
+GLASSESTYPE	9	2Chan -Librarian- Glasses
+GLASSESTYPE	10	Square Frames
+GLASSESTYPE	11	Kamina Shades
+GLASSESTYPE	12	Type 3 Thinner
+GLASSESTYPE	13	Type 4 Thinner
+GLASSESTYPE	14	Short Square Frames
+GLASSESTYPE	15	Tall Square Frames
+GLASSESTYPE	16	Colorable Lenses Black Frame
+GLASSESTYPE	17	Colorable Lenses White Frame
+GLASSESTYPE	18	Hipster Glasses sans White Bits
+GLASSESTYPE	19	Hipster Glasses w/ Shades sans White Bits
+GLASSESTYPE	20	Otaku Glasses
+GLASSESTYPE	21	Opaque Glasses
+GLASSESTYPE	22	Aviators with Black Frames
+GLASSESTYPE	23	Aviators with White Frames
+GLASSESTYPE	24	Large Round Glasses
+GLASSESTYPE	25	Simple Glasses
+GLASSESTYPE	26	Reading Glasses
+GLASSESTYPE	28	Rectangular Type 4
+GLASSESTYPE	29	Tanaka Asuka
+GLASSESTYPE	30	Nagato Yuki
+GLASSESTYPE	31	Rectangular Type 1
+GLASSESTYPE	32	Orie's headband [Fixed Color]
+GLASSESTYPE	33	Orie's headband [Colorable]
+GLASSESTYPE	34	DoLLs Half-Circle
+GLASSESTYPE	35	DoLLs Round
+GLASSESTYPE	36	DoLLs Square
+GLASSESTYPE	37	2chan Thin Glasses 1
+GLASSESTYPE	38	2chan Thin Glasses 2
+GLASSESTYPE	39	2chan Thin Glasses 3
+GLASSESTYPE	41	Deal With It Glasses
+GLASSESTYPE	42	Monstrous 1
+GLASSESTYPE	43	Monstrous 2
+GLASSESTYPE	44	Monstrous 3
+GLASSESTYPE	45	Monstrous 4
+GLASSESTYPE	46	Monstrous 5
+GLASSESTYPE	47	Groucho Glasses
+GLASSESTYPE	48	Demiurge Glasses
 HEIGHT	0	Short
 HEIGHT	1	Normal
 HEIGHT	2	Tall
@@ -259,6 +1198,72 @@ LIPSTICKCOLOR	4	Color 5
 LIPSTICKCOLOR	5	Color 6
 LIPSTICKCOLOR	6	Color 7
 LIPSTICKCOLOR	7	Color 8
+LIPSTICKCOLOR	8	ExtraLips 1
+LIPSTICKCOLOR	9	ExtraLips 2
+LIPSTICKCOLOR	10	ExtraLips 3
+LIPSTICKCOLOR	11	ExtraLips 4
+LIPSTICKCOLOR	12	ExtraLips 5
+LIPSTICKCOLOR	13	Upper Lip 1
+LIPSTICKCOLOR	14	Upper Lip 2
+LIPSTICKCOLOR	15	Upper Lip 3
+LIPSTICKCOLOR	16	Upper Lip 4
+LIPSTICKCOLOR	17	Upper Lip 5
+LIPSTICKCOLOR	18	Upper Lip 6
+LIPSTICKCOLOR	19	Upper Lip 7
+LIPSTICKCOLOR	20	Upper Lip 8
+LIPSTICKCOLOR	21	TruLips HD + ExtraLips 1
+LIPSTICKCOLOR	22	TruLips HD + ExtraLips 2
+LIPSTICKCOLOR	23	TruLips HD + ExtraLips 3
+LIPSTICKCOLOR	24	TruLips HD + ExtraLips 4
+LIPSTICKCOLOR	25	TruLips HD + ExtraLips 5
+LIPSTICKCOLOR	26	TruLips HD + ExtraLips 6
+LIPSTICKCOLOR	27	TruLips HD + ExtraLips 7
+LIPSTICKCOLOR	28	TruLips HD + ExtraLips 8
+LIPSTICKCOLOR	29	TruLips HD + ExtraLips 8
+LIPSTICKCOLOR	30	TruLips HD + ExtraLips 9
+LIPSTICKCOLOR	31	TruLips HD + ExtraLips 10
+LIPSTICKCOLOR	32	TruLips HD + ExtraLips 11
+LIPSTICKCOLOR	33	TruLips HD + ExtraLips 12
+LIPSTICKCOLOR	34	Tsurime 1
+LIPSTICKCOLOR	35	Tsurime 2
+LIPSTICKCOLOR	36	Tsurime 3
+LIPSTICKCOLOR	37	Tsurime 4
+LIPSTICKCOLOR	38	Tsurime 5
+LIPSTICKCOLOR	39	Tsurime 6
+LIPSTICKCOLOR	40	Tsurime 7
+LIPSTICKCOLOR	41	Tsurime 8
+LIPSTICKCOLOR	42	Full Lips Type A-1
+LIPSTICKCOLOR	43	Full Lips Type A-2
+LIPSTICKCOLOR	44	Full Lips Type A-3
+LIPSTICKCOLOR	45	Full Lips Type A-4
+LIPSTICKCOLOR	46	Full Lips Type A-5
+LIPSTICKCOLOR	47	Full Lips Type A-6
+LIPSTICKCOLOR	48	Full Lips Type A-7
+LIPSTICKCOLOR	49	Full Lips Type A-8
+LIPSTICKCOLOR	50	Full Lips Type B-1
+LIPSTICKCOLOR	51	Full Lips Type B-2
+LIPSTICKCOLOR	52	Full Lips Type B-3
+LIPSTICKCOLOR	53	Full Lips Type B-4
+LIPSTICKCOLOR	54	Full Lips Type B-5
+LIPSTICKCOLOR	55	Full Lips Type B-6
+LIPSTICKCOLOR	56	Full Lips Type B-7
+LIPSTICKCOLOR	57	Full Lips Type B-8
+LIPSTICKCOLOR	58	Full Lips Type C-1
+LIPSTICKCOLOR	59	Full Lips Type C-2
+LIPSTICKCOLOR	60	Full Lips Type C-3
+LIPSTICKCOLOR	61	Full Lips Type C-4
+LIPSTICKCOLOR	62	Full Lips Type C-5
+LIPSTICKCOLOR	63	Full Lips Type C-6
+LIPSTICKCOLOR	64	Full Lips Type C-7
+LIPSTICKCOLOR	65	Full Lips Type C-8
+LIPSTICKCOLOR	66	Full Lips Type X-1
+LIPSTICKCOLOR	67	Full Lips Type X-2
+LIPSTICKCOLOR	68	Full Lips Type X-3
+LIPSTICKCOLOR	69	Full Lips Type X-4
+LIPSTICKCOLOR	70	Full Lips Type X-5
+LIPSTICKCOLOR	71	Full Lips Type X-6
+LIPSTICKCOLOR	72	Full Lips Type X-7
+LIPSTICKCOLOR	73	Full Lips Type X-8
 LOCATION	0	School Gates
 LOCATION	1	Back Street
 LOCATION	2	Outside Gymnasium
@@ -361,6 +1366,119 @@ PERSONALITY	26	Caring
 PERSONALITY	27	Schemer (M)
 PERSONALITY	28	Carefree
 PERSONALITY	29	Warm
+PERSONALITY	30	Cold (Male Aloof)
+PERSONALITY	31	AA1 Quiet
+PERSONALITY	32	Methodical
+PERSONALITY	33	AA1 Empress (HF)
+PERSONALITY	34	AA1 Big Sister
+PERSONALITY	35	Silent
+PERSONALITY	36	AA1 Empress (aa2g)
+PERSONALITY	37	AA1 Brave
+PERSONALITY	38	AA1 Pure
+PERSONALITY	39	Composed (M)
+PERSONALITY	40	Robot
+PERSONALITY	41	Sly (M)
+PERSONALITY	42	Russian (M)
+PERSONALITY	43	Timid (M)
+PERSONALITY	44	Whimsical (M)
+PERSONALITY	45	Salamanderman (M)
+PERSONALITY	46	Callous (M)
+PERSONALITY	47	Refined (M)
+PERSONALITY	48	Volatile (M)
+PERSONALITY	49	Vigilant (M)
+PERSONALITY	50	Servent (M)
+PERSONALITY	51	OuterSpace (M)
+PERSONALITY	52	Apricot (Kyou)
+PERSONALITY	53	Wise (Tomoyo)
+PERSONALITY	54	Graceful
+PERSONALITY	55	Trendy
+PERSONALITY	56	Mischievous (M)
+PERSONALITY	58	AA1 Ditzy
+PERSONALITY	59	AA1 Aloof
+PERSONALITY	60	AA1 Affable
+PERSONALITY	61	AA1 Calm
+PERSONALITY	62	AA1 Tense
+PERSONALITY	63	AA1 Rough
+PERSONALITY	64	AA1 Sweet
+PERSONALITY	65	AA1 Mistress
+PERSONALITY	66	AA1 Selfish
+PERSONALITY	67	Bekloppt (M)
+PERSONALITY	68	AA1 Casual
+PERSONALITY	69	Open-eye Joyful
+PERSONALITY	70	AA1 Pleasant
+PERSONALITY	71	Gynoid (Sweet)
+PERSONALITY	72	Open-eye Quiet
+PERSONALITY	73	Scholarly (M)
+PERSONALITY	74	Wry (M)
+PERSONALITY	75	Cynical (M)
+PERSONALITY	76	AA1 Manly (M)
+PERSONALITY	77	AA1 Humble
+PERSONALITY	78	Succubus (Mature)
+PERSONALITY	79	AA1 Violent (M)
+PERSONALITY	80	Analytical (M)
+PERSONALITY	81	Despair (M)
+PERSONALITY	82	Future (M)
+PERSONALITY	83	Kuma (M)
+PERSONALITY	84	Liar (M)
+PERSONALITY	85	Robot (M)
+PERSONALITY	86	Honorable (M)
+PERSONALITY	87	Rowdy (M)
+PERSONALITY	88	Airhead (M)
+PERSONALITY	89	Silent (M)
+PERSONALITY	90	Big Brother (M)
+PERSONALITY	91	Snooty (M)
+PERSONALITY	92	Excitable (M)
+PERSONALITY	93	Relaxed (M)
+PERSONALITY	94	Prickly (M)
+PERSONALITY	95	Polite (M)
+PERSONALITY	96	Energetic (M)
+PERSONALITY	97	Eccentric (M)
+PERSONALITY	98	AA1 Cold
+PERSONALITY	99	AA1 Soft (M)
+PERSONALITY	100	AA1 Eloquent (M)
+PERSONALITY	101	AA1 Obscene
+PERSONALITY	102	AA1 Faithful
+PERSONALITY	103	Professor (M)
+PERSONALITY	104	AA1 Handsome
+PERSONALITY	105	AA1 Dark
+PERSONALITY	106	Twisted
+PERSONALITY	107	Cowardly
+PERSONALITY	108	Haughty
+PERSONALITY	109	[Reserved]
+PERSONALITY	110	Ice (M)
+PERSONALITY	111	Hero (M)
+PERSONALITY	112	Artsy (M)
+PERSONALITY	113	Silent (M) [Pyramid Head]
+PERSONALITY	114	Mute (M)
+PERSONALITY	115	Mute+ (M)
+PERSONALITY	116	Arrogant (M)
+PERSONALITY	117	Frank (M)
+PERSONALITY	118	Clingy (M)
+PERSONALITY	119	Flippant (M)
+PERSONALITY	120	Courteous (M)
+PERSONALITY	130	Returnee
+PERSONALITY	131	[Reserved]
+PERSONALITY	132	[Reserved]
+PERSONALITY	133	Space Case
+PERSONALITY	134	Wild
+PERSONALITY	135	Delinquent
+PERSONALITY	136	Jinxed
+PERSONALITY	137	Chuuni
+PERSONALITY	138	Motherly
+PERSONALITY	139	Tomboy
+PERSONALITY	140	Yandere
+PERSONALITY	141	Gyaru
+PERSONALITY	142	Bookish
+PERSONALITY	143	Archaic
+PERSONALITY	144	Enigma
+PERSONALITY	145	Kouhai
+PERSONALITY	146	Emotionless
+PERSONALITY	147	Bashful
+PERSONALITY	148	Sadistic
+PERSONALITY	149	Geek
+PERSONALITY	150	Friendly
+PERSONALITY	151	Traditional
+PERSONALITY	200	Phantom (M)
 PUBICHAIR	0	Shape 1
 PUBICHAIR	1	Shape 2
 PUBICHAIR	2	Shape 3

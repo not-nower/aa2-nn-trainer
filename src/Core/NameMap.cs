@@ -16,9 +16,11 @@ namespace AA2Trainer
         private readonly List<string> loadedFiles = new List<string>();
         private readonly List<string> errors = new List<string>();
         private bool embeddedLoaded;
+        private int overlayEntries;
 
         public string StatusText { get; private set; }
         public int EntryCount { get; private set; }
+        public int OverlayEntryCount { get { return overlayEntries; } }
         public int FileCount { get { return loadedFiles.Count; } }
         public string GameRoot { get; private set; }
 
@@ -48,6 +50,7 @@ namespace AA2Trainer
             loadedFiles.Clear();
             errors.Clear();
             embeddedLoaded = false;
+            overlayEntries = 0;
             EntryCount = 0;
             GameRoot = gameRoot;
 
@@ -72,11 +75,13 @@ namespace AA2Trainer
                 }
             }
 
+            overlayEntries = NameOverlay.ApplyTo(maps, errors);
             EntryCount = CountEntries();
 
             string source = embeddedLoaded ? "embedded" : "no baseline";
             if (FileCount > 0)
                 source += " + " + FileCount.ToString() + " XML file" + (FileCount == 1 ? "" : "s");
+            if (overlayEntries > 0) source += " + overlay";
             StatusText = source + " / " + EntryCount.ToString() + " names";
             if (errors.Count > 0) StatusText += " / " + errors.Count.ToString() + " error" +
                                                  (errors.Count == 1 ? "" : "s");
@@ -216,6 +221,17 @@ namespace AA2Trainer
                     result.Add(pair);
             }
             return result;
+        }
+
+        /// <summary>Deep copy of the loaded names, used to diff an import.</summary>
+        public Dictionary<string, SortedDictionary<int, string>> Snapshot()
+        {
+            Dictionary<string, SortedDictionary<int, string>> copy =
+                new Dictionary<string, SortedDictionary<int, string>>(
+                    StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, SortedDictionary<int, string>> pair in maps)
+                copy[pair.Key] = new SortedDictionary<int, string>(pair.Value);
+            return copy;
         }
 
         public string ForField(string field, int gender, int value)

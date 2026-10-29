@@ -8,6 +8,7 @@ namespace AA2Trainer
     public sealed class OptionsControl : UserControl
     {
         public Func<bool> ConfirmWriteAllowed { get; set; }
+        public Func<Dictionary<string, SortedDictionary<int, string>>> NameSnapshot { get; set; }
 
         public event EventHandler RefreshRequested;
         public event EventHandler RecheckRequested;
@@ -72,6 +73,10 @@ namespace AA2Trainer
         private Button revertButton;
         private CheckBox liveRefreshBox;
         private ComboBox liveIntervalBox;
+        private Label nameTableStatus;
+        private Label nameTableNote;
+        private Button updateNameTablesButton;
+        private Button resetNameTablesButton;
         private Label gateLabel;
         private Label statusLabel;
         private ToolTip tooltip;
@@ -224,10 +229,11 @@ namespace AA2Trainer
             description.Text = "Refresh re-reads class data and the active tab " +
                 "(pending schedule edits are discarded). Recheck re-runs the health " +
                 "check and updates the write gate. Details shows the last health " +
-                "check. Reload names re-reads the XML name files. Live refresh updates " +
+                "check. Reload names re-reads the XML name files. Update from XMLs " +
+                "imports newer community name tables into a local overlay. " +
+                "Live refresh updates " +
                 "the roster and Character Data status at the selected rate; Auto uses " +
-                "100 ms while a character is active and 500 ms when idle.";
-            description.AutoSize = true;
+                "100 ms while a character is active and 500 ms when idle.";            description.AutoSize = true;
             description.MaximumSize = new Size(800, 0);
             description.Anchor = AnchorStyles.Left | AnchorStyles.Top;
             description.ForeColor = Color.Gray;
@@ -245,8 +251,148 @@ namespace AA2Trainer
             liveRefreshBox.Checked = true;
             UpdateLiveControls();
 
+            TableLayoutPanel nameGroup = NewGroup(host, "Name tables", 2, false);
+            EnsureRowCount(nameGroup, 2);
+
+            nameTableStatus = new Label();
+            nameTableStatus.AutoSize = true;
+            nameTableStatus.Anchor = AnchorStyles.Left;
+            nameTableStatus.ForeColor = Color.DimGray;
+            nameTableStatus.Margin = new Padding(6, 4, 6, 2);
+            nameGroup.Controls.Add(nameTableStatus, 0, 0);
+            nameGroup.SetColumnSpan(nameTableStatus, 2);
+
+            updateNameTablesButton = new Button();
+            updateNameTablesButton.Text = "Update from XMLs...";
+            updateNameTablesButton.Dock = DockStyle.Fill;
+            updateNameTablesButton.MinimumSize = new Size(0, 30);
+            updateNameTablesButton.Margin = new Padding(6, 3, 3, 3);
+            updateNameTablesButton.AccessibleName = "Update name tables from XMLs";
+            updateNameTablesButton.Click += UpdateNameTables;
+            nameGroup.Controls.Add(updateNameTablesButton, 0, 1);
+
+            resetNameTablesButton = new Button();
+            resetNameTablesButton.Text = "Reset overlay";
+            resetNameTablesButton.Dock = DockStyle.Fill;
+            resetNameTablesButton.MinimumSize = new Size(0, 30);
+            resetNameTablesButton.Margin = new Padding(3, 3, 6, 3);
+            resetNameTablesButton.AccessibleName = "Reset name table overlay";
+            resetNameTablesButton.Click += ResetNameTables;
+            nameGroup.Controls.Add(resetNameTablesButton, 1, 1);
+
+            nameTableNote = new Label();
+            nameTableNote.Text = "Bundled name tables use the " + NameOverlay.BundledLabel +
+                " XMLs (clothes.xml, HEXAOC.xml, personalities.xml). Use Update when the " +
+                "community releases newer XMLs: the trainer saves NameData.local.tsv beside " +
+                "AA2Trainer.exe and reloads the names. The overlay only adds or renames " +
+                "entries, it never removes names. Reset deletes the overlay and returns to " +
+                "the bundled tables plus the game's XMLs.";
+            nameTableNote.AutoSize = true;
+            nameTableNote.MaximumSize = new Size(800, 0);
+            nameTableNote.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+            nameTableNote.ForeColor = Color.Gray;
+            nameTableNote.Margin = new Padding(6, 8, 6, 4);
+            nameGroup.Controls.Add(nameTableNote, 0, 2);
+            nameGroup.SetColumnSpan(nameTableNote, 2);
+            nameGroup.Resize += delegate
+            {
+                int width = nameGroup.ClientSize.Width - 16;
+                if (width < 200) width = 200;
+                if (nameTableNote.MaximumSize.Width != width)
+                    nameTableNote.MaximumSize = new Size(width, 0);
+            };
+
+            UpdateNameTableStatus();
+
             ResizeGroups(host);
             return page;
+        }
+
+        private void UpdateNameTableStatus()
+        {
+            if (nameTableStatus == null) return;
+            nameTableStatus.Text = NameOverlay.StatusText();
+            if (resetNameTablesButton != null)
+                resetNameTablesButton.Enabled = NameOverlay.Exists;
+        }
+
+        public void RefreshNameTableStatus()
+        {
+            UpdateNameTableStatus();
+        }
+
+        private void UpdateNameTables(object sender, EventArgs e)
+        {
+            string root = NameMap.FindGameRoot();
+            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+            {
+                dialog.Description =
+                    "Select the folder that contains clothes.xml, HEXAOC.xml, " +
+                    "or personalities.xml. Only this folder is read.";
+                dialog.ShowNewFolderButton = false;
+                if (!string.IsNullOrEmpty(root)) dialog.SelectedPath = root;
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    Cursor = Cursors.WaitCursor;
+                    Dictionary<string, SortedDictionary<int, string>> baseline =
+                        NameSnapshot == null ? null : NameSnapshot();
+                    NameOverlayResult result = NameOverlay.MergeFromFolder(
+                        dialog.SelectedPath, baseline);
+                    UpdateNameTableStatus();
+                    if (ReloadNamesRequested != null)
+                        ReloadNamesRequested(this, EventArgs.Empty);
+
+                    string message;
+                    if (result.Added == 0 && result.Updated == 0)
+                    {
+                        message = "No newer names found in " + result.Files +
+                            (result.Files == 1 ? " file" : " files") + " (" +
+                            result.Checked + " checked).\n\nThe bundled tables are up to date.";
+                    }
+                    else
+                    {
+                        message = result.Files + (result.Files == 1 ? " file" : " files") +
+                            ": " + result.Added + " added, " + result.Updated + " renamed, " +
+                            result.Unchanged + " unchanged.\n\nThe overlay now holds " +
+                            result.Total + " names.";
+                    }
+                    MessageBox.Show(this, message, "Name tables",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, ex.Message, "Name tables",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Cursor = Cursors.Default;
+                }
+            }
+        }
+
+        private void ResetNameTables(object sender, EventArgs e)
+        {
+            if (!NameOverlay.Exists) return;
+            if (MessageBox.Show(this,
+                "Delete " + NameOverlay.FileName + " and return to the bundled name tables?",
+                "Name tables", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            try
+            {
+                NameOverlay.Clear();
+                UpdateNameTableStatus();
+                if (ReloadNamesRequested != null)
+                    ReloadNamesRequested(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Name tables",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void UpdateLiveControls()
@@ -285,6 +431,7 @@ namespace AA2Trainer
         private void RequestReloadNames(object sender, EventArgs e)
         {
             if (ReloadNamesRequested != null) ReloadNamesRequested(this, EventArgs.Empty);
+            UpdateNameTableStatus();
         }
 
         private TabPage BuildSystemPage()

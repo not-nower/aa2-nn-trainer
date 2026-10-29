@@ -8,6 +8,9 @@ obj/
 crash.log
 *.log
 
+# User name-table overlay
+NameData.local.tsv
+
 # IDE / OS
 .vs/
 .idea/

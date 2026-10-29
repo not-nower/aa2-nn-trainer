@@ -17,6 +17,7 @@ namespace AA2Trainer
                 RunHealthCheck();
                 return writesAllowed && mem.CanWrite;
             };
+            optionsControl.NameSnapshot = delegate { return names.Snapshot(); };
             optionsControl.RefreshRequested += delegate
             {
                 DiscardScheduleEdits();

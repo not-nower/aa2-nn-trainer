@@ -14,7 +14,7 @@ Fully vibe coded.
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
 - **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises.
 - **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Replace (offline save/card replacer with side-by-side card-face previews).
-- **Option** — trainer live-refresh settings plus game System/Sound/Additional options.
+- **Option** — trainer live-refresh settings and bundled name-table updates, plus game System/Sound/Additional options.
 - **Debug** — pointer/definition browser and filters.
 - **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
 - **Live refresh** — adaptive background polling.
@@ -37,6 +37,19 @@ Fully vibe coded.
 5. Use the tabs to view or edit the selected character.
 6. For Action/Planner, enter free roam, select an actor and target, then run the action.
 
+## Name tables
+
+Name tables are embedded and built from the game XML set dated **2026-09-06**
+(`clothes.xml`, `HEXAOC.xml`, `personalities.xml`). At runtime the trainer also
+merges `*.xml` found in the game folder.
+
+If the community releases newer XMLs, open **Option → Trainer → Name tables**
+and use **Update from XMLs...**. The trainer writes `NameData.local.tsv` next
+to `AA2Trainer.exe`, reloads the names, and keeps the overlay across exe
+updates. Imports only add or rename entries — names are never removed — and
+**Reset overlay** deletes the file. Only the folder you pick is read (no
+subfolders), so ReiEdit/mod override tables are not pulled in.
+
 ## Build
 
 Requires the .NET SDK 8 or newer (`dotnet --version`). End users only need .NET Framework 4.8.
@@ -51,6 +64,16 @@ Output: `bin\AA2Trainer.exe` — x86, targeting .NET Framework 4.8.
 but the build will fail while the trainer is running. The project is
 `AA2Trainer.csproj`; `dotnet build -c Release` also works, with the same
 running-app caveat.
+
+## Dependencies
+
+- **Runtime:** Windows x86 with .NET Framework 4.8 and AA2Play 2.0.1. Optional:
+  AAUnlimited for AAU modules and the planner hook. No external DLLs — name,
+  trait and card-field tables are embedded in the exe.
+- **Build:** .NET SDK 8+ and the `Microsoft.NETFramework.ReferenceAssemblies`
+  NuGet package (build-only).
+- **Tools only:** Python 3 for the `tools/` exporters. They are not part of the
+  build; the generated TSVs are committed and embedded as-is.
 
 ## Layout
 
@@ -94,12 +117,15 @@ running-app caveat.
     - `CardFields.cs` — card edit-data field definitions
     - `CardSnapshot.cs` — card PNG/edit-data parser
     - `ClassSaveFile.cs` — class save parser/writer
+    - `NameOverlay.cs` — user name-table overlay (`NameData.local.tsv`)
     - `PlayerSwitch.cs` — play-as helper
   - `Data/`
     - `NameData.tsv` — action, location, personality and name tables
     - `TraitEffects.tsv` — trait effect tooltip text
     - `CardFields.tsv` — card edit-data field table
-- `tools/ExportNameData.py` — regenerates `NameData.tsv` from ReiEdit XML
+- `tools/ExportNameData.py` — regenerates `NameData.tsv` from the game or AA2QtEdit XML (merge-only)
+- `tools/ExportCardFields.py` — regenerates `CardFields.tsv` from AA2QtEdit `chardata.xml`
+- `tools/README.md` — exporter usage notes
 - `build.ps1` — stops a running trainer, then builds x86 `bin/AA2Trainer.exe`
 - `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 project
 
@@ -109,6 +135,7 @@ running-app caveat.
 - **Class data is not loaded** — load a save/class in AA2Play first.
 - **Action/Planner does nothing** — make sure you are in free roam, the actor is idle, and a valid target is selected. Check the planner log for the hook state.
 - **Build fails because the trainer is running** — `build.ps1` stops it automatically; `-KeepRunning` skips the stop, so close the trainer first.
+- **Names look outdated** — Option → Trainer → Name tables → **Update from XMLs...** with the folder containing the newer `clothes.xml`, `HEXAOC.xml`, or `personalities.xml`.
 - **Crash** — `crash.log` is written next to `AA2Trainer.exe`.
 
 ## Credits
@@ -116,7 +143,7 @@ running-app caveat.
 - **Ahrie** — original AA2Trainer; inspiration and reference for the game's memory structures.
 - **AAUnlimited Contributors** — [AAUnlimited](https://github.com/aa2g/AA2Unlimited); module/trigger format, planner entry, and modding framework.
 - **geneishouko** — [AA2QtEdit](https://github.com/geneishouko/AA2QtEdit); used as a reference for save and card data handling.
-- **usagirei** — [ReiEdit](https://github.com/usagirei/ReiEdit-AA2); XML name tables used to generate `NameData.tsv`.
+- **usagirei** — [ReiEdit](https://github.com/usagirei/ReiEdit-AA2); original 2017 XML name tables (the shipped baseline has since been extended from the game's XMLs).
 
 ## License
 
