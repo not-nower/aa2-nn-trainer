@@ -81,7 +81,7 @@ namespace AA2Trainer
 
         private TabPage BuildImportReplaceTab()
         {
-            TabPage page = new TabPage("Import/Replace");
+            TabPage page = new TabPage("Import/Export");
             page.BackColor = Color.FromArgb(248, 249, 251);
 
             ImportReplaceControl importReplace = new ImportReplaceControl();

@@ -4,7 +4,7 @@ Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
 
 > **Save safety:** this tool writes to game memory and can rewrite class save
-> files. Back up your saves first. Import/Replace writes a timestamped `.bak`
+> files. Back up your saves first. Import/Export writes a timestamped `.bak`
 > next to the save before changing it, but that is a convenience, not a
 > guarantee. Memory edits are lost unless you save in-game, and editing is only
 > tested against AA2Play 2.0.1. Use at your own risk.
@@ -13,7 +13,7 @@ Fully vibe coded.
 
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
 - **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises.
-- **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Replace (offline save/card replacer with side-by-side card-face previews).
+- **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
 - **Option** — trainer live-refresh settings and bundled name-table updates, plus game System/Sound/Additional options.
 - **Debug** — pointer/definition browser and filters.
 - **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
@@ -104,7 +104,7 @@ running-app caveat.
     - `LoverControl.cs` — Lover
     - `PromisesControl.cs` — Promises
     - `OptionsControl.cs` — Option editor
-    - `ImportReplaceControl.cs` — offline save/card replacer
+    - `ImportReplaceControl.cs` — offline save/card replacer and card exporter
     - `FieldGridControl.cs` — reusable debug field grid
     - `PortraitLoader.cs` — portrait image loading
     - `DashboardData.cs`, `DisplayText.cs` — definition lookup and display text

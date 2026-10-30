@@ -7,8 +7,9 @@ using System.Windows.Forms;
 namespace AA2Trainer
 {
     /// <summary>
-    /// Offline Import/Replace tab. Edits a class save file directly, so it does
-    /// not require the game to be attached. Play data is preserved.
+    /// Offline Import/Export tab. Edits a class save file directly, so it does
+    /// not require the game to be attached, and can write a selected character
+    /// out as a standalone AA2 card. Play data is preserved in the save.
     /// </summary>
     public sealed class ImportReplaceControl : UserControl
     {
@@ -61,6 +62,7 @@ namespace AA2Trainer
         private CheckBox showUnchanged;
         private DataGridView diffGrid;
         private Button applyButton;
+        private Button exportButton;
         private PictureBox currentFaceBox;
         private PictureBox incomingFaceBox;
         private Label currentFaceLabel;
@@ -104,10 +106,11 @@ namespace AA2Trainer
             note.ForeColor = Color.DimGray;
             note.Margin = new Padding(0, 0, 0, 8);
             note.Text =
-                "Offline save editor. In AA2Play, save the game first, then select that .sav here. " +
+                "Offline save editor and card exporter. In AA2Play, save the game first, then select that .sav here. " +
                 "Select the character from that save, choose a card to import, pick the sections, " +
                 "review the comparison, then Apply. The comparison lists only the changes in the " +
-                "selected sections; check Show unchanged to see every field. " +
+                "selected sections; check Show unchanged to see every field. Use Export Card to " +
+                "write the selected character to a standalone .png instead. " +
                 "All selected sections, including Card Face, Roster Image, and AAUnlimited Data, are " +
                 "written to the save and take effect after reloading the class. " +
                 "A timestamped .bak backup is created. Do not save in-game between Apply and reloading.";
@@ -140,6 +143,11 @@ namespace AA2Trainer
             characterCombo.Margin = new Padding(0, 4, 4, 4);
             characterCombo.SelectedIndexChanged += delegate { CharacterChanged(); };
             selectors.Controls.Add(characterCombo, 1, 1);
+
+            exportButton = MakeButton("Export Card...");
+            exportButton.Enabled = false;
+            exportButton.Click += delegate { ExportCard(); };
+            selectors.Controls.Add(exportButton, 2, 1);
 
             selectors.Controls.Add(MakeCaption("Card to import:"), 0, 2);
             cardPathBox = MakePathBox();
@@ -690,6 +698,89 @@ namespace AA2Trainer
             if (applyButton == null) return;
             applyButton.Enabled = save != null && sourceCard != null &&
                 selectedEntry != null && SelectedSections().Count > 0;
+            if (exportButton != null)
+                exportButton.Enabled = save != null && selectedEntry != null;
+        }
+
+        private void ExportCard()
+        {
+            if (selectedEntry == null)
+            {
+                SetStatus("Select a character from a save before exporting.", true);
+                return;
+            }
+
+            SaveCardEntry entry = selectedEntry;
+            CardSnapshot card = entry.Card;
+
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Export AA2 character card";
+                dialog.Filter = "AA2 cards (*.png)|*.png|All files (*.*)|*.*";
+                dialog.DefaultExt = "png";
+                dialog.AddExtension = true;
+                dialog.OverwritePrompt = true;
+                dialog.InitialDirectory = string.IsNullOrEmpty(lastCardDirectory)
+                    ? DefaultCardDirectory() : lastCardDirectory;
+                dialog.FileName = DefaultCardName(entry);
+                if (dialog.ShowDialog(FindForm()) != DialogResult.OK) return;
+
+                string path = dialog.FileName;
+                string temp = path + ".tmp";
+                try
+                {
+                    File.WriteAllBytes(temp, card.BuildCardBytes(null));
+                    VerifyExportedCard(temp, card);
+                    if (File.Exists(path))
+                    {
+                        try { File.Replace(temp, path, null); }
+                        catch { File.Copy(temp, path, true); File.Delete(temp); }
+                    }
+                    else
+                    {
+                        File.Move(temp, path);
+                    }
+                    lastCardDirectory = Path.GetDirectoryName(path);
+                    SetStatus("Exported " + entry.Seat.ToString("D2") + " " + card.Name +
+                        " to " + path +
+                        (card.HasAau ? " (AAU data included; module files are not bundled)" : "") +
+                        ".", false);
+                }
+                catch (Exception ex)
+                {
+                    try { if (File.Exists(temp)) File.Delete(temp); } catch { }
+                    SetStatus(ex.Message, true);
+                }
+            }
+        }
+
+        private static void VerifyExportedCard(string path, CardSnapshot expected)
+        {
+            byte[] data = File.ReadAllBytes(path);
+            int end;
+            CardSnapshot check = CardSnapshot.ParseCard(data, 0, -1, -1, out end);
+            if (end != data.Length)
+                throw new InvalidDataException(
+                    "The exported card has trailing data and is not a clean card file.");
+            if (!BytesEqual(check.EditData, expected.EditData))
+                throw new InvalidDataException("The exported card's edit data did not round-trip.");
+            if (!BytesEqual(check.FacePng, expected.FacePng))
+                throw new InvalidDataException("The exported card's face PNG did not round-trip.");
+            if (!BytesEqual(check.RosterPng, expected.RosterPng))
+                throw new InvalidDataException("The exported card's roster image did not round-trip.");
+            if (!BytesEqual(check.AauChunk, expected.AauChunk))
+                throw new InvalidDataException("The exported card's AAUnlimited data did not round-trip.");
+        }
+
+        private static string DefaultCardName(SaveCardEntry entry)
+        {
+            string name = string.IsNullOrEmpty(entry.Card.Name) ? "" : entry.Card.Name;
+            char[] invalid = Path.GetInvalidFileNameChars();
+            foreach (char c in invalid) name = name.Replace(c, '_');
+            name = name.Trim().TrimEnd('.');
+            if (name.Length == 0) name = "card";
+            if (name.Length > 80) name = name.Substring(0, 80).TrimEnd();
+            return "AA2_" + entry.Seat.ToString("D2") + "_" + name + ".png";
         }
 
         private void ApplyChanges()
