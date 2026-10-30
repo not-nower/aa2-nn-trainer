@@ -21,16 +21,20 @@ namespace AA2Trainer
 
     /// <summary>
     /// Offline AA2 class save reader/writer. The header, every card, and the
-    /// footer are preserved; play data is copied byte-for-byte so replacing a
-    /// card does not touch relationships, history, promises, or status.
+    /// class footer are preserved; play data is copied byte-for-byte so
+    /// replacing a card does not touch relationships, history, promises, or
+    /// status.
+    ///
+    /// Play data lengths are not parsed. Each card ends where the next card's
+    /// five-byte prefix begins, and the last card runs to the end of the file
+    /// (its play data plus the class footer). The AA2 play-data layout has
+    /// version-specific/unknown blocks after PLAYER_STATUS; walking it by hand
+    /// silently truncated every card and corrupted the save.
     /// </summary>
     public sealed class ClassSaveFile
     {
         private const int HeaderSize = 0x13D;
         private const int MaxCards = 100;
-        private const int MaxTargets = 64;
-        private const int MaxActions = 256;
-        private const int MaxIntArray = 100000;
 
         private static readonly byte[] PngHeader =
         {
@@ -41,6 +45,7 @@ namespace AA2Trainer
         public byte[] Raw;
         public byte[] Header;
         public byte[] Footer;
+        public int PcSeat = -1;
         public readonly List<SaveCardEntry> Cards = new List<SaveCardEntry>();
 
         public static ClassSaveFile Load(string path)
@@ -80,7 +85,23 @@ namespace AA2Trainer
                 int cardEnd;
                 CardSnapshot card = CardSnapshot.ParseCard(
                     data, cardStart, seat, gender, out cardEnd);
-                int playEnd = PlayDataEnd(data, cardEnd);
+
+                int playEnd;
+                if (i == wanted - 1)
+                {
+                    // The last card owns everything up to EOF: its play data
+                    // plus the class footer. Keeping them together means the
+                    // footer is written back untouched.
+                    playEnd = data.Length;
+                }
+                else
+                {
+                    int nextCard = FindNextCard(data, cardEnd);
+                    if (nextCard < 0)
+                        throw new InvalidDataException(
+                            "Could not find the next card in the save.");
+                    playEnd = nextCard - 5;
+                }
                 if (playEnd <= cardEnd)
                     throw new InvalidDataException("The card play data is invalid.");
 
@@ -102,9 +123,43 @@ namespace AA2Trainer
             if (save.Cards.Count == 0)
                 throw new InvalidDataException("No character cards were found.");
 
-            save.Footer = new byte[data.Length - pos];
-            Array.Copy(data, pos, save.Footer, 0, save.Footer.Length);
+            // The footer is part of the last card's slice now. Keep the field
+            // empty so Save() does not append it twice.
+            save.Footer = new byte[0];
+            if (data.Length >= 4)
+            {
+                int pcSeat = BitConverter.ToInt32(data, data.Length - 4);
+                if (pcSeat >= 0 && pcSeat <= 24) save.PcSeat = pcSeat;
+            }
             return save;
+        }
+
+        /// <summary>
+        /// Finds the next character card: a PNG signature preceded by a
+        /// plausible one-byte gender and int32 seat. This avoids parsing the
+        /// play-data layout to find card boundaries.
+        /// </summary>
+        private static int FindNextCard(byte[] data, int from)
+        {
+            int pos = from;
+            while (true)
+            {
+                int png = IndexOf(data, PngHeader, pos);
+                if (png < 5) return -1;
+                int prefix = png - 5;
+                if (prefix >= from && IsCardPrefix(data, prefix)) return png;
+                pos = png + 1;
+            }
+        }
+
+        private static bool IsCardPrefix(byte[] data, int offset)
+        {
+            if (data == null || offset < 0 || offset + 5 > data.Length)
+                return false;
+            byte gender = data[offset];
+            if (gender > 1) return false;
+            int seat = BitConverter.ToInt32(data, offset + 1);
+            return seat >= 0 && seat <= 24;
         }
 
         public SaveCardEntry FindCard(int seat)
@@ -169,103 +224,6 @@ namespace AA2Trainer
             }
             File.Copy(path, backup, false);
             return backup;
-        }
-
-        private static int PlayDataEnd(byte[] data, int start)
-        {
-            int o = start;
-            o = SkipIntArray(data, o);
-            o = SkipIntArray(data, o);
-            o = SkipEvaluationArray(data, o);
-            o = SkipIntArray(data, o);
-            o = SkipIntArray(data, o);
-            o = SkipInteractionArray(data, o);
-            o = SkipInteractionArray(data, o);
-            o = SkipPromiseArray(data, o);
-            o = SkipPromiseArray(data, o);
-            o = SkipMeetingArray(data, o);
-            o = SkipFixedArray(data, o, 21);
-            o = SkipMeetingArray(data, o);
-            o = SkipFixedArray(data, o, 21);
-            o = SkipPlayerStatus(data, o);
-            return o;
-        }
-
-        private static int SkipEvaluationArray(byte[] data, int o)
-        {
-            int count = ReadCount(data, ref o, MaxTargets);
-            for (int i = 0; i < count; i++)
-            {
-                o = Advance(data, o, 5 * 4);
-                int history = ReadCount(data, ref o, 256);
-                o = Advance(data, o, history * 4);
-                o = Advance(data, o, 8 * 4);
-                o = SkipIntArray(data, o);
-                o = Advance(data, o, 4);
-            }
-            return o;
-        }
-
-        private static int SkipInteractionArray(byte[] data, int o)
-        {
-            int count = ReadCount(data, ref o, MaxTargets);
-            for (int i = 0; i < count; i++)
-            {
-                o = Advance(data, o, 4);
-                int actions = ReadCount(data, ref o, MaxActions);
-                o = Advance(data, o, actions * 5 * 4);
-            }
-            return o;
-        }
-
-        private static int SkipPromiseArray(byte[] data, int o)
-        {
-            int count = ReadCount(data, ref o, MaxTargets);
-            return Advance(data, o, count * 3 * 4);
-        }
-
-        private static int SkipMeetingArray(byte[] data, int o)
-        {
-            int count = ReadCount(data, ref o, MaxTargets);
-            return Advance(data, o, count * 21);
-        }
-
-        private static int SkipPlayerStatus(byte[] data, int o)
-        {
-            o = Advance(data, o, 8 * 4);
-            o = Advance(data, o, 8);
-            o = Advance(data, o, 2 * 4);
-            return Advance(data, o, 3 * 32);
-        }
-
-        private static int SkipIntArray(byte[] data, int o)
-        {
-            int count = ReadCount(data, ref o, MaxIntArray);
-            return Advance(data, o, count * 4);
-        }
-
-        private static int SkipFixedArray(byte[] data, int o, int itemSize)
-        {
-            int count = ReadCount(data, ref o, MaxIntArray);
-            return Advance(data, o, count * itemSize);
-        }
-
-        private static int ReadCount(byte[] data, ref int o, int max)
-        {
-            if (o < 0 || o + 4 > data.Length)
-                throw new InvalidDataException("Save play data ended unexpectedly.");
-            int count = BitConverter.ToInt32(data, o);
-            o += 4;
-            if (count < 0 || count > max)
-                throw new InvalidDataException("Invalid array length in save play data.");
-            return count;
-        }
-
-        private static int Advance(byte[] data, int o, int bytes)
-        {
-            if (bytes < 0 || o < 0 || o > data.Length - bytes)
-                throw new InvalidDataException("Array runs past the end of the save.");
-            return o + bytes;
         }
 
         private static int IndexOf(byte[] data, byte[] pattern, int start)

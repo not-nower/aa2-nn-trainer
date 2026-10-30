@@ -446,9 +446,7 @@ namespace AA2Trainer
             save = loaded;
             savePathBox.Text = path;
 
-            int pcSeat = -1;
-            if (save.Footer != null && save.Footer.Length >= 4)
-                pcSeat = BitConverter.ToInt32(save.Footer, save.Footer.Length - 4);
+            int pcSeat = save.PcSeat;
 
             characterCombo.BeginUpdate();
             try
