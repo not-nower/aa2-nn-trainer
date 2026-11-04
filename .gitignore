@@ -8,8 +8,9 @@ obj/
 crash.log
 *.log
 
-# User name-table overlay
+# User name-table overlay and portable settings
 NameData.local.tsv
+AA2Trainer.ini
 
 # IDE / OS
 .vs/

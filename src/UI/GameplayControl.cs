@@ -5,8 +5,8 @@ using System.Windows.Forms;
 namespace AA2Trainer
 {
     /// <summary>
-    /// Gameplay features. Action/Planner, Relationship, Behavior History,
-    /// Lover and Promises are implemented.
+    /// Gameplay features. Action/Planner, Limits, Relationship, Behavior
+    /// History, Lover and Promises are implemented.
     /// </summary>
     public sealed class GameplayControl : UserControl
     {
@@ -21,6 +21,7 @@ namespace AA2Trainer
         private BehaviorHistoryControl behaviorHistory;
         private LoverControl lover;
         private PromisesControl promises;
+        private ActionLimitControl actionLimits;
 
         private GameMemory cachedMem;
         private GameContext cachedCtx;
@@ -57,6 +58,13 @@ namespace AA2Trainer
             };
             actionPage.Controls.Add(actionPlanner);
             tabs.TabPages.Add(actionPage);
+
+            TabPage limitsPage = new TabPage("Limits");
+            limitsPage.BackColor = Color.FromArgb(248, 249, 251);
+            actionLimits = new ActionLimitControl();
+            actionLimits.Dock = DockStyle.Fill;
+            limitsPage.Controls.Add(actionLimits);
+            tabs.TabPages.Add(limitsPage);
 
             TabPage relationshipPage = new TabPage("Relationship");
             relationshipPage.BackColor = Color.FromArgb(248, 249, 251);
@@ -115,6 +123,7 @@ namespace AA2Trainer
             };
             promisesPage.Controls.Add(promises);
             tabs.TabPages.Add(promisesPage);
+
             tabs.SelectedIndexChanged += delegate { RefreshActiveTab(); };
             Controls.Add(tabs);
         }
@@ -137,21 +146,24 @@ namespace AA2Trainer
                             cachedSelected, cachedNames, cachedWriteAllowed);
                     break;
                 case 1:
+                    // SetTarget() already feeds the limiter on every refresh.
+                    break;
+                case 2:
                     if (relationship != null)
                         relationship.SetTarget(cachedMem, cachedCtx,
                             cachedSelected, cachedNames, cachedWriteAllowed);
                     break;
-                case 2:
+                case 3:
                     if (behaviorHistory != null)
                         behaviorHistory.SetTarget(cachedMem, cachedCtx,
                             cachedSelected);
                     break;
-                case 3:
+                case 4:
                     if (lover != null)
                         lover.SetTarget(cachedMem, cachedCtx, cachedSelected,
                             cachedWriteAllowed);
                     break;
-                case 4:
+                case 5:
                     if (promises != null)
                         promises.SetTarget(cachedMem, cachedCtx, cachedSelected,
                             cachedNames);
@@ -167,6 +179,8 @@ namespace AA2Trainer
             cachedSelected = selected;
             cachedNames = names;
             cachedWriteAllowed = writeAllowed;
+            if (actionLimits != null)
+                actionLimits.SetTarget(mem, ctx, names, writeAllowed);
             RefreshActiveTab();
         }
 
@@ -177,6 +191,7 @@ namespace AA2Trainer
             if (relationship != null) relationship.SetWriteAllowed(allowed);
             if (behaviorHistory != null) behaviorHistory.SetWriteAllowed(allowed);
             if (lover != null) lover.SetWriteAllowed(allowed);
+            if (actionLimits != null) actionLimits.SetWriteAllowed(allowed);
         }
 
         /// <summary>
@@ -222,6 +237,7 @@ namespace AA2Trainer
             if (behaviorHistory != null) behaviorHistory.Clear();
             if (lover != null) lover.Clear();
             if (promises != null) promises.Clear();
+            if (actionLimits != null) actionLimits.Clear();
         }
     }
 }
