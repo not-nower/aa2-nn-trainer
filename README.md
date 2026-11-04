@@ -4,24 +4,27 @@ Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
 
 > **Save safety:** this tool writes to game memory and can rewrite class save
-> files. Back up your saves first. Import/Export writes a timestamped `.bak`
-> next to the save before changing it, but that is a convenience, not a
-> guarantee. Memory edits are lost unless you save in-game, and editing is only
-> tested against AA2Play 2.0.1. Use at your own risk.
+> files. Back up your saves first. Import/Export and Option → Trainer → Backup
+> write a timestamped `.bak` next to the save before changing it, and Restore
+> creates a safety `.bak` of the current save first. That is a convenience, not
+> a guarantee. Memory edits are lost unless you save in-game, and editing is
+> only tested against AA2Play 2.0.1. After restoring a save, reload the class or
+> restart AA2Play. Use at your own risk.
 
 ## Features
 
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
-- **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises.
+- **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises, and Limits (a persistent list of actions NPCs may not perform).
 - **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
-- **Option** — trainer live-refresh settings and bundled name-table updates, plus game System/Sound/Additional options.
-- **Debug** — pointer/definition browser and filters.
+- **Option** — live-refresh settings, portable save Backup/Restore, and bundled name-table updates, plus game System/Sound/Additional options.
+- **Debug** — pointer/definition browser and filters, plus the experimental Status Preview.
 - **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
 - **Live refresh** — adaptive background polling.
 
 ## Requirements
 
 - Windows with .NET Framework 4.8.
+- A writable folder for `AA2Trainer.exe`; settings and the optional name overlay are stored beside it.
 - x86 AA2Play, tested against version 2.0.1.
 - Run the trainer as administrator for reliable read/write access. Without it, the trainer may attach read-only.
 - A class/save loaded in AA2Play.
@@ -33,13 +36,15 @@ Fully vibe coded.
 1. Download the latest `AA2Trainer-v*-win-x86.zip` from the
    [Releases page](https://github.com/not-nower/aa2-nn-trainer/releases/latest)
    and extract it. The zip contains `AA2Trainer.exe`, its `.config`, `LICENSE`,
-   and a short readme.
+   and `README.md`.
 2. Start AA2Play and load a class/save.
 3. Run `AA2Trainer.exe` as administrator.
 4. The trainer attaches automatically. Use the ↻ button to re-attach or refresh.
 5. Select a character in Class Seats or the roster.
 6. Use the tabs to view or edit the selected character.
 7. For Action/Planner, enter free roam, select an actor and target, then run the action.
+8. Use **Option → Trainer → Save backups** to create or restore a timestamped
+   save backup before making large changes.
 
 ## Name tables
 
@@ -53,6 +58,41 @@ to `AA2Trainer.exe`, reloads the names, and keeps the overlay across exe
 updates. Imports only add or rename entries — names are never removed — and
 **Reset overlay** deletes the file. Only the folder you pick is read (no
 subfolders), so ReiEdit/mod override tables are not pulled in.
+
+## Save backups
+
+**Option → Trainer → Save backups** works on the `.sav` selected in
+Import/Export or chosen with **Select save...**.
+
+- **Backup** copies the save to `<name>.sav.YYYYMMDD-HHMMSS.bak` beside the original.
+- **Restore...** lists timestamped backups with their creation time, verifies
+  the chosen backup, and creates a safety backup of the current save before
+  replacing it.
+- Import/Export backups and Backup-created backups use the same naming, so
+  either function can restore the other's files.
+- Only the `.sav` is restored. AAUnlimited `.json` sidecars are not included.
+- Reload the class or restart AA2Play after restoring.
+
+If Import/Export currently has that save open, the trainer reloads it after a
+restore so stale in-memory card data cannot overwrite the restored file.
+
+## Portable settings
+
+Trainer settings are stored beside `AA2Trainer.exe` in `AA2Trainer.ini`:
+
+```ini
+limit-actions=14,19,40,48,102
+last-save=D:\...\Class01.sav
+```
+
+- `limit-actions` — actions blocked by Gameplay → Limits
+- `last-save` — last save used by Option → Trainer → Save backups
+- The file is created on first use.
+- Copying or moving the exe folder carries the settings with it.
+- The trainer does not write to `%APPDATA%`.
+- If the folder is read-only, the trainer still runs but cannot remember changes.
+
+`NameData.local.tsv` remains a separate portable file beside the exe.
 
 ## Build
 
@@ -85,10 +125,10 @@ running-app caveat.
   - `Program.cs` — application entry point
   - `MainForm.cs` — main window, tab shell, attach/refresh, fail-safe pointer gate
   - `MainForm.Roster.cs` — class seats, hover portrait, play-as character
-  - `MainForm.CharacterEditor.cs` — Character Editor tab and sub-tabs
+  - `MainForm.CharacterEditor.cs` — Character Editor tab, sub-tabs, and save-path sharing
   - `MainForm.Gameplay.cs` — Gameplay tab wiring
-  - `MainForm.Options.cs` — Option tab wiring
-  - `MainForm.Debug.cs` — Debug tab, grids and filters
+  - `MainForm.Options.cs` — Option tab wiring, portable settings, and save path sharing
+  - `MainForm.Debug.cs` — Debug tab, grids and filters, and Status Preview
   - `MainForm.Live.cs` — background live poller and adaptive refresh
   - `MainForm.TopPanel.cs` — top summary, schedule header, clock and freeze
   - `MainForm.Text.cs` — text and formatting helpers
@@ -97,13 +137,15 @@ running-app caveat.
     - `CharacterDataControl.cs` — Character Data, including read-only AAU modules
     - `TraitsControl.cs` — Traits and H Preferences
     - `BodyControl.cs`, `FaceControl.cs`, `HairControl.cs`, `OutfitsControl.cs` — appearance editors
-    - `GameplayControl.cs` — Gameplay sub-tab host
+    - `GameplayControl.cs` — Gameplay sub-tab host, including Limits
     - `ActionPlannerControl.cs` — Action/Planner
+    - `ActionLimitControl.cs` — Limits checkbox UI
     - `RelationshipControl.cs` — Relationship
     - `BehaviorHistoryControl.cs` — Behavior History
     - `LoverControl.cs` — Lover
     - `PromisesControl.cs` — Promises
-    - `OptionsControl.cs` — Option editor
+    - `OptionsControl.cs` — Option editor and save backups
+    - `RestoreBackupDialog.cs` — timestamped backup picker
     - `ImportReplaceControl.cs` — offline save/card replacer and card exporter
     - `FieldGridControl.cs` — reusable debug field grid
     - `PortraitLoader.cs` — portrait image loading
@@ -116,11 +158,15 @@ running-app caveat.
     - `CharacterEditor.cs`, `BodyEditor.cs`, `FaceEditor.cs`, `HairEditor.cs`, `OutfitEditor.cs` — character and appearance data
     - `Traits.cs`, `OptionEditor.cs`, `ScheduleEditor.cs`, `RiskSchedule.cs` — traits, options and schedule
     - `RelationshipData.cs`, `RelationshipEditor.cs`, `LoverEditor.cs`, `PromiseReader.cs` — relationship data
+    - `RelationshipStatus.cs` — status catalog and candidate derivation
     - `ActionParams.cs`, `ActionStateReader.cs`, `ActionPlannerEngine.cs`, `PlannerHook.cs` — Action/Planner and planner hook
+    - `ActionLimitList.cs`, `ActionLimiter.cs` — persistent limits and poll/cancel limiter
     - `AauModuleReader.cs` — read-only AAU module list parser
     - `CardFields.cs` — card edit-data field definitions
     - `CardSnapshot.cs` — card PNG/edit-data parser
     - `ClassSaveFile.cs` — class save parser/writer
+    - `SaveBackup.cs` — timestamped backup listing, validation, and restore
+    - `TrainerSettings.cs` — portable `AA2Trainer.ini` settings
     - `NameOverlay.cs` — user name-table overlay (`NameData.local.tsv`)
     - `PlayerSwitch.cs` — play-as helper
   - `Data/`
@@ -140,6 +186,10 @@ running-app caveat.
 - **Action/Planner does nothing** — make sure you are in free roam, the actor is idle, and a valid target is selected. Check the planner log for the hook state.
 - **Build fails because the trainer is running** — `build.ps1` stops it automatically; `-KeepRunning` skips the stop, so close the trainer first.
 - **Names look outdated** — Option → Trainer → Name tables → **Update from XMLs...** with the folder containing the newer `clothes.xml`, `HEXAOC.xml`, or `personalities.xml`.
+- **Restored save is not visible in AA2Play** — reload the class or restart AA2Play after restoring.
+- **Settings are not remembered** — the folder containing `AA2Trainer.exe` must be writable. Avoid running the portable build from a read-only folder such as Program Files.
+- **Restore does not list a backup** — only files named like `<name>.sav.YYYYMMDD-HHMMSS.bak` are shown. Backup and Import/Export create that format automatically.
+- **AAUnlimited data looks old after restore** — only the `.sav` is restored; the AAUnlimited `.json` sidecar is not included.
 - **Crash** — `crash.log` is written next to `AA2Trainer.exe`.
 
 ## Credits
