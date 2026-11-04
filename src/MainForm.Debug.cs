@@ -11,6 +11,11 @@ namespace AA2Trainer
 {
     public partial class MainForm
     {
+        private ListView statusPreviewList;
+        private Label statusPreviewTarget;
+        private readonly Random statusPreviewRng = new Random();
+        private int statusPreviewTargetSeat = -1;
+
         private TabPage BuildDebugTab()
         {
             TabPage page = new TabPage("Debug");
@@ -28,6 +33,7 @@ namespace AA2Trainer
             debugTabs.TabPages.Add(BuildClassTab());
             debugTabs.TabPages.Add(BuildConfigTab());
             debugTabs.TabPages.Add(BuildPointersTab());
+            debugTabs.TabPages.Add(BuildStatusPreviewTab());
 
             page.Controls.Add(debugTabs);
             return page;
@@ -590,6 +596,143 @@ namespace AA2Trainer
                 pointerDetails.Text = "No visible pointer row.";
         }
 
+        private TabPage BuildStatusPreviewTab()
+        {
+            TabPage page = new TabPage("Status Preview");
+            page.BackColor = Color.FromArgb(248, 249, 251);
+
+            statusPreviewTarget = MakeCaption("Target: -");
+
+            Button refresh = new Button();
+            refresh.Text = "Refresh";
+            refresh.AutoSize = true;
+            refresh.Click += delegate { RefreshStatusPreview(true); };
+
+            Button roll = new Button();
+            roll.Text = "Roll";
+            roll.AutoSize = true;
+            roll.Click += delegate { RollStatusPreview(); };
+
+            FlowLayoutPanel bar = CreateToolbar();
+            bar.Controls.Add(MakeCaption("Target:"));
+            bar.Controls.Add(statusPreviewTarget);
+            bar.Controls.Add(refresh);
+            bar.Controls.Add(roll);
+
+            statusPreviewList = new ListView();
+            statusPreviewList.Dock = DockStyle.Fill;
+            statusPreviewList.View = View.Details;
+            statusPreviewList.FullRowSelect = true;
+            statusPreviewList.GridLines = true;
+            statusPreviewList.HideSelection = false;
+            statusPreviewList.Columns.Add("Character", 190);
+            statusPreviewList.Columns.Add("Love / Like / Dislike / Hate", 220);
+            statusPreviewList.Columns.Add("Candidate statuses", 560);
+            statusPreviewList.Columns.Add("Shown (roll)", 220);
+
+            Label note = new Label();
+            note.Dock = DockStyle.Fill;
+            note.ForeColor = Color.DimGray;
+            note.Text = "Experimental: candidates are derived from the stored LLDH tiers " +
+                        "(Lots / Some / Very little). The game re-picks one when the roster " +
+                        "is opened; this preview does not write to memory.";
+
+            TableLayoutPanel root = new TableLayoutPanel();
+            root.Dock = DockStyle.Fill;
+            root.ColumnCount = 1;
+            root.RowCount = 3;
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
+            root.Controls.Add(bar, 0, 0);
+            root.Controls.Add(statusPreviewList, 0, 1);
+            root.Controls.Add(note, 0, 2);
+            page.Controls.Add(root);
+            return page;
+        }
+
+        private void RefreshStatusPreview(bool resetShown)
+        {
+            if (statusPreviewList == null) return;
+            statusPreviewList.BeginUpdate();
+            try
+            {
+                statusPreviewList.Items.Clear();
+                if (!mem.IsAttached || ctx.Selected == null)
+                {
+                    if (statusPreviewTarget != null) statusPreviewTarget.Text = "Target: -";
+                    statusPreviewTargetSeat = -1;
+                    return;
+                }
+
+                CharacterInfo target = ctx.Selected;
+                statusPreviewTargetSeat = target.Seat;
+                statusPreviewTarget.Text = target.Name + " (seat " + target.Seat + ")";
+
+                foreach (CharacterInfo source in ctx.Characters)
+                {
+                    if (source == null || source.Pointer == target.Pointer) continue;
+
+                    RelationshipRecord rec = RelationshipEditor.FindRecord(
+                        mem, source.Pointer, target.Seat);
+                    byte? lover = mem.ReadU8(source.Pointer + 0xF20 + (uint)target.Seat);
+                    bool isLover = lover.HasValue && lover.Value != 0;
+                    List<int> candidates = RelationshipStatus.BuildCandidates(
+                        rec, isLover, false, false);
+
+                    ListViewItem item = new ListViewItem(source.Name + " (" + source.Seat + ")");
+                    item.SubItems.Add(rec == null
+                        ? "-"
+                        : RelationshipStatus.TierName(rec.Levels[0]) + " / " +
+                          RelationshipStatus.TierName(rec.Levels[1]) + " / " +
+                          RelationshipStatus.TierName(rec.Levels[2]) + " / " +
+                          RelationshipStatus.TierName(rec.Levels[3]));
+                    item.SubItems.Add(CandidatesText(candidates));
+                    item.SubItems.Add("-");
+                    item.Tag = candidates;
+                    statusPreviewList.Items.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (statusPreviewTarget != null)
+                    statusPreviewTarget.Text = "Error: " + ex.Message;
+            }
+            finally
+            {
+                statusPreviewList.EndUpdate();
+            }
+        }
+
+        private void RollStatusPreview()
+        {
+            if (statusPreviewList == null) return;
+            foreach (ListViewItem item in statusPreviewList.Items)
+            {
+                List<int> candidates = item.Tag as List<int>;
+                if (candidates == null || candidates.Count == 0)
+                {
+                    item.SubItems[3].Text = "-";
+                    continue;
+                }
+                int id = candidates[statusPreviewRng.Next(candidates.Count)];
+                item.SubItems[3].Text = RelationshipStatus.LabelWithId(id);
+            }
+        }
+
+        private static string CandidatesText(List<int> candidates)
+        {
+            if (candidates == null || candidates.Count == 0) return "-";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                if (i > 0) sb.Append("  |  ");
+                sb.Append(RelationshipStatus.LabelWithId(candidates[i]));
+            }
+            return sb.ToString();
+        }
+
         private void RefreshDebugTabValues()
         {
             if (debugTabs == null || !mem.IsAttached || ctx.Selected == null) return;
@@ -617,6 +760,10 @@ namespace AA2Trainer
                 case 6:
                     pointerGrid.RefreshValues(mem, ctx, 0);
                     RefreshPointerDetails();
+                    break;
+                case 7:
+                    if (ctx.Selected != null && ctx.Selected.Seat != statusPreviewTargetSeat)
+                        RefreshStatusPreview(false);
                     break;
             }
         }
