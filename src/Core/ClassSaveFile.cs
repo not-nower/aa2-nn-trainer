@@ -195,7 +195,7 @@ namespace AA2Trainer
                 }
                 stream.Write(Footer, 0, Footer.Length);
 
-                string backup = CreateBackup(Path);
+                string backup = SaveBackup.Create(Path);
                 byte[] output = stream.ToArray();
                 string temp = Path + ".tmp";
                 File.WriteAllBytes(temp, output);
@@ -210,20 +210,6 @@ namespace AA2Trainer
                 }
                 return backup;
             }
-        }
-
-        private static string CreateBackup(string path)
-        {
-            string stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            string backup = path + "." + stamp + ".bak";
-            int suffix = 1;
-            while (File.Exists(backup))
-            {
-                backup = path + "." + stamp + "-" + suffix + ".bak";
-                suffix++;
-            }
-            File.Copy(path, backup, false);
-            return backup;
         }
 
         private static int IndexOf(byte[] data, byte[] pattern, int start)

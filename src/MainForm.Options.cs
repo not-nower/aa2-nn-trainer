@@ -10,8 +10,10 @@ namespace AA2Trainer
             TabPage page = new TabPage("Option");
             page.BackColor = Color.FromArgb(248, 249, 251);
 
+            lastClassSavePath = SaveBackup.LoadLastSavePath();
             optionsControl = new OptionsControl();
             optionsControl.Dock = DockStyle.Fill;
+            optionsControl.SetSavePath(lastClassSavePath);
             optionsControl.ConfirmWriteAllowed = delegate
             {
                 RunHealthCheck();
@@ -27,6 +29,16 @@ namespace AA2Trainer
             optionsControl.DetailsRequested += delegate { ShowHealthDetails(); };
             optionsControl.ReloadNamesRequested += delegate { ReloadNames(); };
             optionsControl.LiveRefreshChanged += delegate { ApplyLiveSettings(); };
+            optionsControl.SavePathChanged += delegate
+            {
+                lastClassSavePath = optionsControl.SavePath;
+                SaveBackup.SaveLastSavePath(lastClassSavePath);
+            };
+            optionsControl.SaveRestored += delegate
+            {
+                if (importReplace != null)
+                    importReplace.ReloadIfOpen(optionsControl.LastRestoredSavePath);
+            };
             page.Controls.Add(optionsControl);
             return page;
         }

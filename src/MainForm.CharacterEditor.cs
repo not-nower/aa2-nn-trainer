@@ -84,8 +84,15 @@ namespace AA2Trainer
             TabPage page = new TabPage("Import/Export");
             page.BackColor = Color.FromArgb(248, 249, 251);
 
-            ImportReplaceControl importReplace = new ImportReplaceControl();
+            importReplace = new ImportReplaceControl();
             importReplace.Dock = DockStyle.Fill;
+            importReplace.SavePathChanged += delegate
+            {
+                lastClassSavePath = importReplace.CurrentSavePath;
+                SaveBackup.SaveLastSavePath(lastClassSavePath);
+                if (optionsControl != null)
+                    optionsControl.SetSavePath(lastClassSavePath);
+            };
             page.Controls.Add(importReplace);
             return page;
         }

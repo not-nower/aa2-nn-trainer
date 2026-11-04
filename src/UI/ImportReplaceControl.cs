@@ -13,6 +13,13 @@ namespace AA2Trainer
     /// </summary>
     public sealed class ImportReplaceControl : UserControl
     {
+        public event EventHandler SavePathChanged;
+
+        public string CurrentSavePath
+        {
+            get { return save == null ? null : save.Path; }
+        }
+
         private static readonly string[] SectionNames =
         {
             "Profile",
@@ -475,6 +482,37 @@ namespace AA2Trainer
                 characterCombo.EndUpdate();
             }
             UpdateFaces();
+            if (SavePathChanged != null)
+                SavePathChanged(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Reloads this control from disk when a restore replaced the save it
+        /// currently has open, so cached card data cannot overwrite the restore.
+        /// </summary>
+        public bool ReloadIfOpen(string path)
+        {
+            if (save == null || string.IsNullOrEmpty(path)) return false;
+            if (!SaveBackup.PathsEqual(save.Path, path)) return false;
+
+            int seat = -1;
+            CharacterItem selected = characterCombo.SelectedItem as CharacterItem;
+            if (selected != null) seat = selected.Entry.Seat;
+
+            try
+            {
+                LoadSave(path);
+                if (seat >= 0) SelectSeat(seat);
+                SetStatus("Save restored from backup. Reload the class in AA2Play.",
+                    false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SetStatus("The save was restored, but reloading it failed: " +
+                    ex.Message, true);
+                return false;
+            }
         }
 
         private void SelectCardFile()

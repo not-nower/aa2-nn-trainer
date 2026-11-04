@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace AA2Trainer
@@ -15,6 +16,15 @@ namespace AA2Trainer
         public event EventHandler DetailsRequested;
         public event EventHandler ReloadNamesRequested;
         public event EventHandler LiveRefreshChanged;
+        public event EventHandler SavePathChanged;
+        public event EventHandler SaveRestored;
+
+        public string SavePath
+        {
+            get { return backupSavePath; }
+        }
+
+        public string LastRestoredSavePath { get; private set; }
 
         public bool LiveRefreshEnabled
         {
@@ -77,6 +87,9 @@ namespace AA2Trainer
         private Label nameTableNote;
         private Button updateNameTablesButton;
         private Button resetNameTablesButton;
+        private TextBox backupPathBox;
+        private Label backupStatusLabel;
+        private string backupSavePath;
         private Label gateLabel;
         private Label statusLabel;
         private ToolTip tooltip;
@@ -251,6 +264,8 @@ namespace AA2Trainer
             liveRefreshBox.Checked = true;
             UpdateLiveControls();
 
+            BuildSaveBackupGroup(host);
+
             TableLayoutPanel nameGroup = NewGroup(host, "Name tables", 2, false);
             EnsureRowCount(nameGroup, 2);
 
@@ -306,6 +321,230 @@ namespace AA2Trainer
 
             ResizeGroups(host);
             return page;
+        }
+
+        private void BuildSaveBackupGroup(FlowLayoutPanel host)
+        {
+            TableLayoutPanel group = NewGroup(host, "Save backups", 4, false);
+            EnsureRowCount(group, 3);
+
+            Label caption = new Label();
+            caption.Text = "Save file:";
+            caption.AutoSize = true;
+            caption.Anchor = AnchorStyles.Left;
+            caption.Margin = new Padding(6, 7, 3, 3);
+            group.Controls.Add(caption, 0, 0);
+
+            backupPathBox = new TextBox();
+            backupPathBox.ReadOnly = true;
+            backupPathBox.Dock = DockStyle.Fill;
+            backupPathBox.Margin = new Padding(3, 5, 3, 3);
+            backupPathBox.AccessibleName = "Save file for backups";
+            group.Controls.Add(backupPathBox, 1, 0);
+            group.SetColumnSpan(backupPathBox, 2);
+
+            Button select = new Button();
+            select.Text = "Select save...";
+            select.Width = 130;
+            select.Height = 30;
+            select.Anchor = AnchorStyles.Left;
+            select.Margin = new Padding(3, 4, 6, 3);
+            select.Click += delegate { SelectBackupSaveFile(); };
+            group.Controls.Add(select, 3, 0);
+
+            Button backup = new Button();
+            backup.Text = "Backup";
+            backup.Width = 130;
+            backup.Height = 30;
+            backup.Anchor = AnchorStyles.Left;
+            backup.Margin = new Padding(6, 3, 3, 3);
+            backup.Click += delegate { CreateSaveBackup(); };
+            group.Controls.Add(backup, 0, 1);
+
+            Button restore = new Button();
+            restore.Text = "Restore...";
+            restore.Width = 130;
+            restore.Height = 30;
+            restore.Anchor = AnchorStyles.Left;
+            restore.Margin = new Padding(3, 3, 6, 3);
+            restore.Click += delegate { RestoreSaveBackup(); };
+            group.Controls.Add(restore, 1, 1);
+
+            Label note = new Label();
+            note.Text = "Backups are timestamped .bak files stored beside the .sav. " +
+                "Restore verifies the chosen backup, makes a safety backup of the " +
+                "current save, then replaces it. Close or reload the save in AA2Play " +
+                "after restoring. Only .sav files are included; AAUnlimited .json " +
+                "sidecars are not.";
+            note.AutoSize = true;
+            note.MaximumSize = new Size(800, 0);
+            note.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+            note.ForeColor = Color.Gray;
+            note.Margin = new Padding(6, 8, 6, 4);
+            group.Controls.Add(note, 0, 2);
+            group.SetColumnSpan(note, 4);
+
+            backupStatusLabel = new Label();
+            backupStatusLabel.AutoSize = true;
+            backupStatusLabel.MaximumSize = new Size(800, 0);
+            backupStatusLabel.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+            backupStatusLabel.ForeColor = Color.DimGray;
+            backupStatusLabel.Margin = new Padding(6, 4, 6, 2);
+            group.Controls.Add(backupStatusLabel, 0, 3);
+            group.SetColumnSpan(backupStatusLabel, 4);
+
+            group.Resize += delegate
+            {
+                int width = group.ClientSize.Width - 20;
+                if (width < 200) width = 200;
+                if (note.MaximumSize.Width != width)
+                    note.MaximumSize = new Size(width, 0);
+                if (backupStatusLabel.MaximumSize.Width != width)
+                    backupStatusLabel.MaximumSize = new Size(width, 0);
+            };
+
+            SetSavePath(backupSavePath);
+        }
+
+        public void SetSavePath(string path)
+        {
+            backupSavePath = path;
+            if (backupPathBox != null)
+                backupPathBox.Text = path ?? "";
+            UpdateBackupStatus();
+        }
+
+        private bool SelectBackupSaveFile()
+        {
+            using (OpenFileDialog dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Select an AA2 class save";
+                dialog.Filter = "AA2 class saves (*.sav)|*.sav|All files (*.*)|*.*";
+                string directory = string.IsNullOrEmpty(backupSavePath)
+                    ? SaveBackup.DefaultDirectory()
+                    : Path.GetDirectoryName(backupSavePath);
+                if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
+                    dialog.InitialDirectory = directory;
+                if (dialog.ShowDialog(this) != DialogResult.OK) return false;
+                if (!string.Equals(Path.GetExtension(dialog.FileName), ".sav",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show(this, "Select an AA2 class .sav file.",
+                        "Backup save", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                backupSavePath = dialog.FileName;
+                if (backupPathBox != null) backupPathBox.Text = backupSavePath;
+                SaveBackup.SaveLastSavePath(backupSavePath);
+                UpdateBackupStatus("Selected " + Path.GetFileName(backupSavePath) + ".",
+                    false);
+                if (SavePathChanged != null)
+                    SavePathChanged(this, EventArgs.Empty);
+                return true;
+            }
+        }
+
+        private void CreateSaveBackup()
+        {
+            if (string.IsNullOrEmpty(backupSavePath) || !File.Exists(backupSavePath))
+            {
+                if (!SelectBackupSaveFile()) return;
+            }
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                string backup = SaveBackup.Create(backupSavePath);
+                UpdateBackupStatus("Backup created: " + Path.GetFileName(backup) + ".",
+                    false);
+                MessageBox.Show(this, "Backup created:\n\n" + backup,
+                    "Backup save", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                UpdateBackupStatus(ex.Message, true);
+                MessageBox.Show(this, ex.Message, "Backup save",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private void RestoreSaveBackup()
+        {
+            using (RestoreBackupDialog dialog = new RestoreBackupDialog(backupSavePath))
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                SaveBackupEntry entry = dialog.SelectedEntry;
+                if (entry == null) return;
+
+                string question = "Restore " + entry.SaveName + " from the backup " +
+                    "created " + entry.Created.ToString("yyyy-MM-dd HH:mm:ss") + "?\n\n" +
+                    "This replaces:\n" + entry.SavePath + "\n\n" +
+                    "A safety backup of the current save is created first. " +
+                    "Reload or restart AA2Play after restoring.";
+                if (MessageBox.Show(this, question, "Restore save backup",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    return;
+
+                try
+                {
+                    Cursor = Cursors.WaitCursor;
+                    string safety;
+                    string restored = SaveBackup.Restore(entry, out safety);
+
+                    backupSavePath = restored;
+                    if (backupPathBox != null) backupPathBox.Text = restored;
+                    SaveBackup.SaveLastSavePath(restored);
+                    LastRestoredSavePath = restored;
+
+                    if (SavePathChanged != null)
+                        SavePathChanged(this, EventArgs.Empty);
+                    if (SaveRestored != null)
+                        SaveRestored(this, EventArgs.Empty);
+
+                    UpdateBackupStatus("Restored " + Path.GetFileName(restored) +
+                        " from " + entry.BackupName + ".", false);
+                    MessageBox.Show(this, "Restored:\n" + restored +
+                        "\n\nSafety backup:\n" + (safety ?? "(none)") +
+                        "\n\nReload or restart AA2Play before playing.",
+                        "Restore save backup", MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    UpdateBackupStatus(ex.Message, true);
+                    MessageBox.Show(this, ex.Message, "Restore save backup",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    Cursor = Cursors.Default;
+                }
+            }
+        }
+
+        private void UpdateBackupStatus(string message = null, bool error = false)
+        {
+            if (backupStatusLabel == null) return;
+            backupStatusLabel.ForeColor = error ? Color.Firebrick : Color.DimGray;
+            if (message != null)
+            {
+                backupStatusLabel.Text = message;
+                return;
+            }
+            if (string.IsNullOrEmpty(backupSavePath))
+            {
+                backupStatusLabel.Text = "No save selected. Select a save to back it " +
+                    "up, or use Restore to browse existing backups.";
+                return;
+            }
+            backupStatusLabel.Text = "Selected save: " +
+                Path.GetFileName(backupSavePath) + " in " +
+                Path.GetDirectoryName(backupSavePath) + ".";
         }
 
         private void UpdateNameTableStatus()

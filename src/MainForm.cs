@@ -65,6 +65,8 @@ namespace AA2Trainer
         private ClassRosterControl roster;
         private GameplayControl gameplay;
         private CharacterDataControl characterData;
+        private ImportReplaceControl importReplace;
+        private string lastClassSavePath;
         private TraitsControl traits;
         private BodyControl body;
         private FaceControl face;
