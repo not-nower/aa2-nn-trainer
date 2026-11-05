@@ -45,7 +45,7 @@ namespace AA2Trainer
             root.ColumnCount = 1;
             root.RowCount = 4;
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 58F));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
@@ -63,6 +63,7 @@ namespace AA2Trainer
             info.Dock = DockStyle.Fill;
             info.Text = "Choose a backup to restore. The timestamped file name records " +
                 "the save it belongs to, so the backup is written back to that .sav. " +
+                "Backups marked AAU also restore the AAUnlimited .json sidecar. " +
                 "AA2Play must reload or restart after a restore.";
             info.TextAlign = ContentAlignment.MiddleLeft;
 
@@ -83,10 +84,11 @@ namespace AA2Trainer
             backupList.MultiSelect = false;
             backupList.HideSelection = false;
             backupList.GridLines = false;
-            backupList.Columns.Add("Created", 150, HorizontalAlignment.Left);
-            backupList.Columns.Add("Save", 170, HorizontalAlignment.Left);
-            backupList.Columns.Add("Size", 80, HorizontalAlignment.Right);
-            backupList.Columns.Add("Backup file", 320, HorizontalAlignment.Left);
+            backupList.Columns.Add("Created", 140, HorizontalAlignment.Left);
+            backupList.Columns.Add("Save", 150, HorizontalAlignment.Left);
+            backupList.Columns.Add("AAU", 50, HorizontalAlignment.Center);
+            backupList.Columns.Add("Size", 75, HorizontalAlignment.Right);
+            backupList.Columns.Add("Backup file", 300, HorizontalAlignment.Left);
             backupList.SelectedIndexChanged += delegate { UpdateRestoreButton(); };
             backupList.DoubleClick += delegate { AcceptSelection(); };
             root.Controls.Add(backupList, 0, 1);
@@ -162,6 +164,7 @@ namespace AA2Trainer
                         DateTime.MinValue ? "" :
                         entry.Created.ToString("yyyy-MM-dd HH:mm:ss"));
                     item.SubItems.Add(entry.SaveName);
+                    item.SubItems.Add(entry.HasAauBackup ? "yes" : "no");
                     item.SubItems.Add(FormatSize(entry.Size));
                     item.SubItems.Add(entry.BackupName);
                     item.Tag = entry;

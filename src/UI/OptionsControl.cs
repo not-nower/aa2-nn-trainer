@@ -372,10 +372,10 @@ namespace AA2Trainer
 
             Label note = new Label();
             note.Text = "Backups are timestamped .bak files stored beside the .sav. " +
-                "Restore verifies the chosen backup, makes a safety backup of the " +
-                "current save, then replaces it. Close or reload the save in AA2Play " +
-                "after restoring. Only .sav files are included; AAUnlimited .json " +
-                "sidecars are not.";
+                "The AAUnlimited .json sidecar is included when it exists. Restore " +
+                "verifies the chosen backup, makes a safety backup of the current " +
+                "save and sidecar, then replaces them. Close or reload the save in " +
+                "AA2Play after restoring.";
             note.AutoSize = true;
             note.MaximumSize = new Size(800, 0);
             note.Anchor = AnchorStyles.Left | AnchorStyles.Top;
@@ -456,9 +456,13 @@ namespace AA2Trainer
             {
                 Cursor = Cursors.WaitCursor;
                 string backup = SaveBackup.Create(backupSavePath);
-                UpdateBackupStatus("Backup created: " + Path.GetFileName(backup) + ".",
-                    false);
-                MessageBox.Show(this, "Backup created:\n\n" + backup,
+                string aauBackup = SaveBackup.FindAauBackup(backupSavePath, backup);
+                UpdateBackupStatus("Backup created: " + Path.GetFileName(backup) +
+                    (aauBackup == null ? " (no AAU data)." : " (+ AAU data)."), false);
+                MessageBox.Show(this, "Backup created:\n\n" + backup +
+                    (aauBackup == null
+                        ? "\n\nNo AAUnlimited .json sidecar was present."
+                        : "\n" + aauBackup),
                     "Backup save", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -483,8 +487,12 @@ namespace AA2Trainer
 
                 string question = "Restore " + entry.SaveName + " from the backup " +
                     "created " + entry.Created.ToString("yyyy-MM-dd HH:mm:ss") + "?\n\n" +
-                    "This replaces:\n" + entry.SavePath + "\n\n" +
-                    "A safety backup of the current save is created first. " +
+                    "This replaces:\n" + entry.SavePath +
+                    (entry.HasAauBackup
+                        ? "\n\nThe AAUnlimited .json sidecar will also be restored."
+                        : "\n\nThis backup has no AAUnlimited .json sidecar; the " +
+                          "current sidecar will be left unchanged.") +
+                    "\n\nA safety backup of the current save is created first. " +
                     "Reload or restart AA2Play after restoring.";
                 if (MessageBox.Show(this, question, "Restore save backup",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
@@ -493,8 +501,8 @@ namespace AA2Trainer
                 try
                 {
                     Cursor = Cursors.WaitCursor;
-                    string safety;
-                    string restored = SaveBackup.Restore(entry, out safety);
+                    SaveRestoreResult result = SaveBackup.Restore(entry);
+                    string restored = result.SavePath;
 
                     backupSavePath = restored;
                     if (backupPathBox != null) backupPathBox.Text = restored;
@@ -507,12 +515,23 @@ namespace AA2Trainer
                         SaveRestored(this, EventArgs.Empty);
 
                     UpdateBackupStatus("Restored " + Path.GetFileName(restored) +
+                        (result.RestoredAau ? " and AAU data" : "") +
                         " from " + entry.BackupName + ".", false);
-                    MessageBox.Show(this, "Restored:\n" + restored +
-                        "\n\nSafety backup:\n" + (safety ?? "(none)") +
-                        "\n\nReload or restart AA2Play before playing.",
-                        "Restore save backup", MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
+
+                    string message = "Restored:\n" + result.SavePath;
+                    if (result.RestoredAau)
+                        message += "\n" + result.AauPath;
+                    message += "\n\nSafety backup:\n" +
+                        (result.SafetySaveBackup ?? "(none)");
+                    if (!string.IsNullOrEmpty(result.SafetyAauBackup))
+                        message += "\n" + result.SafetyAauBackup;
+                    if (!result.RestoredAau)
+                        message += "\n\nThe current AAUnlimited .json sidecar was " +
+                            "not changed.";
+                    message += "\n\nReload or restart AA2Play before playing.";
+
+                    MessageBox.Show(this, message, "Restore save backup",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
@@ -542,9 +561,13 @@ namespace AA2Trainer
                     "up, or use Restore to browse existing backups.";
                 return;
             }
+            string aauPath = SaveBackup.AauPath(backupSavePath);
             backupStatusLabel.Text = "Selected save: " +
                 Path.GetFileName(backupSavePath) + " in " +
-                Path.GetDirectoryName(backupSavePath) + ".";
+                Path.GetDirectoryName(backupSavePath) + ". " +
+                (File.Exists(aauPath)
+                    ? "AAUnlimited .json detected."
+                    : "No AAUnlimited .json found.");
         }
 
         private void UpdateNameTableStatus()

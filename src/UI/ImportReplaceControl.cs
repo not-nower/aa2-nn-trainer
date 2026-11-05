@@ -844,7 +844,8 @@ namespace AA2Trainer
                 selectedEntry.Card.Name + "\n" +
                 "Card: " + sourceCard.SourcePath + "\n" +
                 "Sections: " + sectionText + "\n\n" +
-                "A timestamped .bak backup will be created. " +
+                "A timestamped .bak backup will be created, including the " +
+                "AAUnlimited .json when present. " +
                 "Reload the class in AA2Play afterward.";
             if (MessageBox.Show(question, "Replace Character Data",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
@@ -874,9 +875,11 @@ namespace AA2Trainer
 
                 int seat = entry.Seat;
                 string backup = save.Save();
+                string aauBackup = SaveBackup.FindAauBackup(save.Path, backup);
                 LoadSave(save.Path);
                 SelectSeat(seat);
                 SetStatus("Saved. Backup: " + backup +
+                    (aauBackup == null ? " (no AAU data)" : " (+ AAU data)") +
                     "  Reload the class in AA2Play.", false);
             }
             catch (Exception ex)

@@ -5,9 +5,9 @@ Fully vibe coded.
 
 > **Save safety:** this tool writes to game memory and can rewrite class save
 > files. Back up your saves first. Import/Export and Option → Trainer → Backup
-> write a timestamped `.bak` next to the save before changing it, and Restore
-> creates a safety `.bak` of the current save first. That is a convenience, not
-> a guarantee. Memory edits are lost unless you save in-game, and editing is
+> write timestamped `.bak` files next to the save before changing it, and
+> Restore creates safety backups of the current save and AAU sidecar first.
+> That is a convenience, not a guarantee. Memory edits are lost unless you save in-game, and editing is
 > only tested against AA2Play 2.0.1. After restoring a save, reload the class or
 > restart AA2Play. Use at your own risk.
 
@@ -16,7 +16,7 @@ Fully vibe coded.
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
 - **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises, and Limits (a persistent list of actions NPCs may not perform).
 - **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
-- **Option** — live-refresh settings, portable save Backup/Restore, and bundled name-table updates, plus game System/Sound/Additional options.
+- **Option** — live-refresh settings, portable save Backup/Restore (including AAUnlimited `.json` data), and bundled name-table updates, plus game System/Sound/Additional options.
 - **Debug** — pointer/definition browser and filters, plus the experimental Status Preview.
 - **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
 - **Live refresh** — adaptive background polling.
@@ -64,13 +64,17 @@ subfolders), so ReiEdit/mod override tables are not pulled in.
 **Option → Trainer → Save backups** works on the `.sav` selected in
 Import/Export or chosen with **Select save...**.
 
-- **Backup** copies the save to `<name>.sav.YYYYMMDD-HHMMSS.bak` beside the original.
+- **Backup** copies the `.sav` and, when present, the AAUnlimited `.json`
+  sidecar to timestamped `.bak` files beside the original.
+- Both files use the same timestamp. If no `.json` exists, the backup is
+  `.sav` only.
 - **Restore...** lists timestamped backups with their creation time, verifies
-  the chosen backup, and creates a safety backup of the current save before
-  replacing it.
+  the chosen backup, and creates a safety backup of the current save and
+  sidecar before replacing them.
 - Import/Export backups and Backup-created backups use the same naming, so
   either function can restore the other's files.
-- Only the `.sav` is restored. AAUnlimited `.json` sidecars are not included.
+- Backups with AAU data restore both files. Older sav-only backups leave the
+  current `.json` unchanged.
 - Reload the class or restart AA2Play after restoring.
 
 If Import/Export currently has that save open, the trainer reloads it after a
@@ -189,7 +193,7 @@ running-app caveat.
 - **Restored save is not visible in AA2Play** — reload the class or restart AA2Play after restoring.
 - **Settings are not remembered** — the folder containing `AA2Trainer.exe` must be writable. Avoid running the portable build from a read-only folder such as Program Files.
 - **Restore does not list a backup** — only files named like `<name>.sav.YYYYMMDD-HHMMSS.bak` are shown. Backup and Import/Export create that format automatically.
-- **AAUnlimited data looks old after restore** — only the `.sav` is restored; the AAUnlimited `.json` sidecar is not included.
+- **AAUnlimited data was not restored** — the backup was made before AAU backup support, or the `.json` was missing at backup time. Sav-only backups leave the current sidecar unchanged; make a new backup to include it.
 - **Crash** — `crash.log` is written next to `AA2Trainer.exe`.
 
 ## Credits
