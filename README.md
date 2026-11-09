@@ -14,7 +14,7 @@ Fully vibe coded.
 ## Features
 
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
-- **Gameplay** — Action/Planner, Relationship, Behavior History, Lover, Promises, and Limits (a persistent list of actions NPCs may not perform).
+- **Gameplay** — Action/Planner (single action plus per-character multi-step plans), Relationship, Behavior History, Lover, Promises, and Limits (a persistent list of actions NPCs may not perform).
 - **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
 - **Option** — live-refresh settings, portable save Backup/Restore (including AAUnlimited `.json` data), and bundled name-table updates, plus game System/Sound/Additional options.
 - **Debug** — pointer/definition browser and filters, plus the experimental Status Preview.
@@ -43,7 +43,9 @@ Fully vibe coded.
 5. Select a character in Class Seats or the roster.
 6. Use the tabs to view or edit the selected character.
 7. For Action/Planner, enter free roam, select an actor and target, then run the action.
-8. Use **Option → Trainer → Save backups** to create or restore a timestamped
+8. For multi-step plans, build a step list in Action/Planner, choose a mode and
+   trigger, then click **Start plan**.
+9. Use **Option → Trainer → Save backups** to create or restore a timestamped
    save backup before making large changes.
 
 ## Name tables
@@ -98,6 +100,45 @@ last-save=D:\...\Class01.sav
 
 `NameData.local.tsv` remains a separate portable file beside the exe.
 
+`AA2TrainerPlans.xml` (created by **Save plans**) follows the same rule: it is
+written beside `AA2Trainer.exe`, never to `%APPDATA%`. A read-only folder means
+Save plans fails; the trainer still runs.
+
+## Plan Multiple Action
+
+Gameplay → Action/Planner can run a playlist of steps for each character,
+in the same spirit as TAA2's Plan Multiple Action.
+
+- **Build a plan** — select a character, then **Add action** (Target / About /
+  Action) or **Add move** (Room). Reorder with Up/Down and remove steps before
+  starting.
+- **Modes**
+  - **Normal (character chooses)** — passive: the plan does nothing until the
+    character herself starts walking toward the step's target; it then
+    substitutes the step. It never starts an interaction on its own.
+  - **Forced interaction** — waits until the character starts an interaction
+    (with any partner) and then substitutes the step. It does not force while idle.
+  - **Forced perform** — applies the step immediately, including a direct
+    activity write when the game's planner is not responding.
+  - **Ignore interaction** — cancels the current action so the step can run.
+- **Trigger** — Actor initiates (default), Target initiates, or Either initiates.
+- **Repeat / Shuffle** — loop the playlist, or play every step once in random order.
+- **Copy plan / Paste plan** — in-memory clipboard; works across characters and
+  keeps target/about seats. Paste replaces the current plan after confirmation.
+- **Start plan / Stop plan** — the list shows each step as queued, running, done
+  or failed. A step the game refuses after its retries is marked failed and the
+  plan moves on; it does not stop the plan.
+- **Save plans / Load plans** — `AA2TrainerPlans.xml` beside `AA2Trainer.exe`.
+  It stores seats and parameters only (no pointers), so it survives class/scene
+  reloads and moves with the folder. Load merges by seat, skips running plans,
+  and does not auto-start anything.
+- **Live events** — the first log tab records per-seat state changes every
+  250 ms with the partner name. **Planner log** holds the runner trace.
+  Clear and Save Log act on the active tab.
+- **Planner hook** — installed automatically on Start and stays installed until
+  you turn off **Use planner hook**, clear, or detach. AAUnlimited is optional;
+  plans use the game's planner entry either way.
+
 ## Build
 
 Requires the .NET SDK 8 or newer (`dotnet --version`). End users only need .NET Framework 4.8.
@@ -142,7 +183,7 @@ running-app caveat.
     - `TraitsControl.cs` — Traits and H Preferences
     - `BodyControl.cs`, `FaceControl.cs`, `HairControl.cs`, `OutfitsControl.cs` — appearance editors
     - `GameplayControl.cs` — Gameplay sub-tab host, including Limits
-    - `ActionPlannerControl.cs` — Action/Planner
+    - `ActionPlannerControl.cs` — Action/Planner (single action, multi-step plans, live events)
     - `ActionLimitControl.cs` — Limits checkbox UI
     - `RelationshipControl.cs` — Relationship
     - `BehaviorHistoryControl.cs` — Behavior History
@@ -164,6 +205,7 @@ running-app caveat.
     - `RelationshipData.cs`, `RelationshipEditor.cs`, `LoverEditor.cs`, `PromiseReader.cs` — relationship data
     - `RelationshipStatus.cs` — status catalog and candidate derivation
     - `ActionParams.cs`, `ActionStateReader.cs`, `ActionPlannerEngine.cs`, `PlannerHook.cs` — Action/Planner and planner hook
+    - `PlanStep.cs`, `PlanQueue.cs`, `PlanRunner.cs`, `PlannerPrimitives.cs`, `PlanStore.cs` — multi-step plans, runner, and portable plan file
     - `ActionLimitList.cs`, `ActionLimiter.cs` — persistent limits and poll/cancel limiter
     - `AauModuleReader.cs` — read-only AAU module list parser
     - `CardFields.cs` — card edit-data field definitions
@@ -194,6 +236,14 @@ running-app caveat.
 - **Settings are not remembered** — the folder containing `AA2Trainer.exe` must be writable. Avoid running the portable build from a read-only folder such as Program Files.
 - **Restore does not list a backup** — only files named like `<name>.sav.YYYYMMDD-HHMMSS.bak` are shown. Backup and Import/Export create that format automatically.
 - **AAUnlimited data was not restored** — the backup was made before AAU backup support, or the `.json` was missing at backup time. Sav-only backups leave the current sidecar unchanged; make a new backup to include it.
+- **A plan does not start** — Normal waits until the character starts toward the
+  step's target; Forced waits until she starts an interaction. Check the Live
+  events tab, the mode, and that a target is selected.
+- **A plan step shows failed** — the game did not accept the injected action
+  after its retries (for example, the character was already performing it). The
+  plan continues with the next step.
+- **Plans file is missing** — run **Save plans** once; it creates
+  `AA2TrainerPlans.xml` beside `AA2Trainer.exe`.
 - **Crash** — `crash.log` is written next to `AA2Trainer.exe`.
 
 ## Credits

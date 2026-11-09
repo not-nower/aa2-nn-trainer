@@ -7,7 +7,7 @@
     <Prefer32Bit>true</Prefer32Bit>
     <AssemblyName>AA2Trainer</AssemblyName>
     <RootNamespace>AA2Trainer</RootNamespace>
-    <Version>0.5.1</Version>
+    <Version>0.6.0</Version>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
