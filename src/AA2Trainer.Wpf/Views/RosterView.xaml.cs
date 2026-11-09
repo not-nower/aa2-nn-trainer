@@ -45,7 +45,7 @@ namespace AA2Trainer.WpfPrototype.Views
 
             SeatItem target = viewModel.Seats.FirstOrDefault(
                 item => item.SeatIndex == seat);
-            if (target == null || !target.HasName) return;
+            if (target == null || !target.HasName || target.IsFilteredOut) return;
 
             RosterList.SelectedItem = target;
         }

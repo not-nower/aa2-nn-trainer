@@ -28,6 +28,7 @@ namespace AA2Trainer.WpfPrototype
         public string UpdatedText = "Updated -";
         public int SelectedSeat = -1;
         public long Sequence;
+        public CharacterDetail Character;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }

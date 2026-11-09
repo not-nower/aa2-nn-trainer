@@ -22,6 +22,7 @@ namespace AA2Trainer.WpfPrototype
         private bool disposed;
 
         private SeatItem selectedSeat;
+        private CharacterDetail selectedCharacter;
         private bool railCollapsed;
         private bool applyingSnapshot;
         private bool isAttached;
@@ -33,6 +34,8 @@ namespace AA2Trainer.WpfPrototype
         private string writeGate = "Write gate: read-only";
         private string cardStatus = "Cards: not loaded";
         private string rosterSignature = "";
+        private string rosterFilter = "";
+        private int seatFilterIndex;
 
         public MainViewModel()
         {
@@ -80,6 +83,30 @@ namespace AA2Trainer.WpfPrototype
         {
             get { return railCollapsed; }
             set { Set(ref railCollapsed, value); }
+        }
+
+        public CharacterDetail SelectedCharacter
+        {
+            get { return selectedCharacter; }
+            private set { Set(ref selectedCharacter, value); }
+        }
+
+        public string RosterFilter
+        {
+            get { return rosterFilter; }
+            set
+            {
+                if (Set(ref rosterFilter, value)) ApplyRosterFilter();
+            }
+        }
+
+        public int SeatFilterIndex
+        {
+            get { return seatFilterIndex; }
+            set
+            {
+                if (Set(ref seatFilterIndex, value)) ApplyRosterFilter();
+            }
         }
 
         public bool IsAttached
@@ -178,6 +205,7 @@ namespace AA2Trainer.WpfPrototype
                 NamesState = snapshot.NamesState;
                 WriteGate = snapshot.WriteGate;
                 UpdatedText = snapshot.UpdatedText;
+                SelectedCharacter = snapshot.Character;
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -198,6 +226,8 @@ namespace AA2Trainer.WpfPrototype
                         seatSnapshot.IsPlayer);
                 }
 
+                ApplyRosterFilter();
+
                 string signature = BuildRosterSignature();
                 if (!string.Equals(signature, rosterSignature,
                     StringComparison.Ordinal))
@@ -216,6 +246,40 @@ namespace AA2Trainer.WpfPrototype
             {
                 applyingSnapshot = false;
             }
+        }
+
+        private void ApplyRosterFilter()
+        {
+            string filter = (rosterFilter ?? "").Trim();
+            bool hasFilter = filter.Length > 0 || seatFilterIndex > 0;
+
+            foreach (SeatItem seat in Seats)
+            {
+                bool typeMatch = seatFilterIndex == 1
+                    ? seat.SeatIndex != 24
+                    : seatFilterIndex == 2
+                        ? seat.SeatIndex == 24
+                        : true;
+                bool textMatch = filter.Length == 0 ||
+                    MatchesFilter(seat, filter);
+                seat.IsFilteredOut = hasFilter && !(typeMatch && textMatch);
+            }
+        }
+
+        private static bool MatchesFilter(SeatItem seat, string filter)
+        {
+            return Contains(seat.Name, filter) ||
+                   Contains(seat.Room, filter) ||
+                   Contains(seat.Action, filter) ||
+                   Contains(seat.Status, filter) ||
+                   Contains(seat.Relationship, filter) ||
+                   Contains(seat.Seat, filter);
+        }
+
+        private static bool Contains(string value, string filter)
+        {
+            return !string.IsNullOrEmpty(value) &&
+                value.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private string BuildRosterSignature()

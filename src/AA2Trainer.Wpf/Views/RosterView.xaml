@@ -11,15 +11,16 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,6">
             <TextBlock Text="Class roster" Style="{StaticResource PageTitle}" />
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <TextBox Width="170" ToolTip="Filter (wired in M2)"
+                <TextBox Width="170"
+                         Text="{Binding RosterFilter, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Filter by name, room, action, status, or seat"
                          VerticalAlignment="Center" />
-                <ComboBox Width="118" Margin="6,0,0,0" SelectedIndex="0">
+                <ComboBox Width="118" Margin="6,0,0,0"
+                          SelectedIndex="{Binding SeatFilterIndex, Mode=TwoWay}">
                     <ComboBoxItem Content="All seats" />
                     <ComboBoxItem Content="Students" />
                     <ComboBoxItem Content="Teachers" />
                 </ComboBox>
-                <CheckBox Content="Group by room" Margin="10,0,0,0"
-                          VerticalAlignment="Center" />
             </StackPanel>
         </DockPanel>
 

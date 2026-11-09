@@ -28,6 +28,7 @@ namespace AA2Trainer.WpfPrototype
         private readonly System.Threading.Timer timer;
         private PointerHealth health;
         private ScheduleSnapshot schedule;
+        private CharacterDetail selectedCharacterDetail;
         private readonly Dictionary<int, string> relationships =
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
@@ -158,6 +159,7 @@ namespace AA2Trainer.WpfPrototype
             lastContextUtc = DateTime.UtcNow;
             lastHealthUtc = DateTime.UtcNow;
             RefreshRelations();
+            RefreshSelectedCharacter();
         }
 
         private void DetachInternal()
@@ -167,6 +169,7 @@ namespace AA2Trainer.WpfPrototype
             ctx = new GameContext();
             health = null;
             schedule = null;
+            selectedCharacterDetail = null;
             lastContextUtc = DateTime.MinValue;
             lastHealthUtc = DateTime.MinValue;
             lastDisconnectedUtc = DateTime.MinValue;
@@ -185,6 +188,7 @@ namespace AA2Trainer.WpfPrototype
                     ctx.Select(mem, info);
                     live.PublishRoster(ctx.Characters, ctx.Selected);
                     RefreshRelations();
+                    RefreshSelectedCharacter();
                 }
             }
 
@@ -197,12 +201,14 @@ namespace AA2Trainer.WpfPrototype
                 if (!hasClass)
                 {
                     live.Clear();
+                    selectedCharacterDetail = null;
                     PublishAttachedNoClass();
                     return;
                 }
 
                 live.PublishRoster(ctx.Characters, ctx.Selected);
                 RefreshRelations();
+                RefreshSelectedCharacter();
 
                 ScheduleSnapshot readSchedule;
                 string scheduleError;
@@ -237,6 +243,7 @@ namespace AA2Trainer.WpfPrototype
             snapshot.WriteGate = mem.CanWrite
                 ? "Write gate: open" : "Write gate: read-only";
             snapshot.UpdatedText = "Updated " + DateTime.Now.ToString("HH:mm:ss");
+            snapshot.Character = selectedCharacterDetail;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -355,6 +362,89 @@ namespace AA2Trainer.WpfPrototype
                     headerRelationships[seat] = HeaderRelationLabel(relation);
                 }
             }
+        }
+
+        private void RefreshSelectedCharacter()
+        {
+            if (ctx.Selected == null)
+            {
+                selectedCharacterDetail = null;
+                return;
+            }
+
+            CharacterSnapshot snapshot;
+            string error;
+            if (!CharacterEditor.TryRead(mem, ctx.Selected,
+                out snapshot, out error))
+            {
+                selectedCharacterDetail = null;
+                return;
+            }
+
+            selectedCharacterDetail = BuildCharacterDetail(snapshot);
+        }
+
+        private CharacterDetail BuildCharacterDetail(CharacterSnapshot snapshot)
+        {
+            CharacterDetail detail = new CharacterDetail();
+            detail.Profile = snapshot.Profile ?? "";
+            detail.Personality = EnumText("PERSONALITY", snapshot.Personality,
+                "Personality " + snapshot.Personality);
+            detail.Club = EnumText("CLUB", snapshot.Club,
+                "Club " + (snapshot.Club + 1));
+            detail.Social = EnumText("LOW_HIGH", snapshot.Social,
+                "Social " + snapshot.Social);
+            detail.FightingStyle = EnumText("FIGHTSTYLE", snapshot.FightingStyle,
+                "Style " + snapshot.FightingStyle);
+            detail.Virtue = EnumText("LOW_HIGH", snapshot.Virtue,
+                "Virtue " + snapshot.Virtue);
+            detail.Orientation = EnumText("SEXUALITY", snapshot.SexualOrientation,
+                "Orientation " + snapshot.SexualOrientation);
+            detail.VoicePitch = EnumText("LOW_HIGH", snapshot.VoicePitch,
+                "Voice " + snapshot.VoicePitch);
+            detail.Intelligence = StatText(snapshot.IntelligenceLevel,
+                snapshot.IntelligenceRank, snapshot.IntelligenceValue,
+                snapshot.IntelligenceGrade);
+            detail.Strength = StatText(snapshot.StrengthLevel,
+                snapshot.StrengthRank, snapshot.StrengthValue,
+                snapshot.StrengthGrade);
+            detail.ClubStats = StatText(snapshot.ClubLevel, 0,
+                snapshot.ClubValue, snapshot.ClubGrade);
+            detail.Record = "Victory " + snapshot.VictoryCount +
+                " | Class skip " + snapshot.ClassSkip +
+                " | Won over " + snapshot.WinningOver +
+                " | Partner " + snapshot.Partner +
+                " | Rejected " + snapshot.Rejected;
+            detail.Experience = "Intercourse " + snapshot.SexIntercourse +
+                " | Partners " + snapshot.SexPartner +
+                " | Sex " + YesNo(snapshot.SexExperience) +
+                " | Anal " + YesNo(snapshot.AnalExperience);
+            return detail;
+        }
+
+        private string EnumText(string key, int value, string fallback)
+        {
+            string text = names.Get(key, value);
+            return string.IsNullOrEmpty(text) ? fallback : text;
+        }
+
+        private static string StatText(int level, int rank, int value, int grade)
+        {
+            return "Lv " + level + "  Rank " + rank +
+                "  Value " + value + "  Grade " + GradeText(grade);
+        }
+
+        private static string GradeText(int grade)
+        {
+            if (grade == 255) return "None";
+            if (grade >= 0 && grade < 6)
+                return "FEDCBA".Substring(grade, 1);
+            return grade.ToString();
+        }
+
+        private static string YesNo(bool value)
+        {
+            return value ? "Yes" : "No";
         }
 
         private void PublishAttachedNoClass()

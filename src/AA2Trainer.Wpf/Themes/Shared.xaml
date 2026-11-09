@@ -400,6 +400,9 @@
             <DataTrigger Binding="{Binding HasName}" Value="False">
                 <Setter Property="IsEnabled" Value="False" />
             </DataTrigger>
+            <DataTrigger Binding="{Binding IsFilteredOut}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
         </Style.Triggers>
     </Style>
 

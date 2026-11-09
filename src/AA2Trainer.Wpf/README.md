@@ -23,7 +23,14 @@ dotnet build -c Release
 - **Live session:** attaches to AA2Play on a background timer, refreshes the
   roster and relationships once per second, reads live action/activity at 4 Hz,
   checks pointer health every 5 seconds, and publishes one coalesced snapshot
-  to the UI dispatcher. Attach/Detach and Refresh work from the top bar.- Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
+  to the UI dispatcher. Attach/Detach and Refresh work from the top bar.
+- **Roster filters:** text search over name, room, action, status, and seat,
+  plus All seats / Students / Teachers. Filtered cards collapse in place so the
+  classroom layout stays fixed. Group-by-room is deferred because it would
+  break that grid.
+- **Live Character Data:** the selected character’s profile, attributes,
+  academics, and status are read from Core once per second. The Data tab is
+  read-only for now; writes come next.- Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.
 - **Roster** is a fixed **5×5 classroom grid** in Japanese seat order: columns

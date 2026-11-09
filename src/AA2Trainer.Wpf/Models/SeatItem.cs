@@ -22,6 +22,7 @@ namespace AA2Trainer.WpfPrototype
         private BitmapImage cardFaceImage;
         private bool liveNameApplied;
         private string liveName;
+        private bool isFilteredOut;
 
         public int SeatIndex { get; set; } = -1;
         public string Seat { get; set; } = "";
@@ -222,6 +223,16 @@ namespace AA2Trainer.WpfPrototype
         public bool HasCardFace
         {
             get { return cardFaceImage != null; }
+        }
+
+        /// <summary>
+        /// True when the current roster filter hides this seat. The card stays
+        /// in the fixed classroom grid but is collapsed.
+        /// </summary>
+        public bool IsFilteredOut
+        {
+            get { return isFilteredOut; }
+            set { Set(ref isFilteredOut, value); }
         }
 
         /// <summary>
