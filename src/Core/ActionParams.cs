@@ -109,6 +109,19 @@ namespace AA2Trainer
                    " unknown2=" + Unknown2;
         }
 
+        public ActionParams Clone()
+        {
+            ActionParams copy = new ActionParams();
+            copy.ActionId = ActionId;
+            copy.MovementType = MovementType;
+            copy.RoomTarget = RoomTarget;
+            copy.Unknown = Unknown;
+            copy.Target1 = Target1;
+            copy.Target2 = Target2;
+            copy.Unknown2 = Unknown2;
+            return copy;
+        }
+
         private static void WriteInt(byte[] buffer, int offset, int value)
         {
             byte[] raw = BitConverter.GetBytes(value);

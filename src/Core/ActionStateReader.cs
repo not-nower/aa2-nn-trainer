@@ -67,6 +67,17 @@ namespace AA2Trainer
         public int ActionId = -1;
         public int MovementType = -1;
         public int Location = -1;
+
+        /// <summary>Conversation/about target (activity + 0x38).</summary>
+        public uint TargetActivity;
+
+        /// <summary>
+        /// Movement descriptor interface of the character this one is walking to
+        /// or talking with (holder + base + 0x158). This is the real interaction
+        /// partner; activity + 0x38 is only the "about" subject.
+        /// </summary>
+        public uint WalkTargetInterface;
+
         public byte Gender;
         public byte AnimLocked;
         public byte Loading;
@@ -192,7 +203,38 @@ namespace AA2Trainer
             s.MovementType = BitConverter.ToInt32(block, 0x28);
             s.ActionId = BitConverter.ToInt32(block, 0x2C);
             s.Location = BitConverter.ToInt32(block, 0x34);
+            s.TargetActivity = BitConverter.ToUInt32(block, 0x24);
+            uint walkDescriptor = mem.ReadU32(activity.Value + 0xE4) ?? 0;
+            uint walkHolder, walkBase;
+            s.WalkTargetInterface = ReadWalkTarget(walkDescriptor,
+                out walkHolder, out walkBase);
             return s;
+        }
+
+        /// <summary>
+        /// Resolves the movement descriptor's walk target interface:
+        ///   descriptor = [activity + 0xE4]
+        ///   base       = descriptor + [[descriptor] + 8]
+        ///   holder     = [[base + 4] + 4]
+        ///   target     = [holder + base + 0x158]
+        /// </summary>
+        private uint ReadWalkTarget(uint descriptor, out uint holder,
+            out uint baseAddress)
+        {
+            holder = 0;
+            baseAddress = 0;
+            if (descriptor == 0) return 0;
+            uint vtable = mem.ReadU32(descriptor) ?? 0;
+            if (vtable == 0) return 0;
+
+            int offset = mem.ReadI32(vtable + 8) ?? 0;
+            baseAddress = descriptor + (uint)offset;
+            uint first = mem.ReadU32(baseAddress + 4) ?? 0;
+            if (first == 0) return 0;
+
+            holder = mem.ReadU32(first + 4) ?? 0;
+            if (holder == 0) return 0;
+            return mem.ReadU32(holder + baseAddress + 0x158) ?? 0;
         }
 
         public CharacterInfo FindByInterface(uint interfacePointer,
@@ -243,25 +285,16 @@ namespace AA2Trainer
             s.Descriptor = descriptor;
             if (descriptor == 0) return;
 
-            uint vtable = mem.ReadU32(descriptor) ?? 0;
-            if (vtable == 0) return;
-
-            int offset = mem.ReadI32(vtable + 8) ?? 0;
-            uint baseAddress = descriptor + (uint)offset;
-
-            uint first = mem.ReadU32(baseAddress + 4) ?? 0;
-            if (first == 0) return;
-
-            uint holder = mem.ReadU32(first + 4) ?? 0;
+            uint holder, baseAddress;
+            uint target = ReadWalkTarget(descriptor, out holder, out baseAddress);
             if (holder == 0) return;
             s.MovementHolder = holder;
 
             s.MovementMirror = mem.ReadI32(holder + baseAddress + 0x130) ?? -1;
-            s.WalkTargetInterface = mem.ReadU32(holder + baseAddress + 0x158) ?? 0;
+            s.WalkTargetInterface = target;
 
-            CharacterInfo target = FindByInterface(s.WalkTargetInterface,
-                characters);
-            s.WalkTargetChar = target != null ? target.Pointer : 0;
+            CharacterInfo targetInfo = FindByInterface(target, characters);
+            s.WalkTargetChar = targetInfo != null ? targetInfo.Pointer : 0;
         }
     }
 }

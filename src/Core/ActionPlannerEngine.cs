@@ -81,15 +81,15 @@ namespace AA2Trainer
             return reader.FindByActivity(activity, roster);
         }
 
-        public bool Queue(CharacterState actor, ActionParams parameters,
-            out string message)
+        public bool Queue(uint actorActivity, ActionParams parameters,
+            out uint key, out string message)
         {
-            return hook.Queue(actor, parameters, out message);
+            return hook.Queue(actorActivity, parameters, out key, out message);
         }
 
-        public bool IsPending()
+        public bool IsPending(uint key)
         {
-            return hook.IsPending();
+            return hook.IsPending(key);
         }
 
         public void ClearQueue()
@@ -97,9 +97,37 @@ namespace AA2Trainer
             hook.Clear();
         }
 
-        public uint HitCount()
+        public void ClearQueue(uint key)
         {
-            return hook.HitCount();
+            hook.Clear(key);
+        }
+
+        /// <summary>Total planner calls since the hook was installed.</summary>
+        public uint CallCount()
+        {
+            return hook.CallCount();
+        }
+
+        /// <summary>Planner calls for one key (armed or not).</summary>
+        public uint CallCount(uint key)
+        {
+            return hook.CallCount(key);
+        }
+
+        public bool ObserveOnly
+        {
+            get { return hook.ObserveOnly; }
+        }
+
+        public bool SetObserveOnly(bool enabled)
+        {
+            return hook.SetObserveOnly(enabled);
+        }
+
+        public bool ReadObservation(out uint key, out byte[] parameters,
+            out uint counter)
+        {
+            return hook.ReadObservation(out key, out parameters, out counter);
         }
 
         public PlannerRunResult Run(CharacterInfo actor,
@@ -136,6 +164,7 @@ namespace AA2Trainer
                     PlannerLogLevel.Info);
 
             int attempt = 0;
+            uint queueKey = 0;
             while (attempt < maxAttempts)
             {
                 attempt++;
@@ -180,13 +209,15 @@ namespace AA2Trainer
                 CharacterSummary current = ReadSummary(actor);
                 uint activity = current != null && current.Activity != 0
                     ? current.Activity : before.Activity;
+                uint resolvedKey;
                 string message;
-                if (!hook.Queue(activity, parameters, out message))
+                if (!hook.Queue(activity, parameters, out resolvedKey, out message))
                 {
                     Log(log, "  [" + attempt + "] queue failed: " + message,
                         PlannerLogLevel.Error);
                     break;
                 }
+                queueKey = resolvedKey;
 
                 if (verbose)
                     Log(log, "  [" + attempt + "] " + message,
@@ -205,7 +236,7 @@ namespace AA2Trainer
                         result.Cancelled = true;
                         break;
                     }
-                    if (!hook.IsPending())
+                    if (!hook.IsPending(queueKey))
                     {
                         consumed = true;
                         break;
@@ -217,7 +248,7 @@ namespace AA2Trainer
                 if (!consumed)
                 {
                     Log(log, "  [" + attempt +
-                        "] still pending after 2s (hits=" + hook.HitCount() +
+                        "] still pending after 2s (hits=" + hook.HitCount(queueKey) +
                         ").", PlannerLogLevel.Warning);
                     if (verbose)
                         LogPlannerNotTicking(ReadSummary(actor), log);
@@ -231,7 +262,7 @@ namespace AA2Trainer
                 int ms = (int)(DateTime.UtcNow - start).TotalMilliseconds;
                 if (verbose)
                     Log(log, "  [" + attempt + "] consumed at +" + ms +
-                        "ms (hits=" + hook.HitCount() + ").",
+                        "ms (hits=" + hook.HitCount(queueKey) + ").",
                         PlannerLogLevel.Success);
                 else
                     Log(log, "  [" + attempt + "] consumed",
@@ -283,7 +314,13 @@ namespace AA2Trainer
                 }
             }
 
-            if (!result.Observed) hook.Clear();
+            if (!result.Observed && queueKey != 0)
+            {
+                // Per-key cleanup only. A failed Queue() (queueKey == 0) armed
+                // nothing, and a global Clear() would disarm another
+                // character's concurrent plan.
+                hook.Clear(queueKey);
+            }
 
             if (result.Observed || !keepRepeating)
             {
@@ -314,7 +351,7 @@ namespace AA2Trainer
                 if (Cancelled(cancelled)) return false;
 
                 CharacterSummary s = ReadSummary(actor);
-                if (s != null && IsIdle(s))
+                if (s != null && PlannerPrimitives.IsIdle(s))
                 {
                     stable++;
                     if (stable >= requiredStableSamples)
@@ -344,14 +381,6 @@ namespace AA2Trainer
                 Thread.Sleep(250);
             }
             return false;
-        }
-
-        private static bool IsIdle(CharacterSummary s)
-        {
-            if (s == null) return false;
-            if (s.AnimLocked != 0 || s.Loading != 0 || s.InConversation != 0)
-                return false;
-            return s.MovementType == 0 || s.MovementType == 1;
         }
 
         private bool WaitForActionObserved(CharacterInfo actor,
@@ -422,8 +451,29 @@ namespace AA2Trainer
                 message = "The actor has no valid activity block.";
                 return false;
             }
+            return StopAction(s.Character, s.Activity, out message);
+        }
 
-            uint act = s.Activity;
+        /// <summary>
+        /// Cancels the current action from just a character + activity pointer.
+        /// Used by the plan runner, which runs off the UI thread and cannot
+        /// depend on the roster list.
+        /// </summary>
+        public bool StopAction(uint character, uint activity, out string message)
+        {
+            message = null;
+            if (mem == null || !mem.IsAttached || !mem.CanWrite)
+            {
+                message = "The game is not attached with write access.";
+                return false;
+            }
+            if (activity == 0)
+            {
+                message = "The actor has no valid activity block.";
+                return false;
+            }
+
+            uint act = activity;
             byte[] minusOne = BitConverter.GetBytes(-1);
             bool ok = true;
             string writeError = null;
@@ -438,7 +488,7 @@ namespace AA2Trainer
             ok &= WriteStop(act + 0x44, minusOne, ref writeError);
             ok &= WriteStop(act + 0x48, minusOne, ref writeError);
 
-            uint descriptor = s.Descriptor;
+            uint descriptor = mem.ReadU32(act + 0xE4) ?? 0;
             if (descriptor != 0)
             {
                 uint vtable = mem.ReadU32(descriptor) ?? 0;
@@ -459,8 +509,10 @@ namespace AA2Trainer
                 }
             }
 
-            if (s.NpcData != 0)
-                ok &= WriteStop(s.NpcData + 0x26C, BitConverter.GetBytes(0u),
+            uint npcData = character != 0
+                ? (mem.ReadU32(character + 0xF58) ?? 0) : 0;
+            if (npcData != 0)
+                ok &= WriteStop(npcData + 0x26C, BitConverter.GetBytes(0u),
                     ref writeError);
 
             if (!ok)
