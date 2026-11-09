@@ -14,7 +14,9 @@ namespace AA2Trainer
         {
             get
             {
-                Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                Assembly assembly = Assembly.GetEntryAssembly() ??
+                    Assembly.GetExecutingAssembly();
+                Version version = assembly.GetName().Version;
                 if (version == null) return "0.0.0";
                 int build = version.Build < 0 ? 0 : version.Build;
                 return version.Major + "." + version.Minor + "." + build;

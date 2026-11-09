@@ -150,18 +150,19 @@ Requires the .NET SDK 8 or newer (`dotnet --version`). End users only need .NET 
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-Output: `bin\AA2Trainer.exe` — x86, targeting .NET Framework 4.8.
+Output: `bin\AA2Trainer.exe` (x86, .NET Framework 4.8) plus
+`bin\AA2Trainer.Core.dll`. Keep both together.
 
 `build.ps1` stops a running trainer before building. `-KeepRunning` opts out,
-but the build will fail while the trainer is running. The project is
-`AA2Trainer.csproj`; `dotnet build -c Release` also works, with the same
-running-app caveat.
+but the build will fail while the trainer is running. The WinForms project is
+`AA2Trainer.csproj`; `dotnet build AA2Trainer.sln -c Release` also works, with
+the same running-app caveat.
 
 ## Dependencies
 
 - **Runtime:** Windows x86 with .NET Framework 4.8 and AA2Play 2.0.1. Optional:
-  AAUnlimited for AAU modules and the planner hook. No external DLLs — name,
-  trait and card-field tables are embedded in the exe.
+  AAUnlimited for AAU modules and the planner hook. No external data files —
+  name, trait and card-field tables are embedded in `AA2Trainer.Core.dll`.
 - **Build:** .NET SDK 8+ and the `Microsoft.NETFramework.ReferenceAssemblies`
   NuGet package (build-only).
 - **Tools only:** Python 3 for the `tools/` exporters. They are not part of the
@@ -169,6 +170,7 @@ running-app caveat.
 
 ## Layout
 
+- `AA2Trainer.sln` — solution for the WinForms app, Core library, and WPF prototype.
 - `src/`
   - `Program.cs` — application entry point
   - `MainForm.cs` — main window, tab shell, attach/refresh, fail-safe pointer gate
@@ -197,8 +199,9 @@ running-app caveat.
     - `ImportReplaceControl.cs` — offline save/card replacer and card exporter
     - `FieldGridControl.cs` — reusable debug field grid
     - `PortraitLoader.cs` — portrait image loading
-    - `DashboardData.cs`, `DisplayText.cs` — definition lookup and display text
-  - `Core/` — game access and data
+    - `DashboardData.cs` — definition lookup
+  - `Core/` — `AA2Trainer.Core.csproj`, a net48 class library with no UI references
+    - `AA2Trainer.Core.csproj` — Core library project
     - `GameMemory.cs`, `MemoryWriter.cs` — process attach, reads, verified writes
     - `GameProfile.cs`, `PointerHealth.cs` — build detection and pointer health
     - `GameContext.cs`, `LiveReader.cs` — class roster context and live snapshots
@@ -218,15 +221,17 @@ running-app caveat.
     - `TrainerSettings.cs` — portable `AA2Trainer.ini` settings
     - `NameOverlay.cs` — user name-table overlay (`NameData.local.tsv`)
     - `PlayerSwitch.cs` — play-as helper
+    - `DisplayText.cs` — action display text shared by Core and UI
   - `Data/`
-    - `NameData.tsv` — action, location, personality and name tables
-    - `TraitEffects.tsv` — trait effect tooltip text
-    - `CardFields.tsv` — card edit-data field table
+    - `NameData.tsv` — action, location, personality and name tables (embedded in Core)
+    - `TraitEffects.tsv` — trait effect tooltip text (embedded in Core)
+    - `CardFields.tsv` — card edit-data field table (embedded in Core)
+- `src\AA2Trainer.Wpf\` — WPF prototype with live session polling (M1.1); kept in the solution but not part of the WinForms release
 - `tools/ExportNameData.py` — regenerates `NameData.tsv` from the game or AA2QtEdit XML (merge-only)
 - `tools/ExportCardFields.py` — regenerates `CardFields.tsv` from AA2QtEdit `chardata.xml`
 - `tools/README.md` — exporter usage notes
-- `build.ps1` — stops a running trainer, then builds x86 `bin/AA2Trainer.exe`
-- `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 project
+- `build.ps1` — stops a running trainer, then builds x86 `bin/AA2Trainer.exe` plus `AA2Trainer.Core.dll`
+- `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 WinForms app; references `src/Core/AA2Trainer.Core.csproj`
 
 ## Troubleshooting
 

@@ -33,12 +33,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="src\Data\NameData.tsv"
-                      LogicalName="AA2Trainer.NameData.tsv" />
-    <EmbeddedResource Include="src\Data\TraitEffects.tsv"
-                      LogicalName="AA2Trainer.TraitEffects.tsv" />
-    <EmbeddedResource Include="src\Data\CardFields.tsv"
-                      LogicalName="AA2Trainer.CardFields.tsv" />
+    <ProjectReference Include="src\Core\AA2Trainer.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Core is a separate project in this folder tree. Exclude its sources and
+       generated files from the WinForms compile; the project reference supplies
+       them through AA2Trainer.Core.dll. -->
+  <ItemGroup>
+    <Compile Remove="src\Core\**\*.cs" />
+    <Compile Remove="src\AA2Trainer.Wpf\**\*.cs" />
   </ItemGroup>
 
 </Project>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AA2Trainer
 {
-    internal static class DisplayText
+    public static class DisplayText
     {
         private static readonly Dictionary<int, string> ActionNames = BuildActionNames();
 

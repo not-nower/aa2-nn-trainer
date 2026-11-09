@@ -8,6 +8,8 @@ namespace AA2Trainer
         public uint Pointer;
         public int Seat;
         public string Name;
+        public string FamilyName;
+        public string GivenName;
         public bool IsPlayer;
 
         public override string ToString()
@@ -119,11 +121,13 @@ namespace AA2Trainer
                     byte? seat = mem.ReadU8(p.Value + 0x3C);
                     info.Seat = seat.HasValue && seat.Value < 25 ? (int)seat.Value : -1;
 
-                    string first = mem.ReadAnsiString(cd.Value + 0x3D, 96);
-                    string last = mem.ReadAnsiString(cd.Value + 0x141, 96);
-                    first = first == null ? "" : first.Trim();
-                    last = last == null ? "" : last.Trim();
-                    info.Name = (first + " " + last).Trim();
+                    string family = mem.ReadAnsiString(cd.Value + 0x3D, 96);
+                    string given = mem.ReadAnsiString(cd.Value + 0x141, 96);
+                    family = family == null ? "" : family.Trim();
+                    given = given == null ? "" : given.Trim();
+                    info.FamilyName = family;
+                    info.GivenName = given;
+                    info.Name = (family + " " + given).Trim();
                     info.IsPlayer = playerPointer != 0 && p.Value == playerPointer;
                     rebuilt.Add(info);
                 }
@@ -139,10 +143,13 @@ namespace AA2Trainer
                     uint? cd = mem.ReadU32(playerPointer + 0x28);
                     if (cd.HasValue && mem.IsPlausiblePointer(cd.Value))
                     {
-                        string first = mem.ReadAnsiString(cd.Value + 0x3D, 96);
-                        string last = mem.ReadAnsiString(cd.Value + 0x141, 96);
-                        info.Name = ((first == null ? "" : first.Trim()) + " " +
-                                     (last == null ? "" : last.Trim())).Trim();
+                        string family = mem.ReadAnsiString(cd.Value + 0x3D, 96);
+                        string given = mem.ReadAnsiString(cd.Value + 0x141, 96);
+                        family = family == null ? "" : family.Trim();
+                        given = given == null ? "" : given.Trim();
+                        info.FamilyName = family;
+                        info.GivenName = given;
+                        info.Name = (family + " " + given).Trim();
                     }
                     if (info.Name.Length == 0) info.Name = "(player)";
                     rebuilt.Add(info);

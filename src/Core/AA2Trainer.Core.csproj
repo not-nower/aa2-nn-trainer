@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>AA2Trainer.Core</AssemblyName>
+    <RootNamespace>AA2Trainer</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- The net48 targeting pack is not installed on the build machine;
+       this package supplies the reference assemblies so restore/build works. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies"
+                      Version="1.0.3"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <!-- Keep the existing resource names: CardFields/NameMap/Traits look them up
+       by the stable AA2Trainer.* logical names. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Data\NameData.tsv"
+                      LogicalName="AA2Trainer.NameData.tsv" />
+    <EmbeddedResource Include="..\Data\TraitEffects.tsv"
+                      LogicalName="AA2Trainer.TraitEffects.tsv" />
+    <EmbeddedResource Include="..\Data\CardFields.tsv"
+                      LogicalName="AA2Trainer.CardFields.tsv" />
+  </ItemGroup>
+
+</Project>
