@@ -125,9 +125,12 @@ in the same spirit as TAA2's Plan Multiple Action.
 - **Repeat / Shuffle** — loop the playlist, or play every step once in random order.
 - **Copy plan / Paste plan** — in-memory clipboard; works across characters and
   keeps target/about seats. Paste replaces the current plan after confirmation.
-- **Start plan / Stop plan** — the list shows each step as queued, running, done
-  or failed. A step the game refuses after its retries is marked failed and the
-  plan moves on; it does not stop the plan.
+- **Start plan / Stop plan** — the list shows each step as pending, running, done,
+  failed, or skipped. A step the game refuses after its retries is marked failed
+  and the plan moves on; it does not stop the plan.
+- **Enable/disable a step** — clear the row's **On** checkbox to skip it without
+  deleting or reordering. Skipped steps stay in the list, show `skipped`, and are
+  ignored on every repeat cycle. Hover a row to see its last skip or failure reason.
 - **Save plans / Load plans** — `AA2TrainerPlans.xml` beside `AA2Trainer.exe`.
   It stores seats and parameters only (no pointers), so it survives class/scene
   reloads and moves with the folder. Load merges by seat, skips running plans,
@@ -242,6 +245,8 @@ running-app caveat.
 - **A plan step shows failed** — the game did not accept the injected action
   after its retries (for example, the character was already performing it). The
   plan continues with the next step.
+- **A step is always skipped** — its **On** checkbox is off. Tick it before
+  starting the plan.
 - **Plans file is missing** — run **Save plans** once; it creates
   `AA2TrainerPlans.xml` beside `AA2Trainer.exe`.
 - **Crash** — `crash.log` is written next to `AA2Trainer.exe`.

@@ -71,6 +71,13 @@ namespace AA2Trainer
         public int Attempts;
         public string Note = "";
 
+        /// <summary>
+        /// False skips the step without deleting it. The runner marks it
+        /// <see cref="PlanStepState.Skipped"/> and moves on; Repeat skips it
+        /// again on every cycle.
+        /// </summary>
+        public bool Enabled = true;
+
         public PlanStep()
         {
             Params = new ActionParams();
@@ -127,6 +134,7 @@ namespace AA2Trainer
             copy.State = State;
             copy.Attempts = Attempts;
             copy.Note = Note;
+            copy.Enabled = Enabled;
             return copy;
         }
     }

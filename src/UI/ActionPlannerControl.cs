@@ -26,6 +26,7 @@ namespace AA2Trainer
         private volatile bool cancelRequested;
         private bool suppressHook;
         private bool suppressSelection;
+        private bool suppressPlanChecks;
         private int rosterVersion = -1;
         private NameMap choiceNames;
         private readonly List<CharacterInfo> rosterSnapshot =
@@ -421,10 +422,14 @@ namespace AA2Trainer
             planList.MultiSelect = false;
             planList.HideSelection = false;
             planList.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            planList.CheckBoxes = true;
+            planList.ShowItemToolTips = true;
+            planList.Columns.Add("On", 34, HorizontalAlignment.Center);
             planList.Columns.Add("#", 32, HorizontalAlignment.Right);
-            planList.Columns.Add("Step", 250, HorizontalAlignment.Left);
+            planList.Columns.Add("Step", 230, HorizontalAlignment.Left);
             planList.Columns.Add("State", 110, HorizontalAlignment.Left);
             planList.SelectedIndexChanged += delegate { UpdatePlanButtons(); };
+            planList.ItemCheck += PlanItemCheck;
             panel.Controls.Add(planList, 0, 0);
 
             FlowLayoutPanel side = new FlowLayoutPanel();
@@ -1779,6 +1784,32 @@ namespace AA2Trainer
             UpdatePlanUi();
         }
 
+        private void PlanItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (suppressPlanChecks || selected == null) return;
+
+            PlanQueue plan = CurrentPlan();
+            if (plan == null || e.Index < 0 || e.Index >= plan.Steps.Count)
+                return;
+
+            PlanStep step = plan.Steps[e.Index];
+            if (step == null) return;
+
+            if (plan.Started)
+            {
+                e.NewValue = e.CurrentValue;
+                AppendLog("Stop the plan before enabling or disabling steps.",
+                    PlannerLogLevel.Warning);
+                return;
+            }
+
+            bool enabled = e.NewValue == CheckState.Checked;
+            if (step.Enabled == enabled) return;
+            step.Enabled = enabled;
+            AppendLog((enabled ? "Enabled" : "Disabled") + " step " +
+                (e.Index + 1) + ".", PlannerLogLevel.Info);
+        }
+
         private void PlanCopy_Click(object sender, EventArgs e)
         {
             PlanQueue plan = CurrentPlan();
@@ -1987,35 +2018,59 @@ namespace AA2Trainer
             int selectedIndex = SelectedPlanIndex();
             if (listChanged)
             {
-                planList.BeginUpdate();
+                bool previousSuppress = suppressPlanChecks;
+                suppressPlanChecks = true;
                 try
                 {
-                    while (planList.Items.Count > plan.Steps.Count)
-                        planList.Items.RemoveAt(planList.Items.Count - 1);
-                    while (planList.Items.Count < plan.Steps.Count)
+                    planList.BeginUpdate();
+                    try
                     {
-                        ListViewItem item = new ListViewItem(new string[]
-                            { "", "", "" });
-                        item.UseItemStyleForSubItems = true;
-                        planList.Items.Add(item);
+                        while (planList.Items.Count > plan.Steps.Count)
+                            planList.Items.RemoveAt(planList.Items.Count - 1);
+                        while (planList.Items.Count < plan.Steps.Count)
+                        {
+                            ListViewItem item = new ListViewItem(new string[]
+                                { "", "", "", "" });
+                            item.UseItemStyleForSubItems = true;
+                            planList.Items.Add(item);
+                        }
+
+                        for (int i = 0; i < plan.Steps.Count; i++)
+                        {
+                            PlanStep step = plan.Steps[i];
+                            if (step == null) continue;
+                            ListViewItem item = planList.Items[i];
+                            SetSubItemText(item.SubItems[1], (i + 1).ToString());
+                            SetSubItemText(item.SubItems[2], step.Describe());
+                            SetSubItemText(item.SubItems[3], step.StatusText());
+                            string tip = string.IsNullOrEmpty(step.Note)
+                                ? step.Describe() : step.Note;
+                            if (item.ToolTipText != tip) item.ToolTipText = tip;
+                            Color back = plan.CurrentIndex == i
+                                ? Color.FromArgb(255, 248, 214) : Color.White;
+                            if (item.BackColor != back) item.BackColor = back;
+                        }
+                    }
+                    finally
+                    {
+                        planList.EndUpdate();
                     }
 
+                    // Change check state after EndUpdate: setting it inside
+                    // BeginUpdate with LVS_EX_CHECKBOXES can re-enter the
+                    // native ListView while it is still batching messages.
                     for (int i = 0; i < plan.Steps.Count; i++)
                     {
                         PlanStep step = plan.Steps[i];
                         if (step == null) continue;
                         ListViewItem item = planList.Items[i];
-                        SetSubItemText(item.SubItems[0], (i + 1).ToString());
-                        SetSubItemText(item.SubItems[1], step.Describe());
-                        SetSubItemText(item.SubItems[2], step.StatusText());
-                        Color back = plan.CurrentIndex == i
-                            ? Color.FromArgb(255, 248, 214) : Color.White;
-                        if (item.BackColor != back) item.BackColor = back;
+                        if (item.Checked != step.Enabled)
+                            item.Checked = step.Enabled;
                     }
                 }
                 finally
                 {
-                    planList.EndUpdate();
+                    suppressPlanChecks = previousSuppress;
                 }
             }
 
@@ -2055,7 +2110,9 @@ namespace AA2Trainer
                 PlanStep step = plan.Steps[i];
                 sb.Append('|');
                 if (step == null) continue;
-                sb.Append(step.Describe()).Append('|').Append(step.StatusText());
+                sb.Append(step.Describe()).Append('|').Append(step.StatusText())
+                  .Append('|').Append(step.Enabled ? '1' : '0')
+                  .Append('|').Append(step.Note ?? "");
             }
             return sb.ToString();
         }

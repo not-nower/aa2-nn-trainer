@@ -53,6 +53,30 @@ namespace AA2Trainer
 
         public int Count { get { return Steps.Count; } }
 
+        /// <summary>Number of steps that will actually run.</summary>
+        public int EnabledCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (PlanStep step in Steps)
+                    if (step != null && step.Enabled) count++;
+                return count;
+            }
+        }
+
+        /// <summary>Skipped steps in the current cycle.</summary>
+        public int SkippedCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (PlanStep step in Steps)
+                    if (step != null && step.State == PlanStepState.Skipped) count++;
+                return count;
+            }
+        }
+
         public int CurrentIndex
         {
             get
@@ -97,6 +121,11 @@ namespace AA2Trainer
                 message = "The plan has no usable steps.";
                 return false;
             }
+            if (EnabledCount == 0)
+            {
+                message = "Every step is disabled.";
+                return false;
+            }
 
             Cycle = 1;
             Cursor = 0;
@@ -137,6 +166,27 @@ namespace AA2Trainer
             return order.Count > 0;
         }
 
+        /// <summary>
+        /// Advances past consecutive disabled steps, marking each one
+        /// <see cref="PlanStepState.Skipped"/>. Returns the number skipped.
+        /// The loop is bounded by the step count so a repeat cycle made only
+        /// of disabled steps cannot spin forever.
+        /// </summary>
+        public int SkipDisabled()
+        {
+            int skipped = 0;
+            for (int guard = 0; guard < Steps.Count; guard++)
+            {
+                PlanStep step = Current;
+                if (step == null || step.Enabled) break;
+
+                bool hasNext = Advance(PlanStepState.Skipped, "disabled");
+                skipped++;
+                if (!hasNext) break;
+            }
+            return skipped;
+        }
+
         public void Stop()
         {
             Started = false;
@@ -173,8 +223,21 @@ namespace AA2Trainer
             if (Steps.Count == 0) return "no steps";
             if (Finished) return "finished";
             if (!Started) return "stopped";
-            return "step " + CurrentNumber + "/" + Steps.Count +
-                (Cycle > 0 ? " (cycle " + Cycle + ")" : "");
+
+            int skipped = SkippedCount;
+            string suffix = "";
+            if (Cycle > 0 || skipped > 0)
+            {
+                suffix = " (";
+                if (Cycle > 0)
+                {
+                    suffix += "cycle " + Cycle;
+                    if (skipped > 0) suffix += ", ";
+                }
+                if (skipped > 0) suffix += skipped + " skipped";
+                suffix += ")";
+            }
+            return "step " + CurrentNumber + "/" + Steps.Count + suffix;
         }
 
         public void Add(PlanStep step)

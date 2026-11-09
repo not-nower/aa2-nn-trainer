@@ -78,6 +78,7 @@ namespace AA2Trainer
                         stepNode.SetAttribute("aboutSeat", step.AboutSeat.ToString(
                             CultureInfo.InvariantCulture));
                         stepNode.SetAttribute("label", step.Label ?? "");
+                        stepNode.SetAttribute("enabled", step.Enabled ? "true" : "false");
                         planNode.AppendChild(stepNode);
                     }
 
@@ -178,6 +179,7 @@ namespace AA2Trainer
                         stepNode.GetAttribute("label") ?? "");
                     step.TargetSeat = ReadInt(stepNode, "targetSeat", -1);
                     step.AboutSeat = ReadInt(stepNode, "aboutSeat", -1);
+                    step.Enabled = ReadBool(stepNode, "enabled", true);
                     step.TargetCharacter = 0;
                     step.AboutCharacter = 0;
                     plan.Add(step);

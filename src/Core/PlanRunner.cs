@@ -343,8 +343,16 @@ namespace AA2Trainer
         private void TickIdle(RunState run)
         {
             PlanQueue plan = run.Plan;
+
+            int skipped = plan.SkipDisabled();
+            if (skipped > 0)
+            {
+                Log("  " + Describe(plan) + " skipped " + skipped +
+                    " disabled step(s).", PlannerLogLevel.Detail);
+            }
+
             PlanStep step = plan.Current;
-            if (step == null)
+            if (step == null || !step.Enabled)
             {
                 FinishPlan(run);
                 return;
