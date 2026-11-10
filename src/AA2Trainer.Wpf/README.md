@@ -34,7 +34,8 @@ dotnet build -c Release
   restores the live values.
 - **Character writes:** names, profile, attributes, and academics are editable.
   Apply re-checks pointer health before writing, reports the changed fields,
-  and refreshes the live snapshot after success.
+  and refreshes the live snapshot after success. Club choices come from the
+  current class data, matching WinForms.
 - **Traits:** trait, extra, and H-preference checkboxes plus the two-week risk
   schedule. Apply writes changed traits/risk cells in one queued batch after a
   pointer-health check; Revert restores live values.

@@ -33,6 +33,7 @@ namespace AA2Trainer.WpfPrototype
         private bool[] selectedTraitValues;
         private int[,] selectedRiskValues;
         private CharacterOptions characterOptions;
+        private string clubSignature = "";
         private readonly object writeSync = new object();
         private bool writePending;
         private uint writePointer;
@@ -223,6 +224,7 @@ namespace AA2Trainer.WpfPrototype
             bool hasClass = ctx.Refresh(mem, 0);
             names.Load(NameMap.FindGameRoot() ?? "");
             characterOptions = BuildCharacterOptions();
+            clubSignature = BuildClubSignature();
             live.PublishRoster(ctx.Characters, ctx.Selected);
             health = hasClass ? PointerHealth.Run(mem, ctx) : null;
             lastContextUtc = DateTime.UtcNow;
@@ -279,6 +281,9 @@ namespace AA2Trainer.WpfPrototype
                 {
                     live.Clear();
                     selectedCharacterDetail = null;
+                    selectedCharacterSnapshot = null;
+                    selectedTraitValues = null;
+                    selectedRiskValues = null;
                     PublishAttachedNoClass();
                     return;
                 }
@@ -286,6 +291,7 @@ namespace AA2Trainer.WpfPrototype
                 live.PublishRoster(ctx.Characters, ctx.Selected);
                 RefreshRelations();
                 RefreshSelectedCharacter();
+                RefreshCharacterOptions();
 
                 ScheduleSnapshot readSchedule;
                 string scheduleError;
@@ -487,7 +493,7 @@ namespace AA2Trainer.WpfPrototype
         {
             CharacterOptions options = new CharacterOptions();
             options.Personality = BuildOptions("PERSONALITY", 0, 29);
-            options.Club = BuildOptions("CLUB", 0, 7);
+            options.Club = BuildClubOptions();
             options.Social = BuildOptions("LOW_HIGH", 0, 4);
             options.FightingStyle = BuildOptions("FIGHTSTYLE", 0, 2);
             options.Virtue = BuildOptions("LOW_HIGH", 0, 4);
@@ -497,6 +503,35 @@ namespace AA2Trainer.WpfPrototype
             options.ClubLevels = BuildNumbers(0, 8);
             options.Grades = BuildGrades();
             return options;
+        }
+
+        private void RefreshCharacterOptions()
+        {
+            string signature = BuildClubSignature();
+            if (signature == clubSignature) return;
+            clubSignature = signature;
+            characterOptions = BuildCharacterOptions();
+        }
+
+        private string BuildClubSignature()
+        {
+            string[] names = ClubData.ReadNames(mem, ctx);
+            return string.Join("\n", names);
+        }
+
+        private List<CharacterOption> BuildClubOptions()
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            string[] names = ClubData.ReadNames(mem, ctx);
+            for (int i = 0; i < names.Length; i++)
+            {
+                list.Add(new CharacterOption
+                {
+                    Value = i,
+                    Text = i.ToString("D2") + "  " + names[i]
+                });
+            }
+            return list;
         }
 
         private static List<CharacterOption> BuildNumbers(int min, int max)
