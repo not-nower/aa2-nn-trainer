@@ -89,6 +89,13 @@ namespace AA2Trainer.WpfPrototype
         private readonly Dictionary<long, FrozenRelationship> relationshipFreezes =
             new Dictionary<long, FrozenRelationship>();
         private DateTime lastFreezeUtc = DateTime.MinValue;
+        private readonly object scheduleWriteSync = new object();
+        private bool scheduleWritePending;
+        private ScheduleSnapshot scheduleWriteOriginal;
+        private ScheduleSnapshot scheduleWriteEdited;
+        private int? timeFreezeMilliseconds;
+        private int timeFreezeFailures;
+        private DateTime lastPinUtc = DateTime.MinValue;
         private int selectedGender;
         private int[] selectedFaceValues;
         private string[] selectedFaceTexts;
@@ -135,6 +142,7 @@ namespace AA2Trainer.WpfPrototype
         public event Action<OutfitWriteResult> OutfitWriteCompleted;
         public event Action<PlayerSwitchResult> PlayerSwitchCompleted;
         public event Action<RosterActionResult> RosterActionCompleted;
+        public event Action<ScheduleWriteResult> ScheduleWriteCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -343,6 +351,38 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestScheduleWrite(ScheduleSnapshot original,
+            ScheduleSnapshot edited)
+        {
+            if (disposed || !mem.IsAttached || original == null || edited == null)
+                return false;
+
+            lock (scheduleWriteSync)
+            {
+                if (scheduleWritePending) return false;
+                scheduleWriteOriginal = original;
+                scheduleWriteEdited = edited;
+                scheduleWritePending = true;
+                return true;
+            }
+        }
+
+        public bool RequestTimeFreeze(int milliseconds)
+        {
+            if (disposed || !mem.IsAttached) return false;
+            timeFreezeMilliseconds = Math.Max(0,
+                Math.Min(ScheduleEditor.MaxTimeMilliseconds, milliseconds));
+            timeFreezeFailures = 0;
+            lastPinUtc = DateTime.MinValue;
+            return true;
+        }
+
+        public void RequestTimeUnfreeze()
+        {
+            timeFreezeMilliseconds = null;
+            timeFreezeFailures = 0;
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -365,6 +405,7 @@ namespace AA2Trainer.WpfPrototype
             OutfitWriteCompleted = null;
             PlayerSwitchCompleted = null;
             RosterActionCompleted = null;
+            ScheduleWriteCompleted = null;
         }
 
         private void Poll(object state)
@@ -444,6 +485,8 @@ namespace AA2Trainer.WpfPrototype
             CancelPendingPlayerSwitch("Detached.");
             CancelPendingRosterAction("Detached.");
             lock (relationshipFreezeSync) relationshipFreezes.Clear();
+            CancelPendingScheduleWrite("Detached.");
+            timeFreezeMilliseconds = null;
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
@@ -471,6 +514,8 @@ namespace AA2Trainer.WpfPrototype
             ProcessPlayerSwitch();
             ProcessRosterAction();
             RestoreRelationshipFreezes();
+            ProcessScheduleWrite();
+            PinTime();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
@@ -553,6 +598,10 @@ namespace AA2Trainer.WpfPrototype
             snapshot.FaceTexts = selectedFaceTexts;
             snapshot.HairValues = selectedHairValues;
             snapshot.OutfitValues = selectedOutfitValues;
+            snapshot.Schedule = schedule;
+            snapshot.TimeFrozen = timeFreezeMilliseconds.HasValue;
+            snapshot.TimeFrozenMilliseconds =
+                timeFreezeMilliseconds.GetValueOrDefault();
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -2131,6 +2180,107 @@ namespace AA2Trainer.WpfPrototype
                 case 2: return "Dislike";
                 case 3: return "Hate";
                 default: return "feeling";
+            }
+        }
+
+        private void ProcessScheduleWrite()
+        {
+            ScheduleSnapshot original;
+            ScheduleSnapshot edited;
+            lock (scheduleWriteSync)
+            {
+                if (!scheduleWritePending) return;
+                original = scheduleWriteOriginal;
+                edited = scheduleWriteEdited;
+                scheduleWritePending = false;
+                scheduleWriteOriginal = null;
+                scheduleWriteEdited = null;
+            }
+
+            ScheduleWriteResult result = new ScheduleWriteResult();
+            try
+            {
+                PointerHealth check = PointerHealth.Run(mem, ctx);
+                if (!check.Clean)
+                {
+                    result.Error = "Pointer health check failed: " +
+                        check.ShortStatus;
+                }
+                else
+                {
+                    string changed;
+                    string error;
+                    if (ScheduleEditor.TryWrite(mem, ctx, original, edited,
+                        out changed, out error))
+                    {
+                        result.Success = true;
+                        result.Changed = changed ?? "";
+                        lastContextUtc = DateTime.MinValue;
+                        lastHealthUtc = DateTime.MinValue;
+                    }
+                    else
+                    {
+                        result.Error = string.IsNullOrEmpty(error)
+                            ? "Write failed." : error;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishScheduleWrite(result);
+        }
+
+        private void CancelPendingScheduleWrite(string error)
+        {
+            ScheduleWriteResult result;
+            lock (scheduleWriteSync)
+            {
+                if (!scheduleWritePending) return;
+                scheduleWritePending = false;
+                result = new ScheduleWriteResult { Error = error };
+                scheduleWriteOriginal = null;
+                scheduleWriteEdited = null;
+            }
+            PublishScheduleWrite(result);
+        }
+
+        private void PublishScheduleWrite(ScheduleWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<ScheduleWriteResult> handler = ScheduleWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void PinTime()
+        {
+            int? target = timeFreezeMilliseconds;
+            if (!target.HasValue) return;
+
+            DateTime now = DateTime.UtcNow;
+            if ((now - lastPinUtc).TotalMilliseconds < 50) return;
+            lastPinUtc = now;
+
+            bool wrote;
+            string error;
+            if (ScheduleEditor.TryPinTime(mem, ctx, target.Value,
+                out wrote, out error))
+            {
+                timeFreezeFailures = 0;
+                return;
+            }
+
+            timeFreezeFailures++;
+            if (timeFreezeFailures >= 3)
+            {
+                timeFreezeMilliseconds = null;
+                timeFreezeFailures = 0;
             }
         }
 

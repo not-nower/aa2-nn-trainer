@@ -29,6 +29,8 @@ namespace AA2Trainer.WpfPrototype
         private FieldDraft faceDraft;
         private FieldDraft hairDraft;
         private OutfitDraft outfitDraft;
+        private ScheduleDraft scheduleDraft;
+        private ScheduleSnapshot liveSchedule;
         private CharacterOptions characterOptions;
         private CharacterSnapshot liveCharacter;
         private uint livePointer;
@@ -45,12 +47,15 @@ namespace AA2Trainer.WpfPrototype
         private string faceStatus = "No changes.";
         private string hairStatus = "No changes.";
         private string outfitStatus = "No changes.";
+        private string scheduleStatus = "No changes.";
         private bool characterWriteBusy;
         private bool traitWriteBusy;
         private bool bodyWriteBusy;
         private bool faceWriteBusy;
         private bool hairWriteBusy;
         private bool outfitWriteBusy;
+        private bool scheduleWriteBusy;
+        private bool timeFrozen;
         private bool railCollapsed;
         private bool applyingSnapshot;
         private bool isAttached;
@@ -94,6 +99,7 @@ namespace AA2Trainer.WpfPrototype
             session.OutfitWriteCompleted += OnOutfitWriteCompleted;
             session.PlayerSwitchCompleted += OnPlayerSwitchCompleted;
             session.RosterActionCompleted += OnRosterActionCompleted;
+            session.ScheduleWriteCompleted += OnScheduleWriteCompleted;
             LoadCardsAsync();
         }
 
@@ -376,6 +382,84 @@ namespace AA2Trainer.WpfPrototype
                     !outfitWriteBusy;
             }
         }
+
+        public ScheduleDraft ScheduleDraft
+        {
+            get { return scheduleDraft; }
+            private set
+            {
+                if (scheduleDraft == value) return;
+                if (scheduleDraft != null)
+                    scheduleDraft.PropertyChanged -= ScheduleDraft_PropertyChanged;
+                scheduleDraft = value;
+                if (scheduleDraft != null)
+                    scheduleDraft.PropertyChanged += ScheduleDraft_PropertyChanged;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanApplySchedule));
+                OnPropertyChanged(nameof(CanRevertSchedule));
+            }
+        }
+
+        public string ScheduleStatus
+        {
+            get { return scheduleStatus; }
+            private set { Set(ref scheduleStatus, value); }
+        }
+
+        public bool IsScheduleWriteBusy
+        {
+            get { return scheduleWriteBusy; }
+            private set
+            {
+                if (!Set(ref scheduleWriteBusy, value)) return;
+                OnPropertyChanged(nameof(CanApplySchedule));
+                OnPropertyChanged(nameof(CanRevertSchedule));
+            }
+        }
+
+        public bool CanApplySchedule
+        {
+            get
+            {
+                return scheduleDraft != null && scheduleDraft.IsDirty &&
+                    !scheduleWriteBusy && isAttached;
+            }
+        }
+
+        public bool CanRevertSchedule
+        {
+            get
+            {
+                return scheduleDraft != null && scheduleDraft.IsDirty &&
+                    !scheduleWriteBusy;
+            }
+        }
+
+        public bool IsTimeFrozen
+        {
+            get { return timeFrozen; }
+            private set { Set(ref timeFrozen, value); }
+        }
+
+        public IList<string> WeekdayOptions
+        {
+            get { return ScheduleEditor.Weekdays; }
+        }
+
+        public IList<string> PeriodOptions
+        {
+            get { return ScheduleEditor.Periods; }
+        }
+
+        public IList<string> WeekOptions
+        {
+            get { return weekOptions; }
+        }
+
+        private static readonly string[] weekOptions = new string[]
+        {
+            "Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"
+        };
 
         public string TraitStatus
         {
@@ -1040,6 +1124,88 @@ namespace AA2Trainer.WpfPrototype
                 OutfitStatus = "No changes.";
         }
 
+        public void ApplyScheduleEdits()
+        {
+            if (session == null || ScheduleDraft == null ||
+                !ScheduleDraft.IsDirty || scheduleWriteBusy)
+                return;
+
+            IsScheduleWriteBusy = true;
+            ScheduleStatus = "Writing...";
+
+            bool queued = session.RequestScheduleWrite(
+                liveSchedule, ScheduleDraft.ToSnapshot());
+            if (!queued)
+            {
+                IsScheduleWriteBusy = false;
+                ScheduleStatus = "Write request was not accepted.";
+            }
+        }
+
+        public void RevertScheduleEdits()
+        {
+            if (ScheduleDraft == null || liveSchedule == null) return;
+            ScheduleDraft.Load(liveSchedule);
+            ScheduleStatus = "Reverted to live values.";
+        }
+
+        public void SetTimeFrozen(bool frozen)
+        {
+            if (session == null) return;
+            if (frozen)
+            {
+                int milliseconds = ScheduleDraft != null
+                    ? ScheduleDraft.TimeMilliseconds
+                    : (liveSchedule != null ? liveSchedule.TimeMilliseconds : 0);
+                if (session.RequestTimeFreeze(milliseconds))
+                    IsTimeFrozen = true;
+            }
+            else
+            {
+                session.RequestTimeUnfreeze();
+                IsTimeFrozen = false;
+            }
+        }
+
+        private void OnScheduleWriteCompleted(ScheduleWriteResult result)
+        {
+            IsScheduleWriteBusy = false;
+            if (result == null) return;
+
+            if (result.Success)
+            {
+                if (ScheduleDraft != null) ScheduleDraft.MarkSaved();
+                ScheduleStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Saved: " + result.Changed;
+            }
+            else
+            {
+                ScheduleStatus = "Write failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void ScheduleDraft_PropertyChanged(object sender,
+            System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(ScheduleDraft.IsDirty) &&
+                e.PropertyName != nameof(ScheduleDraft.TimeMilliseconds))
+                return;
+
+            OnPropertyChanged(nameof(CanApplySchedule));
+            OnPropertyChanged(nameof(CanRevertSchedule));
+            if (applyingSnapshot) return;
+            if (scheduleWriteBusy) return;
+            if (ScheduleDraft != null && ScheduleDraft.IsDirty)
+                ScheduleStatus = "Unsaved changes.";
+            else
+                ScheduleStatus = "No changes.";
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -1053,6 +1219,7 @@ namespace AA2Trainer.WpfPrototype
             session.OutfitWriteCompleted -= OnOutfitWriteCompleted;
             session.PlayerSwitchCompleted -= OnPlayerSwitchCompleted;
             session.RosterActionCompleted -= OnRosterActionCompleted;
+            session.ScheduleWriteCompleted -= OnScheduleWriteCompleted;
             session.Dispose();
         }
 
@@ -1078,6 +1245,8 @@ namespace AA2Trainer.WpfPrototype
                 UpdateFaceDraft(snapshot);
                 UpdateHairDraft(snapshot);
                 UpdateOutfitDraft(snapshot);
+                UpdateScheduleDraft(snapshot);
+                IsTimeFrozen = snapshot.TimeFrozen;
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -1320,6 +1489,29 @@ namespace AA2Trainer.WpfPrototype
             {
                 OutfitDraft.Load(snapshot.OutfitValues,
                     snapshot.SelectedPointer, snapshot.SelectedSeat);
+            }
+        }
+
+        private void UpdateScheduleDraft(SessionSnapshot snapshot)
+        {
+            liveSchedule = snapshot.Schedule;
+            if (snapshot.Schedule == null)
+            {
+                ScheduleDraft = null;
+                ScheduleStatus = "No schedule data.";
+                return;
+            }
+
+            if (ScheduleDraft == null)
+            {
+                ScheduleDraft draft = new ScheduleDraft();
+                draft.Load(snapshot.Schedule);
+                ScheduleDraft = draft;
+                ScheduleStatus = "No changes.";
+            }
+            else if (!ScheduleDraft.IsDirty)
+            {
+                ScheduleDraft.Load(snapshot.Schedule);
             }
         }
 

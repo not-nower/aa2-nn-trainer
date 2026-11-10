@@ -232,7 +232,131 @@
                     </Ellipse>
                     <TextBlock Text="{Binding AttachState}" VerticalAlignment="Center" />
                     <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding GameTime}" VerticalAlignment="Center" />
+                    <Button x:Name="ScheduleButton"
+                            Content="{Binding GameTime}"
+                            Style="{StaticResource ToolbarButton}"
+                            Padding="6,2"
+                            Click="ScheduleButton_Click"
+                            ToolTip="Edit the class schedule or freeze time" />
+                    <Popup x:Name="SchedulePopup"
+                           Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=ScheduleButton}"
+                           StaysOpen="False"
+                           AllowsTransparency="True">
+                        <Border Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Border}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="10">
+                            <StackPanel Width="380">
+                                <TextBlock Text="Schedule"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="52" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Weekday"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox Grid.Column="1"
+                                              ItemsSource="{Binding WeekdayOptions}"
+                                              SelectedIndex="{Binding ScheduleDraft.Weekday, Mode=TwoWay}" />
+                                    <TextBlock Grid.Column="2" Text="Week"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,0,0" />
+                                    <ComboBox Grid.Column="3"
+                                              ItemsSource="{Binding WeekOptions}"
+                                              SelectedIndex="{Binding ScheduleDraft.WeekIndex, Mode=TwoWay}" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="52" />
+                                        <ColumnDefinition Width="70" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Period"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox Grid.Column="1"
+                                              ItemsSource="{Binding PeriodOptions}"
+                                              SelectedIndex="{Binding ScheduleDraft.Period, Mode=TwoWay}" />
+                                    <TextBlock Grid.Column="2" Text="Duration"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,0,0" />
+                                    <TextBox Grid.Column="3"
+                                             Text="{Binding ScheduleDraft.Duration, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Period duration in minutes (1-60)" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Time"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBox Width="54"
+                                                 Text="{Binding ScheduleDraft.Minute, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Minutes (0-59)" />
+                                        <TextBlock Text=":"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="2,0" />
+                                        <TextBox Width="54"
+                                                 Text="{Binding ScheduleDraft.Second, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Seconds (0-59)" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="2"
+                                              Content="Freeze time"
+                                              IsChecked="{Binding IsTimeFrozen, Mode=OneWay}"
+                                              Checked="TimeFreeze_Changed"
+                                              Unchecked="TimeFreeze_Changed"
+                                              VerticalAlignment="Center"
+                                              Margin="10,0,0,0"
+                                              ToolTip="Pin the selected time every 50 ms" />
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource CaptionText}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,2,0,0">
+                                    <Run Text="Academy: " />
+                                    <Run Text="{Binding ScheduleDraft.Academy, Mode=OneWay}" />
+                                    <Run Text="  Year: " />
+                                    <Run Text="{Binding ScheduleDraft.Year, Mode=OneWay}" />
+                                    <Run Text="  Class: " />
+                                    <Run Text="{Binding ScheduleDraft.ClassNumber, Mode=OneWay}" />
+                                    <Run Text="  Save: " />
+                                    <Run Text="{Binding ScheduleDraft.SaveName, Mode=OneWay}" />
+                                </TextBlock>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button Content="Apply" Width="76"
+                                            IsEnabled="{Binding CanApplySchedule}"
+                                            Click="ApplySchedule_Click" />
+                                    <Button Content="Revert" Width="76"
+                                            Margin="6,0,0,0"
+                                            IsEnabled="{Binding CanRevertSchedule}"
+                                            Click="RevertSchedule_Click" />
+                                    <TextBlock Text="{Binding ScheduleStatus}"
+                                               Style="{StaticResource CaptionText}"
+                                               Margin="10,0,0,0"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
                     <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
                     <TextBlock Text="{Binding PointerHealth}" Style="{StaticResource CaptionText}" />
                 </StackPanel>

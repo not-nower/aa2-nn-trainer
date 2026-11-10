@@ -44,6 +44,9 @@ namespace AA2Trainer.WpfPrototype
         public string[] FaceTexts;
         public int[] HairValues;
         public int[] OutfitValues;
+        public ScheduleSnapshot Schedule;
+        public bool TimeFrozen;
+        public int TimeFrozenMilliseconds;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }

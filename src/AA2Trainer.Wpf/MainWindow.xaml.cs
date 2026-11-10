@@ -173,5 +173,31 @@ namespace AA2Trainer.WpfPrototype
             MainViewModel viewModel = DataContext as MainViewModel;
             if (viewModel != null) viewModel.PlayAs(viewModel.SelectedSeat);
         }
+
+        private void ScheduleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SchedulePopup != null)
+                SchedulePopup.IsOpen = !SchedulePopup.IsOpen;
+        }
+
+        private void ApplySchedule_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyScheduleEdits();
+        }
+
+        private void RevertSchedule_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertScheduleEdits();
+        }
+
+        private void TimeFreeze_Changed(object sender, RoutedEventArgs e)
+        {
+            CheckBox box = sender as CheckBox;
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (box != null && viewModel != null)
+                viewModel.SetTimeFrozen(box.IsChecked == true);
+        }
     }
 }

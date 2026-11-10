@@ -49,6 +49,9 @@ dotnet build -c Release
 - **Hair:** four style indices, lengths, flip flags, and the hair color.
 - **Outfits:** School, Sport, Swimsuit, and Club sets with uniform, top,
   bottom, shoes/socks, and underwear groups, including color/opacity pairs.
+- **Schedule:** click the game-time chip in the top bar to edit weekday, week,
+  period, duration, and time, or to freeze/pin the current time. Academy, year,
+  class, and save name stay read-only.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.
