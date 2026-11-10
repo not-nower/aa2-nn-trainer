@@ -91,6 +91,9 @@ stores them; no translation or romanization is applied.
 - Density: 24–28 px rows, 4/8 px spacing, 12/13 px Segoe UI.
 - Theme brushes are semantic (`Surface`, `Text`, `Accent`, `Success`, …) and
   consumed via `DynamicResource`; `Themes/Shared.xaml` holds the control styles.
+- Scrollbars are 6 px. The system scrollbar-size keys are overridden in
+  `App.xaml` so `ScrollViewer` scrollbars shrink too, not just the custom
+  `ScrollBar` style.
 - Logs use a virtualized `ListBox` with a border-separated time column, never a
   `RichTextBox`/FlowDocument.
 - The right planner panel no longer scrolls at the minimum size; plan-level

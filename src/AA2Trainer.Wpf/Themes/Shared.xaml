@@ -495,7 +495,7 @@
 
     <Style TargetType="ScrollBar">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Width" Value="10" />
+        <Setter Property="Width" Value="6" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
@@ -514,8 +514,8 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Border Background="{DynamicResource BorderStrong}"
-                                                    CornerRadius="4"
-                                                    Margin="1" />
+                                                    CornerRadius="3"
+                                                    Margin="0" />
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -531,7 +531,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="Orientation" Value="Horizontal">
                             <Setter Property="Width" Value="Auto" />
-                            <Setter Property="Height" Value="10" />
+                            <Setter Property="Height" Value="6" />
                             <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
                             <Setter TargetName="DecreaseButton" Property="Command"
                                     Value="{x:Static ScrollBar.PageLeftCommand}" />
