@@ -35,6 +35,9 @@ dotnet build -c Release
 - **Character writes:** names, profile, attributes, and academics are editable.
   Apply re-checks pointer health before writing, reports the changed fields,
   and refreshes the live snapshot after success.
+- **Traits:** trait, extra, and H-preference checkboxes plus the two-week risk
+  schedule. Apply writes changed traits/risk cells in one queued batch after a
+  pointer-health check; Revert restores live values.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.
@@ -79,11 +82,10 @@ stores them; no translation or romanization is applied.
 
 ## Not implemented (next phases)
 
-- M2: writes, full Character editor parity, planner/hook wiring, real card
-  provider.
+- M2: Body/Face/Hair/Outfits; remaining Character Data fields; Import/Export.
 - M3: real planner runner, logs, and Gameplay sub-tabs.
 - M4: Options/Debug parity.
-- M5: keyboard/accessibility/performance pass.
+- M5: focus/accessibility/performance pass; full keyboard navigation deferred.
 - M6: cutover to `AA2Trainer.exe`.
 
 ## Design notes

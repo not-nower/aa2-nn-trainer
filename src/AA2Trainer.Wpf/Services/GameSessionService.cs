@@ -30,6 +30,8 @@ namespace AA2Trainer.WpfPrototype
         private ScheduleSnapshot schedule;
         private CharacterDetail selectedCharacterDetail;
         private CharacterSnapshot selectedCharacterSnapshot;
+        private bool[] selectedTraitValues;
+        private int[,] selectedRiskValues;
         private CharacterOptions characterOptions;
         private readonly object writeSync = new object();
         private bool writePending;
@@ -37,6 +39,14 @@ namespace AA2Trainer.WpfPrototype
         private int writeSeat = -1;
         private CharacterSnapshot writeOriginal;
         private CharacterSnapshot writeEdited;
+        private readonly object traitWriteSync = new object();
+        private bool traitWritePending;
+        private uint traitWritePointer;
+        private int traitWriteSeat = -1;
+        private bool[] traitWriteOriginal;
+        private bool[] traitWriteEdited;
+        private int[,] riskWriteOriginal;
+        private int[,] riskWriteEdited;
         private readonly Dictionary<int, string> relationships =
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
@@ -63,6 +73,7 @@ namespace AA2Trainer.WpfPrototype
 
         public event Action<SessionSnapshot> SnapshotReady;
         public event Action<CharacterWriteResult> CharacterWriteCompleted;
+        public event Action<TraitWriteResult> TraitWriteCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -115,6 +126,29 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestTraitWrite(uint pointer, int seat,
+            bool[] originalTraits, bool[] editedTraits,
+            int[,] originalRisk, int[,] editedRisk)
+        {
+            if (disposed || !mem.IsAttached || pointer == 0 ||
+                originalTraits == null || editedTraits == null ||
+                originalRisk == null || editedRisk == null)
+                return false;
+
+            lock (traitWriteSync)
+            {
+                if (traitWritePending) return false;
+                traitWritePointer = pointer;
+                traitWriteSeat = seat;
+                traitWriteOriginal = originalTraits;
+                traitWriteEdited = editedTraits;
+                riskWriteOriginal = originalRisk;
+                riskWriteEdited = editedRisk;
+                traitWritePending = true;
+                return true;
+            }
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -130,6 +164,7 @@ namespace AA2Trainer.WpfPrototype
             mem.Dispose();
             SnapshotReady = null;
             CharacterWriteCompleted = null;
+            TraitWriteCompleted = null;
         }
 
         private void Poll(object state)
@@ -199,6 +234,7 @@ namespace AA2Trainer.WpfPrototype
         private void DetachInternal()
         {
             CancelPendingWrite("Detached.");
+            CancelPendingTraitWrite("Detached.");
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
@@ -206,6 +242,8 @@ namespace AA2Trainer.WpfPrototype
             schedule = null;
             selectedCharacterDetail = null;
             selectedCharacterSnapshot = null;
+            selectedTraitValues = null;
+            selectedRiskValues = null;
             lastContextUtc = DateTime.MinValue;
             lastHealthUtc = DateTime.MinValue;
             lastDisconnectedUtc = DateTime.MinValue;
@@ -215,6 +253,7 @@ namespace AA2Trainer.WpfPrototype
         private void PollAttached()
         {
             ProcessCharacterWrite();
+            ProcessTraitWrite();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
@@ -285,6 +324,8 @@ namespace AA2Trainer.WpfPrototype
             snapshot.RawCharacter = selectedCharacterSnapshot;
             snapshot.Options = characterOptions;
             snapshot.SelectedPointer = ctx.Selected == null ? 0 : ctx.Selected.Pointer;
+            snapshot.TraitValues = selectedTraitValues;
+            snapshot.RiskValues = selectedRiskValues;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -411,6 +452,8 @@ namespace AA2Trainer.WpfPrototype
             {
                 selectedCharacterDetail = null;
                 selectedCharacterSnapshot = null;
+                selectedTraitValues = null;
+                selectedRiskValues = null;
                 return;
             }
 
@@ -421,11 +464,23 @@ namespace AA2Trainer.WpfPrototype
             {
                 selectedCharacterDetail = null;
                 selectedCharacterSnapshot = null;
+                selectedTraitValues = null;
+                selectedRiskValues = null;
                 return;
             }
 
             selectedCharacterSnapshot = snapshot;
             selectedCharacterDetail = BuildCharacterDetail(snapshot);
+
+            bool[] traits;
+            string traitError;
+            selectedTraitValues = TraitCatalog.TryRead(mem, ctx.Selected,
+                out traits, out traitError) ? traits : null;
+
+            int[,] risk;
+            string riskError;
+            selectedRiskValues = RiskSchedule.TryRead(mem, ctx.Selected,
+                out risk, out riskError) ? risk : null;
         }
 
         private CharacterOptions BuildCharacterOptions()
@@ -671,6 +726,154 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (disposed) return;
                 Action<CharacterWriteResult> handler = CharacterWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void ProcessTraitWrite()
+        {
+            uint pointer;
+            int seat;
+            bool[] originalTraits;
+            bool[] editedTraits;
+            int[,] originalRisk;
+            int[,] editedRisk;
+
+            lock (traitWriteSync)
+            {
+                if (!traitWritePending) return;
+                pointer = traitWritePointer;
+                seat = traitWriteSeat;
+                originalTraits = traitWriteOriginal;
+                editedTraits = traitWriteEdited;
+                originalRisk = riskWriteOriginal;
+                editedRisk = riskWriteEdited;
+                traitWritePending = false;
+                traitWriteOriginal = null;
+                traitWriteEdited = null;
+                riskWriteOriginal = null;
+                riskWriteEdited = null;
+            }
+
+            TraitWriteResult result = new TraitWriteResult
+            {
+                Pointer = pointer,
+                Seat = seat
+            };
+
+            try
+            {
+                CharacterInfo info = ctx.FindByPointer(pointer);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        List<string> errors = new List<string>();
+                        int changedTraits = 0;
+                        int changedRisk = 0;
+
+                        int traitCount = Math.Min(TraitCatalog.All.Count,
+                            Math.Min(originalTraits.Length, editedTraits.Length));
+                        for (int i = 0; i < traitCount; i++)
+                        {
+                            if (originalTraits[i] == editedTraits[i]) continue;
+                            string error;
+                            if (TraitCatalog.TryWrite(mem, info, i,
+                                editedTraits[i], out error))
+                            {
+                                changedTraits++;
+                            }
+                            else
+                            {
+                                errors.Add("trait " + i + ": " + error);
+                            }
+                        }
+
+                        for (int week = 0; week < RiskSchedule.WeekCount; week++)
+                        {
+                            for (int day = 0; day < RiskSchedule.DayCount; day++)
+                            {
+                                if (originalRisk[week, day] ==
+                                    editedRisk[week, day]) continue;
+                                string error;
+                                if (RiskSchedule.TryWrite(mem, info, week, day,
+                                    editedRisk[week, day], out error))
+                                {
+                                    changedRisk++;
+                                }
+                                else
+                                {
+                                    errors.Add(RiskSchedule.Days[day] + " week " +
+                                        (week + 1) + ": " + error);
+                                }
+                            }
+                        }
+
+                        result.Success = errors.Count == 0;
+                        result.Changed = changedTraits + " trait(s), " +
+                            changedRisk + " risk cell(s)";
+                        if (errors.Count > 0)
+                        {
+                            result.Error = string.Join("; ", errors.Take(4));
+                            if (errors.Count > 4) result.Error += "; ...";
+                        }
+
+                        lastContextUtc = DateTime.MinValue;
+                        lastHealthUtc = DateTime.MinValue;
+                        if (ctx.Selected != null &&
+                            ctx.Selected.Pointer == pointer)
+                        {
+                            RefreshSelectedCharacter();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishTraitWrite(result);
+        }
+
+        private void CancelPendingTraitWrite(string error)
+        {
+            TraitWriteResult result;
+            lock (traitWriteSync)
+            {
+                if (!traitWritePending) return;
+                traitWritePending = false;
+                result = new TraitWriteResult
+                {
+                    Pointer = traitWritePointer,
+                    Seat = traitWriteSeat,
+                    Error = error
+                };
+                traitWriteOriginal = null;
+                traitWriteEdited = null;
+                riskWriteOriginal = null;
+                riskWriteEdited = null;
+            }
+            PublishTraitWrite(result);
+        }
+
+        private void PublishTraitWrite(TraitWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<TraitWriteResult> handler = TraitWriteCompleted;
                 if (handler != null) handler(result);
             }));
         }

@@ -262,10 +262,148 @@
         </TabItem>
 
         <TabItem Header="Traits">
-            <TextBlock Text="Prototype - Traits in M2."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="61*" />
+                        <ColumnDefinition Width="39*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="Traits" Style="{StaticResource SectionHeader}"
+                                   Margin="0,0,0,6" />
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                            <ItemsControl ItemsSource="{Binding TraitDraft.TraitItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Display}"
+                                                  IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                                  ToolTip="{Binding Tip}"
+                                                  Margin="0,2,6,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+                        <TextBlock Text="Extra" Style="{StaticResource SectionHeader}"
+                                   Margin="0,0,0,6" />
+                        <Border Style="{StaticResource Card}">
+                            <ItemsControl ItemsSource="{Binding TraitDraft.ExtraItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Display}"
+                                                  IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                                  ToolTip="{Binding Tip}"
+                                                  Margin="0,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="1">
+                        <TextBlock Text="H Preferences" Style="{StaticResource SectionHeader}"
+                                   Margin="0,0,0,6" />
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                            <ItemsControl ItemsSource="{Binding TraitDraft.PreferenceItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Display}"
+                                                  IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                                  ToolTip="{Binding Tip}"
+                                                  Margin="0,2,6,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+                        <TextBlock Text="Risk" Style="{StaticResource SectionHeader}"
+                                   Margin="0,0,0,6" />
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="72" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                           Text="First week"
+                                           Style="{StaticResource CaptionText}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="0" Grid.Column="2"
+                                           Text="Second week"
+                                           Style="{StaticResource CaptionText}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,4" />
+
+                                <ItemsControl Grid.Row="1" Grid.ColumnSpan="3"
+                                              ItemsSource="{Binding TraitDraft.RiskRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="72" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding DayName}"
+                                                           Style="{StaticResource CaptionText}" />
+                                                <ComboBox Grid.Column="1"
+                                                          ItemsSource="{Binding DataContext.TraitDraft.RiskOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                          SelectedValue="{Binding Week1, Mode=TwoWay}"
+                                                          SelectedValuePath="Value"
+                                                          DisplayMemberPath="Text"
+                                                          Margin="2,0" />
+                                                <ComboBox Grid.Column="2"
+                                                          ItemsSource="{Binding DataContext.TraitDraft.RiskOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                          SelectedValue="{Binding Week2, Mode=TwoWay}"
+                                                          SelectedValuePath="Value"
+                                                          DisplayMemberPath="Text"
+                                                          Margin="2,0" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2"
+                                Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Apply" Width="76"
+                                IsEnabled="{Binding CanApplyTraits}"
+                                Click="ApplyTraits_Click" />
+                        <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                IsEnabled="{Binding CanRevertTraits}"
+                                Click="RevertTraits_Click" />
+                        <TextBlock Style="{StaticResource CaptionText}"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding TraitStatus}" />
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
         </TabItem>
         <TabItem Header="Body">
             <TextBlock Text="Prototype - Body in M2."
