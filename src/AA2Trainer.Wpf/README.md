@@ -18,7 +18,7 @@ dotnet build -c Release
 .\bin\Release\net48\AA2Trainer.WpfPrototype.exe
 ```
 
-## Implemented in M0 and M1.1
+## Implemented
 
 - **Live session:** attaches to AA2Play on a background timer, refreshes the
   roster and relationships once per second, reads live action/activity at 4 Hz,
@@ -30,14 +30,16 @@ dotnet build -c Release
   break that grid.
 - **Live Character Data:** the selected character’s profile, attributes,
   academics, and status are read from Core once per second. The Data tab is
-  read-only for now; writes come next.- Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
+  read-only for now; writes come next.
+- Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.
 - **Roster** is a fixed **5×5 classroom grid** in Japanese seat order: columns
   run right-to-left and top-to-bottom, with teacher seat **24 at the top-middle**.
-  It hides the seat rail, character header and log drawer so the 25 cards get the
-  full window. Cards reserve a 68×80 portrait area with a seat badge overlay and
-  no reflow on resize.
+  The Class seats rail is available here and starts collapsed; the character
+  header and log drawer stay hidden so the cards keep the height. Expand the
+  rail from its top button when needed. Cards reserve a 68×80 portrait area with
+  a seat badge overlay and no reflow on resize.
 - **Teacher badge:** seat 24 carries a small `Teacher` pill (muted while the seat
   is empty) in the roster card and the card-face popup.
 - Empty seats are not selectable; arrow keys move by classroom position rather
@@ -49,10 +51,11 @@ dotnet build -c Release
   decoded only for matched seats, so a large card library does not sit in
   memory. A hover popup opens the card face only when a card matched; detaching
   clears names and card art.
-- Character/Options/Debug restore the seat rail and header; Gameplay also shows
-  the log drawer. Roster selection still drives the rail/header when you switch
-  tabs.
-- Character Data sample form (edits update the header live).
+- Character/Options/Debug keep the rail expanded by default and restore the
+  character header; Gameplay also shows the log drawer. Roster selection still
+  drives the rail/header when you switch tabs.
+- Character Data now shows live profile, attributes, academics, and status for
+  the selected character. The form is read-only for now.
 - Gameplay > Planner sample:
   - plan list with On checkbox, state colors, skipped dimming;
   - compact step editor;
@@ -82,8 +85,9 @@ stores them; no translation or romanization is applied.
 
 - Default window: **1180×760**; minimum **1024×680**.
 - Roster cells are a fixed 5×5 classroom grid (right-to-left columns, teacher
-  seat 24 top-middle); the roster is a focused view and does not show the
-  rail/header/log. Other tabs restore the surrounding chrome.
+  seat 24 top-middle). The Class seats rail is shown collapsed by default on
+  the roster; the character header and log stay hidden. Other tabs start with
+  the rail expanded.
 - Density: 24–28 px rows, 4/8 px spacing, 12/13 px Segoe UI.
 - Theme brushes are semantic (`Surface`, `Text`, `Accent`, `Success`, …) and
   consumed via `DynamicResource`; `Themes/Shared.xaml` holds the control styles.

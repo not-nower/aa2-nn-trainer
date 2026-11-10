@@ -8,6 +8,7 @@ namespace AA2Trainer.WpfPrototype
         private readonly MainViewModel viewModel;
         private bool loaded;
         private bool railCollapsed;
+        private bool rosterRailCollapsed = true;
         private bool logCollapsed;
 
         public MainWindow()
@@ -57,26 +58,20 @@ namespace AA2Trainer.WpfPrototype
             bool roster = MainTabs.SelectedIndex == 0;
             bool gameplay = MainTabs.SelectedIndex == 2;
 
-            // Roster is a focused 5x5 view: the seat rail, character header
-            // and log drawer would steal the height the portraits need.
-            SeatRailBorder.Visibility = roster
-                ? Visibility.Collapsed : Visibility.Visible;
-            SeatRailColumn.Width = roster
-                ? new GridLength(0)
-                : new GridLength(railCollapsed ? 52 : 220);
-            SeatSplitterColumn.Width = roster
-                ? new GridLength(0) : new GridLength(4);
+            // The classroom roster keeps the seat rail available, but it starts
+            // collapsed so the 5x5 grid keeps the full width on first launch.
+            bool railIsCollapsed = roster ? rosterRailCollapsed : railCollapsed;
+            SeatRailBorder.Visibility = Visibility.Visible;
+            SeatRailColumn.Width = new GridLength(railIsCollapsed ? 68 : 220);
+            SeatSplitterColumn.Width = new GridLength(4);
 
-            if (!roster)
-            {
-                RailHeaderText.Visibility = railCollapsed
-                    ? Visibility.Collapsed : Visibility.Visible;
-                RailFooterText.Visibility = railCollapsed
-                    ? Visibility.Collapsed : Visibility.Visible;
-                CollapseRailButton.Content = railCollapsed ? "\uE76C" : "\uE76B";
-                CollapseRailButton.ToolTip = railCollapsed
-                    ? "Expand seat rail" : "Collapse seat rail";
-            }
+            RailHeaderText.Visibility = railIsCollapsed
+                ? Visibility.Collapsed : Visibility.Visible;
+            RailFooterText.Visibility = railIsCollapsed
+                ? Visibility.Collapsed : Visibility.Visible;
+            CollapseRailButton.Content = railIsCollapsed ? "\uE76C" : "\uE76B";
+            CollapseRailButton.ToolTip = railIsCollapsed
+                ? "Expand seat rail" : "Collapse seat rail";
 
             HeaderRow.Height = roster
                 ? new GridLength(0) : new GridLength(56);
@@ -97,7 +92,7 @@ namespace AA2Trainer.WpfPrototype
                 ? "Expand log" : "Collapse log";
 
             MainViewModel viewModel = DataContext as MainViewModel;
-            if (viewModel != null) viewModel.RailCollapsed = railCollapsed && !roster;
+            if (viewModel != null) viewModel.RailCollapsed = railIsCollapsed;
         }
 
         private void ThemeCombo_SelectionChanged(object sender,
@@ -109,7 +104,10 @@ namespace AA2Trainer.WpfPrototype
 
         private void CollapseRail_Click(object sender, RoutedEventArgs e)
         {
-            railCollapsed = !railCollapsed;
+            if (MainTabs.SelectedIndex == 0)
+                rosterRailCollapsed = !rosterRailCollapsed;
+            else
+                railCollapsed = !railCollapsed;
             ApplyShellForTab();
         }
 
