@@ -29,6 +29,14 @@ namespace AA2Trainer.WpfPrototype
         private PointerHealth health;
         private ScheduleSnapshot schedule;
         private CharacterDetail selectedCharacterDetail;
+        private CharacterSnapshot selectedCharacterSnapshot;
+        private CharacterOptions characterOptions;
+        private readonly object writeSync = new object();
+        private bool writePending;
+        private uint writePointer;
+        private int writeSeat = -1;
+        private CharacterSnapshot writeOriginal;
+        private CharacterSnapshot writeEdited;
         private readonly Dictionary<int, string> relationships =
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
@@ -54,6 +62,7 @@ namespace AA2Trainer.WpfPrototype
         }
 
         public event Action<SessionSnapshot> SnapshotReady;
+        public event Action<CharacterWriteResult> CharacterWriteCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -83,6 +92,29 @@ namespace AA2Trainer.WpfPrototype
             Interlocked.Exchange(ref pendingSeat, seat);
         }
 
+        /// <summary>
+        /// Queues a write for the poll thread. Returns false when a write is
+        /// already queued or the game is not attached.
+        /// </summary>
+        public bool RequestCharacterWrite(uint pointer, int seat,
+            CharacterSnapshot original, CharacterSnapshot edited)
+        {
+            if (disposed || !mem.IsAttached || pointer == 0 ||
+                original == null || edited == null)
+                return false;
+
+            lock (writeSync)
+            {
+                if (writePending) return false;
+                writePointer = pointer;
+                writeSeat = seat;
+                writeOriginal = original;
+                writeEdited = edited;
+                writePending = true;
+                return true;
+            }
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -97,6 +129,7 @@ namespace AA2Trainer.WpfPrototype
             live.Clear();
             mem.Dispose();
             SnapshotReady = null;
+            CharacterWriteCompleted = null;
         }
 
         private void Poll(object state)
@@ -154,6 +187,7 @@ namespace AA2Trainer.WpfPrototype
             ctx = new GameContext();
             bool hasClass = ctx.Refresh(mem, 0);
             names.Load(NameMap.FindGameRoot() ?? "");
+            characterOptions = BuildCharacterOptions();
             live.PublishRoster(ctx.Characters, ctx.Selected);
             health = hasClass ? PointerHealth.Run(mem, ctx) : null;
             lastContextUtc = DateTime.UtcNow;
@@ -164,12 +198,14 @@ namespace AA2Trainer.WpfPrototype
 
         private void DetachInternal()
         {
+            CancelPendingWrite("Detached.");
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
             health = null;
             schedule = null;
             selectedCharacterDetail = null;
+            selectedCharacterSnapshot = null;
             lastContextUtc = DateTime.MinValue;
             lastHealthUtc = DateTime.MinValue;
             lastDisconnectedUtc = DateTime.MinValue;
@@ -178,6 +214,8 @@ namespace AA2Trainer.WpfPrototype
 
         private void PollAttached()
         {
+            ProcessCharacterWrite();
+
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
             {
@@ -244,6 +282,9 @@ namespace AA2Trainer.WpfPrototype
                 ? "Write gate: open" : "Write gate: read-only";
             snapshot.UpdatedText = "Updated " + DateTime.Now.ToString("HH:mm:ss");
             snapshot.Character = selectedCharacterDetail;
+            snapshot.RawCharacter = selectedCharacterSnapshot;
+            snapshot.Options = characterOptions;
+            snapshot.SelectedPointer = ctx.Selected == null ? 0 : ctx.Selected.Pointer;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -369,6 +410,7 @@ namespace AA2Trainer.WpfPrototype
             if (ctx.Selected == null)
             {
                 selectedCharacterDetail = null;
+                selectedCharacterSnapshot = null;
                 return;
             }
 
@@ -378,10 +420,92 @@ namespace AA2Trainer.WpfPrototype
                 out snapshot, out error))
             {
                 selectedCharacterDetail = null;
+                selectedCharacterSnapshot = null;
                 return;
             }
 
+            selectedCharacterSnapshot = snapshot;
             selectedCharacterDetail = BuildCharacterDetail(snapshot);
+        }
+
+        private CharacterOptions BuildCharacterOptions()
+        {
+            CharacterOptions options = new CharacterOptions();
+            options.Personality = BuildOptions("PERSONALITY", 0, 29);
+            options.Club = BuildOptions("CLUB", 0, 7);
+            options.Social = BuildOptions("LOW_HIGH", 0, 4);
+            options.FightingStyle = BuildOptions("FIGHTSTYLE", 0, 2);
+            options.Virtue = BuildOptions("LOW_HIGH", 0, 4);
+            options.Orientation = BuildOptions("SEXUALITY", 0, 4);
+            options.VoicePitch = BuildOptions("LOW_HIGH", 0, 4);
+            options.Levels = BuildOptions("LOW_HIGHPLUS", 0, 4);
+            options.ClubLevels = BuildNumbers(0, 8);
+            options.Grades = BuildGrades();
+            return options;
+        }
+
+        private static List<CharacterOption> BuildNumbers(int min, int max)
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            for (int i = min; i <= max; i++)
+            {
+                list.Add(new CharacterOption
+                {
+                    Value = i,
+                    Text = i.ToString()
+                });
+            }
+            return list;
+        }
+
+        private List<CharacterOption> BuildOptions(string key, int min, int max)
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            HashSet<int> seen = new HashSet<int>();
+
+            foreach (KeyValuePair<int, string> pair in names.Entries(key))
+            {
+                if (pair.Key < 0 || pair.Key > 255) continue;
+                if (string.IsNullOrEmpty(pair.Value)) continue;
+                list.Add(new CharacterOption
+                {
+                    Value = pair.Key,
+                    Text = pair.Key.ToString("D2") + "  " + pair.Value
+                });
+                seen.Add(pair.Key);
+            }
+
+            for (int i = min; i <= max; i++)
+            {
+                if (seen.Contains(i)) continue;
+                list.Add(new CharacterOption
+                {
+                    Value = i,
+                    Text = i.ToString("D2") + "  (unnamed)"
+                });
+            }
+
+            list.Sort(delegate(CharacterOption a, CharacterOption b)
+            {
+                return a.Value.CompareTo(b.Value);
+            });
+            return list;
+        }
+
+        private static List<CharacterOption> BuildGrades()
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            string grades = "FEDCBA";
+            for (int i = 0; i < grades.Length; i++)
+            {
+                list.Add(new CharacterOption
+                {
+                    Value = i,
+                    Text = grades.Substring(i, 1)
+                });
+            }
+            list.Add(new CharacterOption { Value = 255, Text = "None" });
+            return list;
         }
 
         private CharacterDetail BuildCharacterDetail(CharacterSnapshot snapshot)
@@ -445,6 +569,110 @@ namespace AA2Trainer.WpfPrototype
         private static string YesNo(bool value)
         {
             return value ? "Yes" : "No";
+        }
+
+        private void ProcessCharacterWrite()
+        {
+            uint pointer;
+            int seat;
+            CharacterSnapshot original;
+            CharacterSnapshot edited;
+
+            lock (writeSync)
+            {
+                if (!writePending) return;
+                pointer = writePointer;
+                seat = writeSeat;
+                original = writeOriginal;
+                edited = writeEdited;
+                writePending = false;
+                writeOriginal = null;
+                writeEdited = null;
+            }
+
+            CharacterWriteResult result = new CharacterWriteResult
+            {
+                Pointer = pointer,
+                Seat = seat
+            };
+
+            try
+            {
+                CharacterInfo info = ctx.FindByPointer(pointer);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        string changed;
+                        string error;
+                        if (CharacterEditor.TryWrite(mem, info, original, edited,
+                            out changed, out error))
+                        {
+                            result.Success = true;
+                            result.Changed = changed ?? "";
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                            if (ctx.Selected != null &&
+                                ctx.Selected.Pointer == pointer)
+                            {
+                                RefreshSelectedCharacter();
+                            }
+                            RefreshRelations();
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "Write failed." : error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishCharacterWrite(result);
+        }
+
+        private void CancelPendingWrite(string error)
+        {
+            CharacterWriteResult result;
+            lock (writeSync)
+            {
+                if (!writePending) return;
+                writePending = false;
+                result = new CharacterWriteResult
+                {
+                    Pointer = writePointer,
+                    Seat = writeSeat,
+                    Error = error
+                };
+                writeOriginal = null;
+                writeEdited = null;
+            }
+            PublishCharacterWrite(result);
+        }
+
+        private void PublishCharacterWrite(CharacterWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<CharacterWriteResult> handler = CharacterWriteCompleted;
+                if (handler != null) handler(result);
+            }));
         }
 
         private void PublishAttachedNoClass()

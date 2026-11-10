@@ -27,8 +27,11 @@ namespace AA2Trainer.WpfPrototype
         public string WriteGate = "Write gate: read-only";
         public string UpdatedText = "Updated -";
         public int SelectedSeat = -1;
+        public uint SelectedPointer;
         public long Sequence;
         public CharacterDetail Character;
+        public CharacterSnapshot RawCharacter;
+        public CharacterOptions Options;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }

@@ -30,7 +30,11 @@ dotnet build -c Release
   break that grid.
 - **Live Character Data:** the selected character’s profile, attributes,
   academics, and status are read from Core once per second. The Data tab is
-  read-only for now; writes come next.
+  editable; Apply sends a draft through the session write queue and Revert
+  restores the live values.
+- **Character writes:** names, profile, attributes, and academics are editable.
+  Apply re-checks pointer health before writing, reports the changed fields,
+  and refreshes the live snapshot after success.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.
@@ -54,8 +58,9 @@ dotnet build -c Release
 - Character/Options/Debug keep the rail expanded by default and restore the
   character header; Gameplay also shows the log drawer. Roster selection still
   drives the rail/header when you switch tabs.
-- Character Data now shows live profile, attributes, academics, and status for
-  the selected character. The form is read-only for now.
+- Character Data now shows and edits live profile, attributes, academics, and
+  status for the selected character. Apply/Revert are enabled only when the
+  draft has changes.
 - Gameplay > Planner sample:
   - plan list with On checkbox, state colors, skipped dimming;
   - compact step editor;

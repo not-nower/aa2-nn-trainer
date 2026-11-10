@@ -12,12 +12,14 @@ namespace AA2Trainer.WpfPrototype.Views
 
         private void Apply_Click(object sender, RoutedEventArgs e)
         {
-            CharacterNote.Text = "Prototype: writes are wired in M2.";
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyCharacterEdits();
         }
 
         private void Revert_Click(object sender, RoutedEventArgs e)
         {
-            CharacterNote.Text = "Prototype: revert is wired in M2.";
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertCharacterEdits();
         }
     }
 }

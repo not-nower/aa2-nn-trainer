@@ -23,6 +23,12 @@ namespace AA2Trainer.WpfPrototype
 
         private SeatItem selectedSeat;
         private CharacterDetail selectedCharacter;
+        private CharacterDraft characterDraft;
+        private CharacterOptions characterOptions;
+        private CharacterSnapshot liveCharacter;
+        private uint livePointer;
+        private string characterStatus = "No changes.";
+        private bool characterWriteBusy;
         private bool railCollapsed;
         private bool applyingSnapshot;
         private bool isAttached;
@@ -56,6 +62,7 @@ namespace AA2Trainer.WpfPrototype
                 : Dispatcher.CurrentDispatcher;
             session = new GameSessionService(dispatcher);
             session.SnapshotReady += ApplySnapshot;
+            session.CharacterWriteCompleted += OnCharacterWriteCompleted;
             LoadCardsAsync();
         }
 
@@ -91,6 +98,63 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref selectedCharacter, value); }
         }
 
+        public CharacterDraft CharacterDraft
+        {
+            get { return characterDraft; }
+            private set
+            {
+                if (characterDraft == value) return;
+                if (characterDraft != null)
+                    characterDraft.PropertyChanged -= CharacterDraft_PropertyChanged;
+                characterDraft = value;
+                if (characterDraft != null)
+                    characterDraft.PropertyChanged += CharacterDraft_PropertyChanged;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanApply));
+                OnPropertyChanged(nameof(CanRevert));
+            }
+        }
+
+        public CharacterOptions CharacterOptions
+        {
+            get { return characterOptions; }
+            private set { Set(ref characterOptions, value); }
+        }
+
+        public string CharacterStatus
+        {
+            get { return characterStatus; }
+            private set { Set(ref characterStatus, value); }
+        }
+
+        public bool IsCharacterWriteBusy
+        {
+            get { return characterWriteBusy; }
+            private set
+            {
+                if (!Set(ref characterWriteBusy, value)) return;
+                OnPropertyChanged(nameof(CanApply));
+            }
+        }
+
+        public bool CanApply
+        {
+            get
+            {
+                return characterDraft != null && characterDraft.IsDirty &&
+                    !characterWriteBusy && isAttached;
+            }
+        }
+
+        public bool CanRevert
+        {
+            get
+            {
+                return characterDraft != null && characterDraft.IsDirty &&
+                    !characterWriteBusy;
+            }
+        }
+
         public string RosterFilter
         {
             get { return rosterFilter; }
@@ -116,6 +180,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref isAttached, value)) return;
                 OnPropertyChanged(nameof(AttachButtonText));
+                OnPropertyChanged(nameof(CanApply));
             }
         }
 
@@ -183,11 +248,80 @@ namespace AA2Trainer.WpfPrototype
                 session.RequestAttach();
         }
 
+        public void ApplyCharacterEdits()
+        {
+            if (session == null || CharacterDraft == null ||
+                !CharacterDraft.IsDirty || characterWriteBusy)
+                return;
+
+            IsCharacterWriteBusy = true;
+            CharacterStatus = "Writing...";
+
+            bool queued = session.RequestCharacterWrite(
+                CharacterDraft.Pointer, CharacterDraft.SeatIndex,
+                CharacterDraft.Original, CharacterDraft.ToSnapshot());
+            if (!queued)
+            {
+                IsCharacterWriteBusy = false;
+                CharacterStatus = "Write request was not accepted.";
+            }
+        }
+
+        public void RevertCharacterEdits()
+        {
+            if (CharacterDraft == null || liveCharacter == null) return;
+            CharacterDraft.Load(liveCharacter, livePointer,
+                CharacterDraft.SeatIndex);
+            CharacterStatus = "Reverted to live values.";
+        }
+
+        private void OnCharacterWriteCompleted(CharacterWriteResult result)
+        {
+            IsCharacterWriteBusy = false;
+            if (result == null) return;
+
+            if (result.Success)
+            {
+                if (CharacterDraft != null &&
+                    CharacterDraft.Pointer == result.Pointer)
+                {
+                    CharacterDraft.MarkSaved();
+                }
+                CharacterStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Saved: " + result.Changed;
+            }
+            else
+            {
+                CharacterStatus = "Write failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void CharacterDraft_PropertyChanged(object sender,
+            System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(CharacterDraft.IsDirty))
+                return;
+
+            OnPropertyChanged(nameof(CanApply));
+            OnPropertyChanged(nameof(CanRevert));
+            if (CharacterDraft != null && CharacterDraft.IsDirty &&
+                !characterWriteBusy)
+            {
+                CharacterStatus = "Unsaved changes.";
+            }
+        }
+
         public void Dispose()
         {
             disposed = true;
             if (session == null) return;
             session.SnapshotReady -= ApplySnapshot;
+            session.CharacterWriteCompleted -= OnCharacterWriteCompleted;
             session.Dispose();
         }
 
@@ -206,6 +340,8 @@ namespace AA2Trainer.WpfPrototype
                 WriteGate = snapshot.WriteGate;
                 UpdatedText = snapshot.UpdatedText;
                 SelectedCharacter = snapshot.Character;
+                if (snapshot.Options != null) CharacterOptions = snapshot.Options;
+                UpdateCharacterDraft(snapshot);
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -245,6 +381,39 @@ namespace AA2Trainer.WpfPrototype
             finally
             {
                 applyingSnapshot = false;
+            }
+        }
+
+        private void UpdateCharacterDraft(SessionSnapshot snapshot)
+        {
+            if (snapshot.RawCharacter == null || snapshot.SelectedPointer == 0)
+            {
+                liveCharacter = null;
+                livePointer = 0;
+                CharacterDraft = null;
+                CharacterStatus = "No character selected.";
+                return;
+            }
+
+            bool rawChanged = !ReferenceEquals(liveCharacter, snapshot.RawCharacter);
+            bool sameCharacter = CharacterDraft != null &&
+                CharacterDraft.Pointer == snapshot.SelectedPointer;
+
+            liveCharacter = snapshot.RawCharacter;
+            livePointer = snapshot.SelectedPointer;
+
+            if (!sameCharacter)
+            {
+                CharacterDraft draft = new CharacterDraft();
+                draft.Load(snapshot.RawCharacter, snapshot.SelectedPointer,
+                    snapshot.SelectedSeat);
+                CharacterDraft = draft;
+                CharacterStatus = "No changes.";
+            }
+            else if (!CharacterDraft.IsDirty && rawChanged)
+            {
+                CharacterDraft.Load(snapshot.RawCharacter, snapshot.SelectedPointer,
+                    snapshot.SelectedSeat);
             }
         }
 
