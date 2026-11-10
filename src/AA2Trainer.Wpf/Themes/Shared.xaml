@@ -355,7 +355,9 @@
     <Style x:Key="SeatItemStyle" TargetType="ListBoxItem">
         <Setter Property="Padding" Value="6,3" />
         <Setter Property="Margin" Value="4,0,4,0" />
+        <Setter Property="Height" Value="45" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="ToolTip" Value="{Binding Name}" />
         <Setter Property="Template">
             <Setter.Value>
