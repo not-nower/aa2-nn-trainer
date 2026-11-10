@@ -65,7 +65,8 @@ dotnet build -c Release
   The Class seats rail is available here and starts collapsed; the character
   header and log drawer stay hidden so the cards keep the height. Expand the
   rail from its top button when needed. Cards reserve a 68×80 portrait area with
-  a seat badge overlay and no reflow on resize.
+  a seat badge overlay and no reflow on resize. Seat status is a vertical bar at
+  the left of each row, so it stays visible when the rail is collapsed.
 - **Roster menu:** right-click a card for Play this character, Open in Character,
   Set Lover/Break Up, Set Love/Like/Dislike/Hate, and Freeze Relationship. The
   header Play as button uses the same queued player-switch path.
