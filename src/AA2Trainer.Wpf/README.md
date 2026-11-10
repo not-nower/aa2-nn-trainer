@@ -48,7 +48,7 @@ dotnet build -c Release
   rail from its top button when needed. Cards reserve a 68×80 portrait area with
   a seat badge overlay and no reflow on resize.
 - **Teacher badge:** seat 24 carries a small `Teacher` pill (muted while the seat
-  is empty) in the roster card and the card-face popup.
+  is empty) in the roster card.
 - Empty seats are not selectable; arrow keys move by classroom position rather
   than by seat number.
 - **Card previews** read the game’s card save folders plus a `Cards` folder
@@ -56,8 +56,9 @@ dotnet build -c Release
   source picker, file import, or recursive scan. Names are read exactly as
   stored and matched to live seat names without translation. Card images are
   decoded only for matched seats, so a large card library does not sit in
-  memory. A hover popup opens the card face only when a card matched; detaching
-  clears names and card art.
+  memory. Hovering a seat in the Class seats rail opens the full card face when
+  a card matched; the roster grid shows only the thumb. Detaching clears names
+  and card art.
 - Character/Options/Debug keep the rail expanded by default and restore the
   character header; Gameplay also shows the log drawer. Roster selection still
   drives the rail/header when you switch tabs.

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 
 namespace AA2Trainer.WpfPrototype
 {
@@ -41,6 +42,33 @@ namespace AA2Trainer.WpfPrototype
         private void AttachButton_Click(object sender, RoutedEventArgs e)
         {
             viewModel.ToggleAttach();
+        }
+
+        private void SeatFacePreview_Loaded(object sender, RoutedEventArgs e)
+        {
+            Popup popup = sender as Popup;
+            if (popup != null) popup.CustomPopupPlacementCallback = PlaceSeatPreview;
+        }
+
+        private static CustomPopupPlacement[] PlaceSeatPreview(
+            Size popupSize, Size targetSize, Point offset)
+        {
+            const double gap = 8;
+            return new[]
+            {
+                new CustomPopupPlacement(
+                    new Point(targetSize.Width + gap, -20),
+                    PopupPrimaryAxis.Horizontal),
+                new CustomPopupPlacement(
+                    new Point(-popupSize.Width - gap, -20),
+                    PopupPrimaryAxis.Horizontal),
+                new CustomPopupPlacement(
+                    new Point(-20, targetSize.Height + gap),
+                    PopupPrimaryAxis.Vertical),
+                new CustomPopupPlacement(
+                    new Point(-20, -popupSize.Height - gap),
+                    PopupPrimaryAxis.Vertical)
+            };
         }
 
         private void MainTabs_SelectionChanged(object sender,

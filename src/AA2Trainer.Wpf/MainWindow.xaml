@@ -16,7 +16,7 @@
 
     <Window.Resources>
         <DataTemplate x:Key="SeatRailTemplate">
-            <Grid>
+            <Grid x:Name="SeatRow">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="34" />
                     <ColumnDefinition Width="*" />
@@ -67,6 +67,62 @@
                          Fill="{DynamicResource Success}"
                          HorizontalAlignment="Center"
                          VerticalAlignment="Center" />
+
+                <Popup x:Name="SeatFacePreview"
+                       Placement="Custom"
+                       PlacementTarget="{Binding ElementName=SeatRow}"
+                       Loaded="SeatFacePreview_Loaded"
+                       AllowsTransparency="True"
+                       StaysOpen="True"
+                       IsHitTestVisible="False"
+                       PopupAnimation="Fade">
+                    <Popup.Style>
+                        <Style TargetType="Popup">
+                            <Setter Property="IsOpen" Value="False" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsMouseOver, ElementName=SeatRow}" Value="True" />
+                                        <Condition Binding="{Binding HasCardFace}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsOpen" Value="True" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Popup.Style>
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Border}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="6">
+                        <StackPanel>
+                            <Grid Width="200" Height="300"
+                                  Background="{DynamicResource SurfaceAlt}">
+                                <TextBlock Text="No card face"
+                                           Style="{StaticResource CaptionText}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                                <Image Source="{Binding CardFaceImage}"
+                                       Stretch="Uniform"
+                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,6,0,0">
+                                <Border Style="{StaticResource Pill}" Margin="0,0,6,0">
+                                    <TextBlock Text="{Binding Seat}"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                </Border>
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding RoomAction}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,2,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Popup>
             </Grid>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding DataContext.RailCollapsed, RelativeSource={RelativeSource AncestorType=ListBox}}"

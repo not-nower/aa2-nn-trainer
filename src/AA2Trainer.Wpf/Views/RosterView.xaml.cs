@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 namespace AA2Trainer.WpfPrototype.Views
@@ -48,37 +47,6 @@ namespace AA2Trainer.WpfPrototype.Views
             if (target == null || !target.HasName || target.IsFilteredOut) return;
 
             RosterList.SelectedItem = target;
-        }
-
-        private void FacePreview_Loaded(object sender, RoutedEventArgs e)
-        {
-            Popup popup = sender as Popup;
-            if (popup != null) popup.CustomPopupPlacementCallback = PlacePreview;
-        }
-
-        /// <summary>
-        /// Keep the card-face preview inside the work area: try right, left,
-        /// below, then above the hovered card.
-        /// </summary>
-        public static CustomPopupPlacement[] PlacePreview(
-            Size popupSize, Size targetSize, Point offset)
-        {
-            const double gap = 8;
-            return new[]
-            {
-                new CustomPopupPlacement(
-                    new Point(targetSize.Width + gap, -20),
-                    PopupPrimaryAxis.Horizontal),
-                new CustomPopupPlacement(
-                    new Point(-popupSize.Width - gap, -20),
-                    PopupPrimaryAxis.Horizontal),
-                new CustomPopupPlacement(
-                    new Point(-20, targetSize.Height + gap),
-                    PopupPrimaryAxis.Vertical),
-                new CustomPopupPlacement(
-                    new Point(-20, -popupSize.Height - gap),
-                    PopupPrimaryAxis.Vertical)
-            };
         }
     }
 }
