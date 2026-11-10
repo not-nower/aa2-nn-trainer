@@ -426,11 +426,11 @@ namespace AA2Trainer.WpfPrototype
 
             OnPropertyChanged(nameof(CanApply));
             OnPropertyChanged(nameof(CanRevert));
-            if (CharacterDraft != null && CharacterDraft.IsDirty &&
-                !characterWriteBusy)
-            {
+            if (characterWriteBusy) return;
+            if (CharacterDraft != null && CharacterDraft.IsDirty)
                 CharacterStatus = "Unsaved changes.";
-            }
+            else
+                CharacterStatus = "No changes.";
         }
 
         public void ApplyTraitEdits()
@@ -493,8 +493,11 @@ namespace AA2Trainer.WpfPrototype
 
             OnPropertyChanged(nameof(CanApplyTraits));
             OnPropertyChanged(nameof(CanRevertTraits));
-            if (TraitDraft != null && TraitDraft.IsDirty && !traitWriteBusy)
+            if (traitWriteBusy) return;
+            if (TraitDraft != null && TraitDraft.IsDirty)
                 TraitStatus = "Unsaved changes.";
+            else
+                TraitStatus = "No changes.";
         }
 
         public void ApplyBodyEdits()
@@ -554,8 +557,11 @@ namespace AA2Trainer.WpfPrototype
 
             OnPropertyChanged(nameof(CanApplyBody));
             OnPropertyChanged(nameof(CanRevertBody));
-            if (BodyDraft != null && BodyDraft.IsDirty && !bodyWriteBusy)
+            if (bodyWriteBusy) return;
+            if (BodyDraft != null && BodyDraft.IsDirty)
                 BodyStatus = "Unsaved changes.";
+            else
+                BodyStatus = "No changes.";
         }
 
         public void Dispose()

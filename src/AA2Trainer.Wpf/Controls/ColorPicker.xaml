@@ -3,12 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Name="Root"
              Width="236">
-    <StackPanel>
+    <StackPanel HorizontalAlignment="Center">
         <TextBlock Text="Color" Style="{StaticResource CaptionText}"
-                   Margin="0,0,0,4" />
+                   HorizontalAlignment="Center" Margin="0,0,0,6" />
 
         <Canvas x:Name="SpectrumCanvas"
                 Width="220" Height="140"
+                HorizontalAlignment="Center"
                 ClipToBounds="True"
                 MouseLeftButtonDown="Spectrum_MouseLeftButtonDown"
                 MouseMove="Spectrum_MouseMove"
@@ -24,7 +25,8 @@
         </Canvas>
 
         <Canvas x:Name="HueCanvas"
-                Height="18" Margin="0,8,0,0"
+                Width="220" Height="18" Margin="0,8,0,0"
+                HorizontalAlignment="Center"
                 ClipToBounds="True"
                 MouseLeftButtonDown="Hue_MouseLeftButtonDown"
                 MouseMove="Hue_MouseMove"
@@ -48,19 +50,36 @@
                      IsHitTestVisible="False" />
         </Canvas>
 
-        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <TextBlock Text="H" Style="{StaticResource CaptionText}"
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center" Margin="0,8,0,0">
+            <TextBlock Text="H" Width="10" Style="{StaticResource CaptionText}"
                        Margin="0,0,4,0" />
             <TextBox Width="46"
                      Text="{Binding Hue, ElementName=Root, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, StringFormat={}{0:F0}}" />
-            <TextBlock Text="S" Style="{StaticResource CaptionText}"
+            <TextBlock Text="S" Width="10" Style="{StaticResource CaptionText}"
                        Margin="10,0,4,0" />
             <TextBox Width="46"
                      Text="{Binding Saturation, ElementName=Root, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, StringFormat={}{0:F0}}" />
-            <TextBlock Text="L" Style="{StaticResource CaptionText}"
+            <TextBlock Text="L" Width="10" Style="{StaticResource CaptionText}"
                        Margin="10,0,4,0" />
             <TextBox Width="46"
                      Text="{Binding Lightness, ElementName=Root, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, StringFormat={}{0:F0}}" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center" Margin="0,6,0,0">
+            <TextBlock Text="R" Width="10" Style="{StaticResource CaptionText}"
+                       Margin="0,0,4,0" />
+            <TextBox Width="46"
+                     Text="{Binding Red, ElementName=Root, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+            <TextBlock Text="G" Width="10" Style="{StaticResource CaptionText}"
+                       Margin="10,0,4,0" />
+            <TextBox Width="46"
+                     Text="{Binding Green, ElementName=Root, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+            <TextBlock Text="B" Width="10" Style="{StaticResource CaptionText}"
+                       Margin="10,0,4,0" />
+            <TextBox Width="46"
+                     Text="{Binding Blue, ElementName=Root, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

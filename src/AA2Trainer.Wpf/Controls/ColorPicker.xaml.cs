@@ -91,6 +91,33 @@ namespace AA2Trainer.WpfPrototype.Controls
             }
         }
 
+        public int Red
+        {
+            get { return (Value >> 16) & 0xFF; }
+            set { SetChannel(16, value); }
+        }
+
+        public int Green
+        {
+            get { return (Value >> 8) & 0xFF; }
+            set { SetChannel(8, value); }
+        }
+
+        public int Blue
+        {
+            get { return Value & 0xFF; }
+            set { SetChannel(0, value); }
+        }
+
+        private void SetChannel(int shift, int channel)
+        {
+            int clamped = channel < 0 ? 0 : (channel > 255 ? 255 : channel);
+            int rgb = Value & 0xFFFFFF;
+            if (((rgb >> shift) & 0xFF) == clamped) return;
+            rgb = (rgb & ~(0xFF << shift)) | (clamped << shift);
+            Value = unchecked((int)(0xFF000000u | (uint)rgb));
+        }
+
         private static void OnValueChanged(DependencyObject d,
             DependencyPropertyChangedEventArgs e)
         {
@@ -121,6 +148,9 @@ namespace AA2Trainer.WpfPrototype.Controls
             OnPropertyChanged(nameof(Hue));
             OnPropertyChanged(nameof(Saturation));
             OnPropertyChanged(nameof(Lightness));
+            OnPropertyChanged(nameof(Red));
+            OnPropertyChanged(nameof(Green));
+            OnPropertyChanged(nameof(Blue));
             UpdateSpectrum();
             UpdateMarkers();
         }
