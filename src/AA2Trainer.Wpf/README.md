@@ -39,9 +39,9 @@ dotnet build -c Release
 - **Traits:** trait, extra, and H-preference checkboxes plus the two-week risk
   schedule. Apply writes changed traits/risk cells in one queued batch after a
   pointer-health check; Revert restores live values.
-- **Body:** body, breast, and skin fields with number, choice, and hex-color
-  controls. Apply writes changed body fields through the session queue; Revert
-  restores live values.
+- **Body:** body, breast, and skin fields with number, choice, and color
+  controls. Colors use a swatch with a hex field and an RGB popup. Apply writes
+  changed body fields through the session queue; Revert restores live values.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.

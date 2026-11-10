@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Media;
 
 namespace AA2Trainer.WpfPrototype
 {
@@ -39,6 +40,10 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref this.value, value)) return;
                 OnPropertyChanged(nameof(ColorText));
+                OnPropertyChanged(nameof(R));
+                OnPropertyChanged(nameof(G));
+                OnPropertyChanged(nameof(B));
+                OnPropertyChanged(nameof(Swatch));
             }
         }
 
@@ -61,6 +66,46 @@ namespace AA2Trainer.WpfPrototype
                 }
                 OnPropertyChanged();
             }
+        }
+
+        public int R
+        {
+            get { return (value >> 16) & 0xFF; }
+            set { SetChannel(16, value); }
+        }
+
+        public int G
+        {
+            get { return (value >> 8) & 0xFF; }
+            set { SetChannel(8, value); }
+        }
+
+        public int B
+        {
+            get { return value & 0xFF; }
+            set { SetChannel(0, value); }
+        }
+
+        public Brush Swatch
+        {
+            get
+            {
+                SolidColorBrush brush = new SolidColorBrush(
+                    Color.FromRgb((byte)R, (byte)G, (byte)B));
+                brush.Freeze();
+                return brush;
+            }
+        }
+
+        private void SetChannel(int shift, int channel)
+        {
+            int clamped = Math.Max(0, Math.Min(255, channel));
+            int rgb = value & 0xFFFFFF;
+            rgb = (rgb & ~(0xFF << shift)) | (clamped << shift);
+            Value = unchecked((int)(0xFF000000u | (uint)rgb));
+            OnPropertyChanged(nameof(R));
+            OnPropertyChanged(nameof(G));
+            OnPropertyChanged(nameof(B));
         }
     }
 

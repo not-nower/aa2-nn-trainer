@@ -444,11 +444,67 @@
                                                  Grid.Column="1"
                                                  Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                                  Visibility="Collapsed" />
-                                        <TextBox x:Name="ColorControl"
-                                                 Grid.Column="1"
-                                                 Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
-                                                 ToolTip="RRGGBB"
-                                                 Visibility="Collapsed" />
+                                        <Grid x:Name="ColorControl"
+                                              Grid.Column="1"
+                                              Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="26" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button x:Name="ColorButton"
+                                                          Width="24" Height="22"
+                                                          Background="{Binding Swatch}"
+                                                          Tag="{Binding ElementName=ColorPopup}"
+                                                          Click="ColorButton_Click"
+                                                          ToolTip="Click to edit RGB">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderBrush="{DynamicResource Border}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="3" />
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <TextBox Grid.Column="1"
+                                                     Margin="4,0,0,0"
+                                                     Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Hex color (#RRGGBB)" />
+                                            <Popup x:Name="ColorPopup"
+                                                   Placement="Bottom"
+                                                   PlacementTarget="{Binding ElementName=ColorButton}"
+                                                   StaysOpen="False"
+                                                   AllowsTransparency="True">
+                                                <Border Background="{DynamicResource Surface}"
+                                                        BorderBrush="{DynamicResource Border}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="4"
+                                                        Padding="8">
+                                                    <StackPanel>
+                                                        <TextBlock Text="RGB"
+                                                                   Style="{StaticResource CaptionText}"
+                                                                   Margin="0,0,0,4" />
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="R"
+                                                                       Style="{StaticResource CaptionText}"
+                                                                       Margin="0,0,4,0" />
+                                                            <TextBox Width="46"
+                                                                     Text="{Binding R, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                                            <TextBlock Text="G"
+                                                                       Style="{StaticResource CaptionText}"
+                                                                       Margin="8,0,4,0" />
+                                                            <TextBox Width="46"
+                                                                     Text="{Binding G, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                                            <TextBlock Text="B"
+                                                                       Style="{StaticResource CaptionText}"
+                                                                       Margin="8,0,4,0" />
+                                                            <TextBox Width="46"
+                                                                     Text="{Binding B, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Popup>
+                                        </Grid>
                                     </Grid>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding IsChoice}" Value="True">
@@ -537,11 +593,67 @@
                                                  Grid.Column="1"
                                                  Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                                  Visibility="Collapsed" />
-                                        <TextBox x:Name="ColorControl"
-                                                 Grid.Column="1"
-                                                 Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
-                                                 ToolTip="RRGGBB"
-                                                 Visibility="Collapsed" />
+                                        <Grid x:Name="ColorControl"
+                                              Grid.Column="1"
+                                              Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="26" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button x:Name="ColorButton"
+                                                          Width="24" Height="22"
+                                                          Background="{Binding Swatch}"
+                                                          Tag="{Binding ElementName=ColorPopup}"
+                                                          Click="ColorButton_Click"
+                                                          ToolTip="Click to edit RGB">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderBrush="{DynamicResource Border}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="3" />
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <TextBox Grid.Column="1"
+                                                     Margin="4,0,0,0"
+                                                     Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Hex color (#RRGGBB)" />
+                                            <Popup x:Name="ColorPopup"
+                                                   Placement="Bottom"
+                                                   PlacementTarget="{Binding ElementName=ColorButton}"
+                                                   StaysOpen="False"
+                                                   AllowsTransparency="True">
+                                                <Border Background="{DynamicResource Surface}"
+                                                        BorderBrush="{DynamicResource Border}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="4"
+                                                        Padding="8">
+                                                    <StackPanel>
+                                                        <TextBlock Text="RGB"
+                                                                   Style="{StaticResource CaptionText}"
+                                                                   Margin="0,0,0,4" />
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="R"
+                                                                       Style="{StaticResource CaptionText}"
+                                                                       Margin="0,0,4,0" />
+                                                            <TextBox Width="46"
+                                                                     Text="{Binding R, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                                            <TextBlock Text="G"
+                                                                       Style="{StaticResource CaptionText}"
+                                                                       Margin="8,0,4,0" />
+                                                            <TextBox Width="46"
+                                                                     Text="{Binding G, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                                            <TextBlock Text="B"
+                                                                       Style="{StaticResource CaptionText}"
+                                                                       Margin="8,0,4,0" />
+                                                            <TextBox Width="46"
+                                                                     Text="{Binding B, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Popup>
+                                        </Grid>
                                     </Grid>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding IsChoice}" Value="True">
