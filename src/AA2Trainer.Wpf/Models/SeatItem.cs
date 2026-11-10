@@ -28,6 +28,10 @@ namespace AA2Trainer.WpfPrototype
         public string Seat { get; set; } = "";
         public bool IsPc { get; set; }
         public bool IsTeacher { get; set; }
+        public bool HasRelationship { get; set; }
+        public bool IsLover { get; set; }
+        public bool OtherIsLover { get; set; }
+        public bool IsFrozen { get; set; }
 
         /// <summary>
         /// True once a live session snapshot has supplied this seat's name.
@@ -241,7 +245,9 @@ namespace AA2Trainer.WpfPrototype
         /// </summary>
         public void ApplyLive(string name, string familyName, string givenName,
             string roomText, string actionText, string statusText,
-            string relationshipText, string headerText, bool isPlayer)
+            string relationshipText, string headerText, bool isPlayer,
+            bool hasRelationship, bool isLover, bool otherIsLover,
+            bool isFrozen)
         {
             SetLiveName(name, familyName, givenName);
             Room = roomText;
@@ -250,6 +256,10 @@ namespace AA2Trainer.WpfPrototype
             Relationship = relationshipText;
             HeaderRelationship = headerText;
             IsPc = isPlayer;
+            HasRelationship = hasRelationship;
+            IsLover = isLover;
+            OtherIsLover = otherIsLover;
+            IsFrozen = isFrozen;
         }
 
         public void SetLiveName(string fullName, string familyName,

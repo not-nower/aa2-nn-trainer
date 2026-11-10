@@ -15,6 +15,10 @@ namespace AA2Trainer.WpfPrototype
         public string Relationship = "";
         public string HeaderRelationship = "";
         public bool IsBusy;
+        public bool HasRelationship;
+        public bool IsLover;
+        public bool OtherIsLover;
+        public bool IsFrozen;
     }
 
     public sealed class SessionSnapshot

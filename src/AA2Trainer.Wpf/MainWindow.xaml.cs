@@ -167,5 +167,11 @@ namespace AA2Trainer.WpfPrototype
             logCollapsed = !logCollapsed;
             ApplyShellForTab();
         }
+
+        private void PlayAs_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.PlayAs(viewModel.SelectedSeat);
+        }
     }
 }

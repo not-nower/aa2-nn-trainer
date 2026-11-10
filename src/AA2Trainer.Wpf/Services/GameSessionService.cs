@@ -75,6 +75,20 @@ namespace AA2Trainer.WpfPrototype
         private int outfitWriteSeat = -1;
         private int[] outfitWriteOriginal;
         private int[] outfitWriteEdited;
+        private readonly object playerSwitchSync = new object();
+        private bool playerSwitchPending;
+        private int playerSwitchSeat = -1;
+        private readonly object rosterActionSync = new object();
+        private bool rosterActionPending;
+        private int rosterActionKind;
+        private int rosterActionSourceSeat = -1;
+        private int rosterActionTargetSeat = -1;
+        private int rosterActionFeeling;
+        private bool rosterActionFlag;
+        private readonly object relationshipFreezeSync = new object();
+        private readonly Dictionary<long, FrozenRelationship> relationshipFreezes =
+            new Dictionary<long, FrozenRelationship>();
+        private DateTime lastFreezeUtc = DateTime.MinValue;
         private int selectedGender;
         private int[] selectedFaceValues;
         private string[] selectedFaceTexts;
@@ -84,6 +98,14 @@ namespace AA2Trainer.WpfPrototype
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
             new Dictionary<int, string>();
+        private readonly Dictionary<int, bool> hasRelationships =
+            new Dictionary<int, bool>();
+        private readonly Dictionary<int, bool> isLovers =
+            new Dictionary<int, bool>();
+        private readonly Dictionary<int, bool> otherIsLovers =
+            new Dictionary<int, bool>();
+        private readonly Dictionary<int, bool> frozenRelationships =
+            new Dictionary<int, bool>();
         private DateTime lastContextUtc = DateTime.MinValue;
         private DateTime lastHealthUtc = DateTime.MinValue;
         private DateTime lastAttachUtc = DateTime.MinValue;
@@ -111,6 +133,8 @@ namespace AA2Trainer.WpfPrototype
         public event Action<FaceWriteResult> FaceWriteCompleted;
         public event Action<HairWriteResult> HairWriteCompleted;
         public event Action<OutfitWriteResult> OutfitWriteCompleted;
+        public event Action<PlayerSwitchResult> PlayerSwitchCompleted;
+        public event Action<RosterActionResult> RosterActionCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -266,6 +290,59 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestPlayerSwitch(int seat)
+        {
+            if (disposed || !mem.IsAttached || seat < 0 || seat > 24)
+                return false;
+
+            lock (playerSwitchSync)
+            {
+                if (playerSwitchPending) return false;
+                playerSwitchSeat = seat;
+                playerSwitchPending = true;
+                return true;
+            }
+        }
+
+        public bool RequestRelationshipFeeling(int sourceSeat, int targetSeat,
+            int feeling)
+        {
+            return QueueRosterAction(0, sourceSeat, targetSeat, feeling, false);
+        }
+
+        public bool RequestLover(int sourceSeat, int targetSeat, bool lovers)
+        {
+            return QueueRosterAction(1, sourceSeat, targetSeat, 0, lovers);
+        }
+
+        public bool RequestRelationshipFreeze(int sourceSeat, int targetSeat,
+            bool frozen)
+        {
+            return QueueRosterAction(2, sourceSeat, targetSeat, 0, frozen);
+        }
+
+        private bool QueueRosterAction(int kind, int sourceSeat, int targetSeat,
+            int feeling, bool flag)
+        {
+            if (disposed || !mem.IsAttached ||
+                sourceSeat < 0 || sourceSeat > 24 ||
+                targetSeat < 0 || targetSeat > 24 ||
+                sourceSeat == targetSeat)
+                return false;
+
+            lock (rosterActionSync)
+            {
+                if (rosterActionPending) return false;
+                rosterActionKind = kind;
+                rosterActionSourceSeat = sourceSeat;
+                rosterActionTargetSeat = targetSeat;
+                rosterActionFeeling = feeling;
+                rosterActionFlag = flag;
+                rosterActionPending = true;
+                return true;
+            }
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -286,6 +363,8 @@ namespace AA2Trainer.WpfPrototype
             FaceWriteCompleted = null;
             HairWriteCompleted = null;
             OutfitWriteCompleted = null;
+            PlayerSwitchCompleted = null;
+            RosterActionCompleted = null;
         }
 
         private void Poll(object state)
@@ -362,6 +441,9 @@ namespace AA2Trainer.WpfPrototype
             CancelPendingFaceWrite("Detached.");
             CancelPendingHairWrite("Detached.");
             CancelPendingOutfitWrite("Detached.");
+            CancelPendingPlayerSwitch("Detached.");
+            CancelPendingRosterAction("Detached.");
+            lock (relationshipFreezeSync) relationshipFreezes.Clear();
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
@@ -386,6 +468,9 @@ namespace AA2Trainer.WpfPrototype
             ProcessFaceWrite();
             ProcessHairWrite();
             ProcessOutfitWrite();
+            ProcessPlayerSwitch();
+            ProcessRosterAction();
+            RestoreRelationshipFreezes();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
@@ -535,7 +620,14 @@ namespace AA2Trainer.WpfPrototype
                     Status = StatusLabel(liveState),
                     Relationship = relationship,
                     HeaderRelationship = headerRelationship,
-                    IsBusy = liveState != null && liveState.IsBusy
+                    IsBusy = liveState != null && liveState.IsBusy,
+                    HasRelationship = hasRelationships.ContainsKey(seat) &&
+                        hasRelationships[seat],
+                    IsLover = isLovers.ContainsKey(seat) && isLovers[seat],
+                    OtherIsLover = otherIsLovers.ContainsKey(seat) &&
+                        otherIsLovers[seat],
+                    IsFrozen = frozenRelationships.ContainsKey(seat) &&
+                        frozenRelationships[seat]
                 });
             }
 
@@ -546,6 +638,10 @@ namespace AA2Trainer.WpfPrototype
         {
             relationships.Clear();
             headerRelationships.Clear();
+            hasRelationships.Clear();
+            isLovers.Clear();
+            otherIsLovers.Clear();
+            frozenRelationships.Clear();
 
             CharacterInfo selected = ctx.Selected;
             CharacterInfo player = ctx.Characters.FirstOrDefault(
@@ -560,7 +656,17 @@ namespace AA2Trainer.WpfPrototype
                 {
                     relationships[seat] = "";
                     headerRelationships[seat] = "";
+                    hasRelationships[seat] = false;
+                    isLovers[seat] = false;
+                    otherIsLovers[seat] = false;
+                    frozenRelationships[seat] = false;
                     continue;
+                }
+
+                RelationshipSnapshot relation = null;
+                if (selected != null && info.Seat != selected.Seat)
+                {
+                    relation = RelationshipReader.Read(mem, info, selected.Seat);
                 }
 
                 if (selected != null && info.Seat == selected.Seat)
@@ -569,10 +675,18 @@ namespace AA2Trainer.WpfPrototype
                 }
                 else
                 {
-                    RelationshipSnapshot relation = selected == null ? null :
-                        RelationshipReader.Read(mem, info, selected.Seat);
                     relationships[seat] = RelationLabel(relation);
                 }
+
+                hasRelationships[seat] = relation != null;
+                isLovers[seat] = relation != null && relation.IsLover;
+                otherIsLovers[seat] = selected != null &&
+                    info.Seat != selected.Seat &&
+                    mem.ReadU8(selected.Pointer + LoverEditor.LoverOffset +
+                        (uint)info.Seat).GetValueOrDefault() != 0;
+                frozenRelationships[seat] = selected != null &&
+                    info.Seat != selected.Seat &&
+                    IsRelationshipFrozen(info.Pointer, selected.Seat);
 
                 if (info.IsPlayer)
                 {
@@ -580,10 +694,10 @@ namespace AA2Trainer.WpfPrototype
                 }
                 else
                 {
-                    RelationshipSnapshot relation = player == null ||
+                    RelationshipSnapshot headerRelation = player == null ||
                         player.Seat == info.Seat ? null :
                         RelationshipReader.Read(mem, player, info.Seat);
-                    headerRelationships[seat] = HeaderRelationLabel(relation);
+                    headerRelationships[seat] = HeaderRelationLabel(headerRelation);
                 }
             }
         }
@@ -1651,6 +1765,373 @@ namespace AA2Trainer.WpfPrototype
                 Action<OutfitWriteResult> handler = OutfitWriteCompleted;
                 if (handler != null) handler(result);
             }));
+        }
+
+        private CharacterInfo FindCharacterBySeat(int seat)
+        {
+            return ctx.Characters.FirstOrDefault(
+                c => c != null && c.Seat == seat);
+        }
+
+        private void ProcessPlayerSwitch()
+        {
+            int seat;
+            lock (playerSwitchSync)
+            {
+                if (!playerSwitchPending) return;
+                seat = playerSwitchSeat;
+                playerSwitchPending = false;
+                playerSwitchSeat = -1;
+            }
+
+            PlayerSwitchResult result = new PlayerSwitchResult { Seat = seat };
+            try
+            {
+                CharacterInfo info = FindCharacterBySeat(seat);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        string error;
+                        if (PlayerSwitch.TrySetPlayer(mem, ctx, info, out error))
+                        {
+                            result.Success = true;
+                            result.Pointer = info.Pointer;
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "Player switch failed." : error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishPlayerSwitch(result);
+        }
+
+        private void CancelPendingPlayerSwitch(string error)
+        {
+            PlayerSwitchResult result;
+            lock (playerSwitchSync)
+            {
+                if (!playerSwitchPending) return;
+                playerSwitchPending = false;
+                result = new PlayerSwitchResult
+                {
+                    Seat = playerSwitchSeat,
+                    Error = error
+                };
+                playerSwitchSeat = -1;
+            }
+            PublishPlayerSwitch(result);
+        }
+
+        private void PublishPlayerSwitch(PlayerSwitchResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<PlayerSwitchResult> handler = PlayerSwitchCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void ProcessRosterAction()
+        {
+            int kind;
+            int sourceSeat;
+            int targetSeat;
+            int feeling;
+            bool flag;
+
+            lock (rosterActionSync)
+            {
+                if (!rosterActionPending) return;
+                kind = rosterActionKind;
+                sourceSeat = rosterActionSourceSeat;
+                targetSeat = rosterActionTargetSeat;
+                feeling = rosterActionFeeling;
+                flag = rosterActionFlag;
+                rosterActionPending = false;
+                rosterActionSourceSeat = -1;
+                rosterActionTargetSeat = -1;
+            }
+
+            RosterActionResult result = new RosterActionResult();
+            try
+            {
+                CharacterInfo source = FindCharacterBySeat(sourceSeat);
+                CharacterInfo target = FindCharacterBySeat(targetSeat);
+                if (source == null || target == null)
+                {
+                    result.Error = "The selected pair is no longer loaded.";
+                }
+                else if (source.Pointer == target.Pointer)
+                {
+                    result.Error = "A character cannot target themselves.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        string error;
+                        bool ok;
+                        if (kind == 0)
+                        {
+                            ok = ApplyFeeling(source, target, feeling,
+                                out error);
+                            result.Message = "Set " + source.Name + "'s " +
+                                FeelingName(feeling) + " toward " +
+                                target.Name + " to 30.";
+                        }
+                        else if (kind == 1)
+                        {
+                            ok = LoverEditor.TryWriteMutualLovers(mem,
+                                source, target, flag, out error);
+                            result.Message = flag
+                                ? "Made " + source.Name + " and " +
+                                    target.Name + " lovers."
+                                : "Broke up " + source.Name + " and " +
+                                    target.Name + ".";
+                        }
+                        else
+                        {
+                            ok = ApplyFreeze(source, target, flag, out error);
+                            result.Message = flag
+                                ? "Froze " + source.Name + " toward " +
+                                    target.Name + "."
+                                : "Unfroze " + source.Name + " toward " +
+                                    target.Name + ".";
+                        }
+
+                        if (ok)
+                        {
+                            result.Success = true;
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "The action failed." : error;
+                            result.Message = "";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishRosterAction(result);
+        }
+
+        private void CancelPendingRosterAction(string error)
+        {
+            RosterActionResult result;
+            lock (rosterActionSync)
+            {
+                if (!rosterActionPending) return;
+                rosterActionPending = false;
+                result = new RosterActionResult { Error = error };
+                rosterActionSourceSeat = -1;
+                rosterActionTargetSeat = -1;
+            }
+            PublishRosterAction(result);
+        }
+
+        private void PublishRosterAction(RosterActionResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<RosterActionResult> handler = RosterActionCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private bool ApplyFeeling(CharacterInfo source, CharacterInfo target,
+            int feeling, out string error)
+        {
+            error = null;
+            RelationshipRecord record = RelationshipEditor.FindRecord(mem,
+                source.Pointer, target.Seat);
+            if (record == null)
+            {
+                error = "No relationship record exists for this pair.";
+                return false;
+            }
+
+            int[] counts = new int[4];
+            int[] points = new int[4];
+            int[] levels = new int[4];
+            for (int f = 0; f < 4; f++) levels[f] = 2;
+            counts[feeling] = 30;
+            levels[feeling] = 0;
+
+            int latest = record.HistoryCount > 0 ? feeling : -1;
+            bool writeLatest = record.HistoryCount > 0;
+            return RelationshipEditor.TryWrite(mem, record, counts, points,
+                levels, latest, writeLatest, out error);
+        }
+
+        private bool ApplyFreeze(CharacterInfo source, CharacterInfo target,
+            bool frozen, out string error)
+        {
+            error = null;
+            long key = FreezeKey(source.Pointer, target.Seat);
+            if (!frozen)
+            {
+                lock (relationshipFreezeSync) relationshipFreezes.Remove(key);
+                return true;
+            }
+
+            RelationshipRecord record = RelationshipEditor.FindRecord(mem,
+                source.Pointer, target.Seat);
+            if (record == null)
+            {
+                error = "No relationship record exists for this pair.";
+                return false;
+            }
+            lock (relationshipFreezeSync)
+            {
+                relationshipFreezes[key] = new FrozenRelationship(record);
+            }
+            return true;
+        }
+
+        private void RestoreRelationshipFreezes()
+        {
+            int count;
+            lock (relationshipFreezeSync) count = relationshipFreezes.Count;
+            if (count == 0) return;
+
+            DateTime now = DateTime.UtcNow;
+            if ((now - lastFreezeUtc).TotalMilliseconds < 100) return;
+            lastFreezeUtc = now;
+
+            List<KeyValuePair<long, FrozenRelationship>> snapshot;
+            lock (relationshipFreezeSync)
+            {
+                snapshot = new List<KeyValuePair<long, FrozenRelationship>>(
+                    relationshipFreezes);
+            }
+
+            List<long> stale = null;
+            foreach (KeyValuePair<long, FrozenRelationship> pair in snapshot)
+            {
+                FrozenRelationship frozen = pair.Value;
+                RelationshipRecord record = RelationshipEditor.FindRecord(mem,
+                    frozen.SourcePointer, frozen.TargetSeat);
+                if (record == null)
+                {
+                    if (stale == null) stale = new List<long>();
+                    stale.Add(pair.Key);
+                    continue;
+                }
+                if (SameRelationship(record, frozen)) continue;
+
+                string error;
+                RelationshipEditor.TryWrite(mem, record, frozen.Counts,
+                    frozen.Points, frozen.Levels, frozen.Latest,
+                    frozen.Latest >= 0, out error);
+            }
+
+            if (stale != null)
+            {
+                lock (relationshipFreezeSync)
+                {
+                    foreach (long key in stale) relationshipFreezes.Remove(key);
+                }
+            }
+        }
+
+        private sealed class FrozenRelationship
+        {
+            public uint SourcePointer;
+            public int TargetSeat;
+            public int[] Counts;
+            public int[] Points;
+            public int[] Levels;
+            public int Latest;
+
+            public FrozenRelationship(RelationshipRecord record)
+            {
+                SourcePointer = record.Source == null ? 0 : record.Source.Pointer;
+                TargetSeat = record.TargetSeat;
+                Counts = new int[4];
+                Points = new int[4];
+                Levels = new int[4];
+                Array.Copy(record.Counts, Counts, 4);
+                Array.Copy(record.Points, Points, 4);
+                Array.Copy(record.Levels, Levels, 4);
+                Latest = record.Latest;
+            }
+        }
+
+        private static long FreezeKey(uint pointer, int seat)
+        {
+            return ((long)pointer << 8) | (uint)seat;
+        }
+
+        private bool IsRelationshipFrozen(uint sourcePointer, int targetSeat)
+        {
+            lock (relationshipFreezeSync)
+            {
+                return relationshipFreezes.ContainsKey(
+                    FreezeKey(sourcePointer, targetSeat));
+            }
+        }
+
+        private static bool SameRelationship(RelationshipRecord record,
+            FrozenRelationship frozen)
+        {
+            if (record == null || frozen == null) return false;
+            for (int i = 0; i < 4; i++)
+            {
+                if (record.Counts[i] != frozen.Counts[i]) return false;
+                if (record.Points[i] != frozen.Points[i]) return false;
+                if (record.Levels[i] != frozen.Levels[i]) return false;
+            }
+            return record.Latest == frozen.Latest;
+        }
+
+        private static string FeelingName(int feeling)
+        {
+            switch (feeling)
+            {
+                case 0: return "Love";
+                case 1: return "Like";
+                case 2: return "Dislike";
+                case 3: return "Hate";
+                default: return "feeling";
+            }
         }
 
         private void PublishAttachedNoClass()

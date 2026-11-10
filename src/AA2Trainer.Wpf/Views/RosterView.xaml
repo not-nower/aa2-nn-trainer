@@ -49,6 +49,53 @@
                             Padding="6"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch">
+                        <Border.ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                <MenuItem Header="Play this character"
+                                          Click="PlayAs_Click">
+                                    <MenuItem.Style>
+                                        <Style TargetType="MenuItem">
+                                            <Setter Property="IsEnabled" Value="True" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsPc}" Value="True">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HasName}" Value="False">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </MenuItem.Style>
+                                </MenuItem>
+                                <MenuItem Header="Open in Character"
+                                          Click="OpenInCharacter_Click" />
+                                <Separator />
+                                <MenuItem Header="Set Lover"
+                                          Click="SetLover_Click"
+                                          IsEnabled="{Binding HasRelationship}" />
+                                <MenuItem Header="Break Up"
+                                          Click="BreakUp_Click"
+                                          IsEnabled="{Binding HasRelationship}" />
+                                <Separator />
+                                <MenuItem Header="Set Love"
+                                          Click="SetLove_Click"
+                                          IsEnabled="{Binding HasRelationship}" />
+                                <MenuItem Header="Set Like"
+                                          Click="SetLike_Click"
+                                          IsEnabled="{Binding HasRelationship}" />
+                                <MenuItem Header="Set Dislike"
+                                          Click="SetDislike_Click"
+                                          IsEnabled="{Binding HasRelationship}" />
+                                <MenuItem Header="Set Hate"
+                                          Click="SetHate_Click"
+                                          IsEnabled="{Binding HasRelationship}" />
+                                <MenuItem Header="Freeze Relationship"
+                                          Click="ToggleFreeze_Click"
+                                          IsCheckable="True"
+                                          IsChecked="{Binding IsFrozen, Mode=OneWay}"
+                                          IsEnabled="{Binding HasRelationship}" />
+                            </ContextMenu>
+                        </Border.ContextMenu>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="68" />

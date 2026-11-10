@@ -378,14 +378,33 @@
                                            FontSize="10"
                                            Foreground="{DynamicResource TextMuted}" />
                             </Border>
-                            <Button Content="Play as" Style="{StaticResource ToolbarButton}"
-                                    IsEnabled="False" ToolTip="Wired in M2" />
+                            <Button Content="Play as"
+                                    Click="PlayAs_Click"
+                                    ToolTip="Make the selected character the player">
+                                <Button.Style>
+                                    <Style TargetType="Button"
+                                           BasedOn="{StaticResource ToolbarButton}">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedSeat.IsPc}"
+                                                         Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedSeat.HasName}"
+                                                         Value="False">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </StackPanel>
                     </Grid>
                 </Border>
 
                 <!-- Main tabs -->
-                <TabControl x:Name="MainTabs" Grid.Row="1" SelectedIndex="0"
+                <TabControl x:Name="MainTabs" Grid.Row="1"
+                            SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
                             SelectionChanged="MainTabs_SelectionChanged">
                     <TabItem>
                         <TabItem.Header>
@@ -526,6 +545,8 @@
                     <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource CaptionText}" />
                     <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
                     <TextBlock Text="{Binding CardStatus}" Style="{StaticResource CaptionText}" />
+                    <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
+                    <TextBlock Text="{Binding RosterStatus}" Style="{StaticResource CaptionText}" />
                 </StackPanel>
             </DockPanel>
         </Border>

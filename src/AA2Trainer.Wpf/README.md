@@ -58,6 +58,9 @@ dotnet build -c Release
   header and log drawer stay hidden so the cards keep the height. Expand the
   rail from its top button when needed. Cards reserve a 68×80 portrait area with
   a seat badge overlay and no reflow on resize.
+- **Roster menu:** right-click a card for Play this character, Open in Character,
+  Set Lover/Break Up, Set Love/Like/Dislike/Hate, and Freeze Relationship. The
+  header Play as button uses the same queued player-switch path.
 - **Teacher badge:** seat 24 carries a small `Teacher` pill (muted while the seat
   is empty) in the roster card.
 - Empty seats are not selectable; arrow keys move by classroom position rather

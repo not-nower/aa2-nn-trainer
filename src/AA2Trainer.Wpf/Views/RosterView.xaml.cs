@@ -48,5 +48,66 @@ namespace AA2Trainer.WpfPrototype.Views
 
             RosterList.SelectedItem = target;
         }
+
+        private static SeatItem SeatFrom(object sender)
+        {
+            FrameworkElement element = sender as FrameworkElement;
+            return element == null ? null : element.DataContext as SeatItem;
+        }
+
+        private void PlayAs_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.PlayAs(SeatFrom(sender));
+        }
+
+        private void OpenInCharacter_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.OpenInCharacter(SeatFrom(sender));
+        }
+
+        private void SetLover_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.SetLover(SeatFrom(sender), true);
+        }
+
+        private void BreakUp_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.SetLover(SeatFrom(sender), false);
+        }
+
+        private void SetLove_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.SetRelationship(SeatFrom(sender), 0);
+        }
+
+        private void SetLike_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.SetRelationship(SeatFrom(sender), 1);
+        }
+
+        private void SetDislike_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.SetRelationship(SeatFrom(sender), 2);
+        }
+
+        private void SetHate_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.SetRelationship(SeatFrom(sender), 3);
+        }
+
+        private void ToggleFreeze_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null)
+                viewModel.ToggleRelationshipFreeze(SeatFrom(sender));
+        }
     }
 }

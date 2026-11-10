@@ -61,9 +61,11 @@ namespace AA2Trainer.WpfPrototype
         private string updatedText = "Updated -";
         private string writeGate = "Write gate: read-only";
         private string cardStatus = "Cards: not loaded";
+        private string rosterStatus = "";
         private string rosterSignature = "";
         private string rosterFilter = "";
         private int seatFilterIndex;
+        private int selectedTabIndex;
 
         public MainViewModel()
         {
@@ -90,6 +92,8 @@ namespace AA2Trainer.WpfPrototype
             session.FaceWriteCompleted += OnFaceWriteCompleted;
             session.HairWriteCompleted += OnHairWriteCompleted;
             session.OutfitWriteCompleted += OnOutfitWriteCompleted;
+            session.PlayerSwitchCompleted += OnPlayerSwitchCompleted;
+            session.RosterActionCompleted += OnRosterActionCompleted;
             LoadCardsAsync();
         }
 
@@ -520,6 +524,18 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref cardStatus, value); }
         }
 
+        public string RosterStatus
+        {
+            get { return rosterStatus; }
+            private set { Set(ref rosterStatus, value); }
+        }
+
+        public int SelectedTabIndex
+        {
+            get { return selectedTabIndex; }
+            set { Set(ref selectedTabIndex, value); }
+        }
+
         public string HookState { get { return "Hook: not installed"; } }
         public string PlanStatus { get { return "Plan: not running  |  no steps"; } }
 
@@ -535,6 +551,89 @@ namespace AA2Trainer.WpfPrototype
                 session.RequestDetach();
             else
                 session.RequestAttach();
+        }
+
+        public void PlayAs(SeatItem seat)
+        {
+            if (seat == null || session == null || seat.SeatIndex < 0) return;
+            if (seat.IsPc)
+            {
+                RosterStatus = seat.Name + " is already the player character.";
+                return;
+            }
+            if (!session.RequestPlayerSwitch(seat.SeatIndex))
+                RosterStatus = "Player switch was not accepted.";
+            else
+                RosterStatus = "Switching player...";
+        }
+
+        public void OpenInCharacter(SeatItem seat)
+        {
+            if (seat == null) return;
+            SelectedSeat = seat;
+            SelectedTabIndex = 1;
+        }
+
+        public void SetRelationship(SeatItem source, int feeling)
+        {
+            if (source == null || SelectedSeat == null || session == null)
+                return;
+            if (!session.RequestRelationshipFeeling(source.SeatIndex,
+                SelectedSeat.SeatIndex, feeling))
+                RosterStatus = "Relationship change was not accepted.";
+            else
+                RosterStatus = "Updating relationship...";
+        }
+
+        public void SetLover(SeatItem source, bool lovers)
+        {
+            if (source == null || SelectedSeat == null || session == null)
+                return;
+            if (!session.RequestLover(source.SeatIndex,
+                SelectedSeat.SeatIndex, lovers))
+                RosterStatus = "Lover change was not accepted.";
+            else
+                RosterStatus = lovers ? "Setting lovers..." : "Breaking up...";
+        }
+
+        public void ToggleRelationshipFreeze(SeatItem source)
+        {
+            if (source == null || SelectedSeat == null || session == null)
+                return;
+            bool frozen = !source.IsFrozen;
+            if (!session.RequestRelationshipFreeze(source.SeatIndex,
+                SelectedSeat.SeatIndex, frozen))
+                RosterStatus = "Freeze change was not accepted.";
+            else
+                RosterStatus = frozen
+                    ? "Freezing relationship..." : "Unfreezing relationship...";
+        }
+
+        private void OnPlayerSwitchCompleted(PlayerSwitchResult result)
+        {
+            if (result == null) return;
+            if (result.Success)
+            {
+                string name = result.Seat >= 0 && result.Seat < Seats.Count
+                    ? Seats[result.Seat].Name : "character";
+                RosterStatus = "Now playing: " + name;
+            }
+            else
+            {
+                RosterStatus = "Player switch failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void OnRosterActionCompleted(RosterActionResult result)
+        {
+            if (result == null) return;
+            RosterStatus = result.Success
+                ? result.Message
+                : "Action failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
         }
 
         public void ApplyCharacterEdits()
@@ -952,6 +1051,8 @@ namespace AA2Trainer.WpfPrototype
             session.FaceWriteCompleted -= OnFaceWriteCompleted;
             session.HairWriteCompleted -= OnHairWriteCompleted;
             session.OutfitWriteCompleted -= OnOutfitWriteCompleted;
+            session.PlayerSwitchCompleted -= OnPlayerSwitchCompleted;
+            session.RosterActionCompleted -= OnRosterActionCompleted;
             session.Dispose();
         }
 
@@ -994,7 +1095,11 @@ namespace AA2Trainer.WpfPrototype
                         seatSnapshot.Status,
                         seatSnapshot.Relationship,
                         seatSnapshot.HeaderRelationship,
-                        seatSnapshot.IsPlayer);
+                        seatSnapshot.IsPlayer,
+                        seatSnapshot.HasRelationship,
+                        seatSnapshot.IsLover,
+                        seatSnapshot.OtherIsLover,
+                        seatSnapshot.IsFrozen);
                 }
 
                 ApplyRosterFilter();
