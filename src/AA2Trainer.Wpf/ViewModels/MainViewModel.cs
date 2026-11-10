@@ -26,18 +26,31 @@ namespace AA2Trainer.WpfPrototype
         private CharacterDraft characterDraft;
         private TraitDraft traitDraft;
         private BodyDraft bodyDraft;
+        private FieldDraft faceDraft;
+        private FieldDraft hairDraft;
+        private OutfitDraft outfitDraft;
         private CharacterOptions characterOptions;
         private CharacterSnapshot liveCharacter;
         private uint livePointer;
         private bool[] liveTraits;
         private int[,] liveRisk;
         private int[] liveBodyValues;
+        private int[] liveFaceValues;
+        private string[] liveFaceTexts;
+        private int[] liveHairValues;
+        private int[] liveOutfitValues;
         private string characterStatus = "No changes.";
         private string traitStatus = "No changes.";
         private string bodyStatus = "No changes.";
+        private string faceStatus = "No changes.";
+        private string hairStatus = "No changes.";
+        private string outfitStatus = "No changes.";
         private bool characterWriteBusy;
         private bool traitWriteBusy;
         private bool bodyWriteBusy;
+        private bool faceWriteBusy;
+        private bool hairWriteBusy;
+        private bool outfitWriteBusy;
         private bool railCollapsed;
         private bool applyingSnapshot;
         private bool isAttached;
@@ -74,6 +87,9 @@ namespace AA2Trainer.WpfPrototype
             session.CharacterWriteCompleted += OnCharacterWriteCompleted;
             session.TraitWriteCompleted += OnTraitWriteCompleted;
             session.BodyWriteCompleted += OnBodyWriteCompleted;
+            session.FaceWriteCompleted += OnFaceWriteCompleted;
+            session.HairWriteCompleted += OnHairWriteCompleted;
+            session.OutfitWriteCompleted += OnOutfitWriteCompleted;
             LoadCardsAsync();
         }
 
@@ -198,6 +214,162 @@ namespace AA2Trainer.WpfPrototype
             {
                 return bodyDraft != null && bodyDraft.IsDirty &&
                     !bodyWriteBusy;
+            }
+        }
+
+        public FieldDraft FaceDraft
+        {
+            get { return faceDraft; }
+            private set
+            {
+                if (faceDraft == value) return;
+                if (faceDraft != null)
+                    faceDraft.PropertyChanged -= FaceDraft_PropertyChanged;
+                faceDraft = value;
+                if (faceDraft != null)
+                    faceDraft.PropertyChanged += FaceDraft_PropertyChanged;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanApplyFace));
+                OnPropertyChanged(nameof(CanRevertFace));
+            }
+        }
+
+        public string FaceStatus
+        {
+            get { return faceStatus; }
+            private set { Set(ref faceStatus, value); }
+        }
+
+        public bool IsFaceWriteBusy
+        {
+            get { return faceWriteBusy; }
+            private set
+            {
+                if (!Set(ref faceWriteBusy, value)) return;
+                OnPropertyChanged(nameof(CanApplyFace));
+                OnPropertyChanged(nameof(CanRevertFace));
+            }
+        }
+
+        public bool CanApplyFace
+        {
+            get
+            {
+                return faceDraft != null && faceDraft.IsDirty &&
+                    !faceWriteBusy && isAttached;
+            }
+        }
+
+        public bool CanRevertFace
+        {
+            get
+            {
+                return faceDraft != null && faceDraft.IsDirty &&
+                    !faceWriteBusy;
+            }
+        }
+
+        public FieldDraft HairDraft
+        {
+            get { return hairDraft; }
+            private set
+            {
+                if (hairDraft == value) return;
+                if (hairDraft != null)
+                    hairDraft.PropertyChanged -= HairDraft_PropertyChanged;
+                hairDraft = value;
+                if (hairDraft != null)
+                    hairDraft.PropertyChanged += HairDraft_PropertyChanged;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanApplyHair));
+                OnPropertyChanged(nameof(CanRevertHair));
+            }
+        }
+
+        public string HairStatus
+        {
+            get { return hairStatus; }
+            private set { Set(ref hairStatus, value); }
+        }
+
+        public bool IsHairWriteBusy
+        {
+            get { return hairWriteBusy; }
+            private set
+            {
+                if (!Set(ref hairWriteBusy, value)) return;
+                OnPropertyChanged(nameof(CanApplyHair));
+                OnPropertyChanged(nameof(CanRevertHair));
+            }
+        }
+
+        public bool CanApplyHair
+        {
+            get
+            {
+                return hairDraft != null && hairDraft.IsDirty &&
+                    !hairWriteBusy && isAttached;
+            }
+        }
+
+        public bool CanRevertHair
+        {
+            get
+            {
+                return hairDraft != null && hairDraft.IsDirty &&
+                    !hairWriteBusy;
+            }
+        }
+
+        public OutfitDraft OutfitDraft
+        {
+            get { return outfitDraft; }
+            private set
+            {
+                if (outfitDraft == value) return;
+                if (outfitDraft != null)
+                    outfitDraft.PropertyChanged -= OutfitDraft_PropertyChanged;
+                outfitDraft = value;
+                if (outfitDraft != null)
+                    outfitDraft.PropertyChanged += OutfitDraft_PropertyChanged;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanApplyOutfit));
+                OnPropertyChanged(nameof(CanRevertOutfit));
+            }
+        }
+
+        public string OutfitStatus
+        {
+            get { return outfitStatus; }
+            private set { Set(ref outfitStatus, value); }
+        }
+
+        public bool IsOutfitWriteBusy
+        {
+            get { return outfitWriteBusy; }
+            private set
+            {
+                if (!Set(ref outfitWriteBusy, value)) return;
+                OnPropertyChanged(nameof(CanApplyOutfit));
+                OnPropertyChanged(nameof(CanRevertOutfit));
+            }
+        }
+
+        public bool CanApplyOutfit
+        {
+            get
+            {
+                return outfitDraft != null && outfitDraft.IsDirty &&
+                    !outfitWriteBusy && isAttached;
+            }
+        }
+
+        public bool CanRevertOutfit
+        {
+            get
+            {
+                return outfitDraft != null && outfitDraft.IsDirty &&
+                    !outfitWriteBusy;
             }
         }
 
@@ -426,6 +598,7 @@ namespace AA2Trainer.WpfPrototype
 
             OnPropertyChanged(nameof(CanApply));
             OnPropertyChanged(nameof(CanRevert));
+            if (applyingSnapshot) return;
             if (characterWriteBusy) return;
             if (CharacterDraft != null && CharacterDraft.IsDirty)
                 CharacterStatus = "Unsaved changes.";
@@ -493,6 +666,7 @@ namespace AA2Trainer.WpfPrototype
 
             OnPropertyChanged(nameof(CanApplyTraits));
             OnPropertyChanged(nameof(CanRevertTraits));
+            if (applyingSnapshot) return;
             if (traitWriteBusy) return;
             if (TraitDraft != null && TraitDraft.IsDirty)
                 TraitStatus = "Unsaved changes.";
@@ -557,11 +731,214 @@ namespace AA2Trainer.WpfPrototype
 
             OnPropertyChanged(nameof(CanApplyBody));
             OnPropertyChanged(nameof(CanRevertBody));
+            if (applyingSnapshot) return;
             if (bodyWriteBusy) return;
             if (BodyDraft != null && BodyDraft.IsDirty)
                 BodyStatus = "Unsaved changes.";
             else
                 BodyStatus = "No changes.";
+        }
+
+        public void ApplyFaceEdits()
+        {
+            if (session == null || FaceDraft == null ||
+                !FaceDraft.IsDirty || faceWriteBusy)
+                return;
+
+            IsFaceWriteBusy = true;
+            FaceStatus = "Writing...";
+
+            bool queued = session.RequestFaceWrite(
+                FaceDraft.Pointer, FaceDraft.SeatIndex,
+                FaceDraft.OriginalValues, FaceDraft.ToValues(),
+                FaceDraft.OriginalTexts, FaceDraft.ToTexts());
+            if (!queued)
+            {
+                IsFaceWriteBusy = false;
+                FaceStatus = "Write request was not accepted.";
+            }
+        }
+
+        public void RevertFaceEdits()
+        {
+            if (FaceDraft == null || liveFaceValues == null) return;
+            FaceDraft.Load(liveFaceValues, liveFaceTexts, livePointer,
+                FaceDraft.SeatIndex);
+            FaceStatus = "Reverted to live values.";
+        }
+
+        private void OnFaceWriteCompleted(FaceWriteResult result)
+        {
+            IsFaceWriteBusy = false;
+            if (result == null) return;
+
+            if (result.Success)
+            {
+                if (FaceDraft != null && FaceDraft.Pointer == result.Pointer)
+                    FaceDraft.MarkSaved();
+                FaceStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Saved: " + result.Changed;
+            }
+            else
+            {
+                FaceStatus = "Write failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void FaceDraft_PropertyChanged(object sender,
+            System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(FieldDraft.IsDirty))
+                return;
+
+            OnPropertyChanged(nameof(CanApplyFace));
+            OnPropertyChanged(nameof(CanRevertFace));
+            if (applyingSnapshot) return;
+            if (faceWriteBusy) return;
+            if (FaceDraft != null && FaceDraft.IsDirty)
+                FaceStatus = "Unsaved changes.";
+            else
+                FaceStatus = "No changes.";
+        }
+
+        public void ApplyHairEdits()
+        {
+            if (session == null || HairDraft == null ||
+                !HairDraft.IsDirty || hairWriteBusy)
+                return;
+
+            IsHairWriteBusy = true;
+            HairStatus = "Writing...";
+
+            bool queued = session.RequestHairWrite(
+                HairDraft.Pointer, HairDraft.SeatIndex,
+                HairDraft.OriginalValues, HairDraft.ToValues());
+            if (!queued)
+            {
+                IsHairWriteBusy = false;
+                HairStatus = "Write request was not accepted.";
+            }
+        }
+
+        public void RevertHairEdits()
+        {
+            if (HairDraft == null || liveHairValues == null) return;
+            HairDraft.Load(liveHairValues, null, livePointer,
+                HairDraft.SeatIndex);
+            HairStatus = "Reverted to live values.";
+        }
+
+        private void OnHairWriteCompleted(HairWriteResult result)
+        {
+            IsHairWriteBusy = false;
+            if (result == null) return;
+
+            if (result.Success)
+            {
+                if (HairDraft != null && HairDraft.Pointer == result.Pointer)
+                    HairDraft.MarkSaved();
+                HairStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Saved: " + result.Changed;
+            }
+            else
+            {
+                HairStatus = "Write failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void HairDraft_PropertyChanged(object sender,
+            System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(FieldDraft.IsDirty))
+                return;
+
+            OnPropertyChanged(nameof(CanApplyHair));
+            OnPropertyChanged(nameof(CanRevertHair));
+            if (applyingSnapshot) return;
+            if (hairWriteBusy) return;
+            if (HairDraft != null && HairDraft.IsDirty)
+                HairStatus = "Unsaved changes.";
+            else
+                HairStatus = "No changes.";
+        }
+
+        public void ApplyOutfitEdits()
+        {
+            if (session == null || OutfitDraft == null ||
+                !OutfitDraft.IsDirty || outfitWriteBusy)
+                return;
+
+            IsOutfitWriteBusy = true;
+            OutfitStatus = "Writing...";
+
+            bool queued = session.RequestOutfitWrite(
+                OutfitDraft.Pointer, OutfitDraft.SeatIndex,
+                OutfitDraft.OriginalValues, OutfitDraft.ToValues());
+            if (!queued)
+            {
+                IsOutfitWriteBusy = false;
+                OutfitStatus = "Write request was not accepted.";
+            }
+        }
+
+        public void RevertOutfitEdits()
+        {
+            if (OutfitDraft == null || liveOutfitValues == null) return;
+            OutfitDraft.Load(liveOutfitValues, livePointer,
+                OutfitDraft.SeatIndex);
+            OutfitStatus = "Reverted to live values.";
+        }
+
+        private void OnOutfitWriteCompleted(OutfitWriteResult result)
+        {
+            IsOutfitWriteBusy = false;
+            if (result == null) return;
+
+            if (result.Success)
+            {
+                if (OutfitDraft != null &&
+                    OutfitDraft.Pointer == result.Pointer)
+                {
+                    OutfitDraft.MarkSaved();
+                }
+                OutfitStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Saved: " + result.Changed;
+            }
+            else
+            {
+                OutfitStatus = "Write failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void OutfitDraft_PropertyChanged(object sender,
+            System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(OutfitDraft.IsDirty))
+                return;
+
+            OnPropertyChanged(nameof(CanApplyOutfit));
+            OnPropertyChanged(nameof(CanRevertOutfit));
+            if (applyingSnapshot) return;
+            if (outfitWriteBusy) return;
+            if (OutfitDraft != null && OutfitDraft.IsDirty)
+                OutfitStatus = "Unsaved changes.";
+            else
+                OutfitStatus = "No changes.";
         }
 
         public void Dispose()
@@ -572,6 +949,9 @@ namespace AA2Trainer.WpfPrototype
             session.CharacterWriteCompleted -= OnCharacterWriteCompleted;
             session.TraitWriteCompleted -= OnTraitWriteCompleted;
             session.BodyWriteCompleted -= OnBodyWriteCompleted;
+            session.FaceWriteCompleted -= OnFaceWriteCompleted;
+            session.HairWriteCompleted -= OnHairWriteCompleted;
+            session.OutfitWriteCompleted -= OnOutfitWriteCompleted;
             session.Dispose();
         }
 
@@ -594,6 +974,9 @@ namespace AA2Trainer.WpfPrototype
                 UpdateCharacterDraft(snapshot);
                 UpdateTraitDraft(snapshot);
                 UpdateBodyDraft(snapshot);
+                UpdateFaceDraft(snapshot);
+                UpdateHairDraft(snapshot);
+                UpdateOutfitDraft(snapshot);
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -733,6 +1116,122 @@ namespace AA2Trainer.WpfPrototype
                 BodyDraft.Load(snapshot.BodyValues, snapshot.SelectedPointer,
                     snapshot.SelectedSeat);
             }
+        }
+
+        private void UpdateFaceDraft(SessionSnapshot snapshot)
+        {
+            if (snapshot.SelectedPointer == 0 || snapshot.FaceValues == null)
+            {
+                liveFaceValues = null;
+                liveFaceTexts = null;
+                FaceDraft = null;
+                FaceStatus = "No character selected.";
+                return;
+            }
+
+            bool rawChanged =
+                !ReferenceEquals(liveFaceValues, snapshot.FaceValues) ||
+                !ReferenceEquals(liveFaceTexts, snapshot.FaceTexts);
+            bool sameCharacter = FaceDraft != null &&
+                FaceDraft.Pointer == snapshot.SelectedPointer;
+
+            liveFaceValues = snapshot.FaceValues;
+            liveFaceTexts = snapshot.FaceTexts;
+
+            if (!sameCharacter)
+            {
+                FieldDraft draft = new FieldDraft(AppearanceFields.Face(),
+                    FaceChoice);
+                draft.Load(snapshot.FaceValues, snapshot.FaceTexts,
+                    snapshot.SelectedPointer, snapshot.SelectedSeat);
+                FaceDraft = draft;
+                FaceStatus = "No changes.";
+            }
+            else if (!FaceDraft.IsDirty && rawChanged)
+            {
+                FaceDraft.Load(snapshot.FaceValues, snapshot.FaceTexts,
+                    snapshot.SelectedPointer, snapshot.SelectedSeat);
+            }
+        }
+
+        private void UpdateHairDraft(SessionSnapshot snapshot)
+        {
+            if (snapshot.SelectedPointer == 0 || snapshot.HairValues == null)
+            {
+                liveHairValues = null;
+                HairDraft = null;
+                HairStatus = "No character selected.";
+                return;
+            }
+
+            bool rawChanged = !ReferenceEquals(liveHairValues, snapshot.HairValues);
+            bool sameCharacter = HairDraft != null &&
+                HairDraft.Pointer == snapshot.SelectedPointer;
+
+            liveHairValues = snapshot.HairValues;
+
+            if (!sameCharacter)
+            {
+                FieldDraft draft = new FieldDraft(AppearanceFields.Hair(),
+                    HairChoice);
+                draft.Load(snapshot.HairValues, null,
+                    snapshot.SelectedPointer, snapshot.SelectedSeat);
+                HairDraft = draft;
+                HairStatus = "No changes.";
+            }
+            else if (!HairDraft.IsDirty && rawChanged)
+            {
+                HairDraft.Load(snapshot.HairValues, null,
+                    snapshot.SelectedPointer, snapshot.SelectedSeat);
+            }
+        }
+
+        private void UpdateOutfitDraft(SessionSnapshot snapshot)
+        {
+            if (snapshot.SelectedPointer == 0 || snapshot.OutfitValues == null)
+            {
+                liveOutfitValues = null;
+                OutfitDraft = null;
+                OutfitStatus = "No character selected.";
+                return;
+            }
+
+            bool rawChanged =
+                !ReferenceEquals(liveOutfitValues, snapshot.OutfitValues);
+            bool sameCharacter = OutfitDraft != null &&
+                OutfitDraft.Pointer == snapshot.SelectedPointer;
+
+            liveOutfitValues = snapshot.OutfitValues;
+
+            if (!sameCharacter)
+            {
+                OutfitDraft draft = new OutfitDraft(CharacterOptions);
+                draft.Load(snapshot.OutfitValues, snapshot.SelectedPointer,
+                    snapshot.SelectedSeat);
+                OutfitDraft = draft;
+                OutfitStatus = "No changes.";
+            }
+            else if (!OutfitDraft.IsDirty && rawChanged)
+            {
+                OutfitDraft.Load(snapshot.OutfitValues,
+                    snapshot.SelectedPointer, snapshot.SelectedSeat);
+            }
+        }
+
+        private List<CharacterOption> FaceChoice(string name)
+        {
+            List<CharacterOption> list;
+            return CharacterOptions != null &&
+                CharacterOptions.FaceChoices.TryGetValue(name, out list)
+                ? list : null;
+        }
+
+        private List<CharacterOption> HairChoice(string name)
+        {
+            List<CharacterOption> list;
+            return CharacterOptions != null &&
+                CharacterOptions.HairChoices.TryGetValue(name, out list)
+                ? list : null;
         }
 
         private void ApplyRosterFilter()

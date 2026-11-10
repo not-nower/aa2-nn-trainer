@@ -2,6 +2,113 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:AA2Trainer.WpfPrototype.Controls">
+    <UserControl.Resources>
+        <DataTemplate x:Key="FieldGroupTemplate">
+            <StackPanel Margin="0,0,0,10">
+                <TextBlock Text="{Binding Title}"
+                           Style="{StaticResource SectionHeader}"
+                           Margin="0,0,0,6" />
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2,8,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Label}"
+                                           Style="{StaticResource CaptionText}"
+                                           ToolTip="{Binding Tip}" />
+                                <ComboBox x:Name="ChoiceControl"
+                                          Grid.Column="1"
+                                          ItemsSource="{Binding Options}"
+                                          SelectedValue="{Binding Value, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text"
+                                          Visibility="Collapsed" />
+                                <TextBox x:Name="NumberControl"
+                                         Grid.Column="1"
+                                         Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                         Visibility="Collapsed" />
+                                <CheckBox x:Name="ToggleControl"
+                                          Grid.Column="1"
+                                          IsChecked="{Binding ToggleValue, Mode=TwoWay}"
+                                          Content="On"
+                                          VerticalAlignment="Center"
+                                          Visibility="Collapsed" />
+                                <TextBox x:Name="TextControl"
+                                         Grid.Column="1"
+                                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="Collapsed" />
+                                <Grid x:Name="ColorControl"
+                                      Grid.Column="1"
+                                      Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="26" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="ColorButton"
+                                            Width="24" Height="22"
+                                            Background="{Binding Swatch}"
+                                            Tag="{Binding ElementName=ColorPopup}"
+                                            Click="ColorButton_Click"
+                                            ToolTip="Click to edit color">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{DynamicResource Border}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="3" />
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                    <TextBox Grid.Column="1"
+                                             Margin="4,0,0,0"
+                                             Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Hex color (#RRGGBB)" />
+                                    <Popup x:Name="ColorPopup"
+                                           Placement="Bottom"
+                                           PlacementTarget="{Binding ElementName=ColorButton}"
+                                           StaysOpen="False"
+                                           AllowsTransparency="True">
+                                        <Border Background="{DynamicResource Surface}"
+                                                BorderBrush="{DynamicResource Border}"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="8">
+                                            <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsChoice}" Value="True">
+                                    <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsNumber}" Value="True">
+                                    <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsToggle}" Value="True">
+                                    <Setter TargetName="ToggleControl" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsText}" Value="True">
+                                    <Setter TargetName="TextControl" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsColor}" Value="True">
+                                    <Setter TargetName="ColorControl" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
     <TabControl>
         <TabItem Header="Data">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -648,22 +755,105 @@
             </ScrollViewer>
         </TabItem>
         <TabItem Header="Face">
-            <TextBlock Text="Prototype - Face in M2."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding FaceDraft.Groups}"
+                                  ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                </ScrollViewer>
+                <StackPanel Grid.Row="1" Orientation="Horizontal"
+                            Margin="0,8,0,0">
+                    <Button Content="Apply" Width="76"
+                            IsEnabled="{Binding CanApplyFace}"
+                            Click="ApplyFace_Click" />
+                    <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                            IsEnabled="{Binding CanRevertFace}"
+                            Click="RevertFace_Click" />
+                    <TextBlock Text="{Binding FaceStatus}"
+                               Style="{StaticResource CaptionText}"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
         </TabItem>
         <TabItem Header="Hair">
-            <TextBlock Text="Prototype - Hair in M2."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding HairDraft.Groups}"
+                                  ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                </ScrollViewer>
+                <StackPanel Grid.Row="1" Orientation="Horizontal"
+                            Margin="0,8,0,0">
+                    <Button Content="Apply" Width="76"
+                            IsEnabled="{Binding CanApplyHair}"
+                            Click="ApplyHair_Click" />
+                    <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                            IsEnabled="{Binding CanRevertHair}"
+                            Click="RevertHair_Click" />
+                    <TextBlock Text="{Binding HairStatus}"
+                               Style="{StaticResource CaptionText}"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
         </TabItem>
         <TabItem Header="Outfits">
-            <TextBlock Text="Prototype - Outfits in M2."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TabControl Grid.Row="0">
+                    <TabItem Header="School">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl Margin="8"
+                                          ItemsSource="{Binding OutfitDraft.School.Groups}"
+                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Sport">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl Margin="8"
+                                          ItemsSource="{Binding OutfitDraft.Sport.Groups}"
+                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Swimsuit">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl Margin="8"
+                                          ItemsSource="{Binding OutfitDraft.Swim.Groups}"
+                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Club">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl Margin="8"
+                                          ItemsSource="{Binding OutfitDraft.Club.Groups}"
+                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+                <StackPanel Grid.Row="1" Orientation="Horizontal"
+                            Margin="0,8,0,0">
+                    <Button Content="Apply" Width="76"
+                            IsEnabled="{Binding CanApplyOutfit}"
+                            Click="ApplyOutfit_Click" />
+                    <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                            IsEnabled="{Binding CanRevertOutfit}"
+                            Click="RevertOutfit_Click" />
+                    <TextBlock Text="{Binding OutfitStatus}"
+                               Style="{StaticResource CaptionText}"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
         </TabItem>
         <TabItem Header="Import/Export">
             <TextBlock Text="Prototype - Import/Export in M2."

@@ -43,6 +43,12 @@ dotnet build -c Release
   controls. Colors use a swatch, a hex field, and a centered picker with a
   spectrum square, hue bar, and direct H/S/L and R/G/B input. Apply writes
   changed body fields through the session queue; Revert restores live values.
+- **Face:** face type, eyes, iris, brow, glasses, moles, and AAUnlimited
+  external-texture names. Colors use the same picker; texture names are plain
+  Shift-JIS text fields. Apply writes changed face values/texts in one batch.
+- **Hair:** four style indices, lengths, flip flags, and the hair color.
+- **Outfits:** School, Sport, Swimsuit, and Club sets with uniform, top,
+  bottom, shoes/socks, and underwear groups, including color/opacity pairs.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.

@@ -55,6 +55,31 @@ namespace AA2Trainer.WpfPrototype
         private int bodyWriteSeat = -1;
         private int[] bodyWriteOriginal;
         private int[] bodyWriteEdited;
+        private readonly object faceWriteSync = new object();
+        private bool faceWritePending;
+        private uint faceWritePointer;
+        private int faceWriteSeat = -1;
+        private int[] faceWriteOriginalValues;
+        private int[] faceWriteEditedValues;
+        private string[] faceWriteOriginalTexts;
+        private string[] faceWriteEditedTexts;
+        private readonly object hairWriteSync = new object();
+        private bool hairWritePending;
+        private uint hairWritePointer;
+        private int hairWriteSeat = -1;
+        private int[] hairWriteOriginal;
+        private int[] hairWriteEdited;
+        private readonly object outfitWriteSync = new object();
+        private bool outfitWritePending;
+        private uint outfitWritePointer;
+        private int outfitWriteSeat = -1;
+        private int[] outfitWriteOriginal;
+        private int[] outfitWriteEdited;
+        private int selectedGender;
+        private int[] selectedFaceValues;
+        private string[] selectedFaceTexts;
+        private int[] selectedHairValues;
+        private int[] selectedOutfitValues;
         private readonly Dictionary<int, string> relationships =
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
@@ -83,6 +108,9 @@ namespace AA2Trainer.WpfPrototype
         public event Action<CharacterWriteResult> CharacterWriteCompleted;
         public event Action<TraitWriteResult> TraitWriteCompleted;
         public event Action<BodyWriteResult> BodyWriteCompleted;
+        public event Action<FaceWriteResult> FaceWriteCompleted;
+        public event Action<HairWriteResult> HairWriteCompleted;
+        public event Action<OutfitWriteResult> OutfitWriteCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -177,6 +205,67 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestFaceWrite(uint pointer, int seat,
+            int[] originalValues, int[] editedValues,
+            string[] originalTexts, string[] editedTexts)
+        {
+            if (disposed || !mem.IsAttached || pointer == 0 ||
+                originalValues == null || editedValues == null ||
+                originalTexts == null || editedTexts == null)
+                return false;
+
+            lock (faceWriteSync)
+            {
+                if (faceWritePending) return false;
+                faceWritePointer = pointer;
+                faceWriteSeat = seat;
+                faceWriteOriginalValues = originalValues;
+                faceWriteEditedValues = editedValues;
+                faceWriteOriginalTexts = originalTexts;
+                faceWriteEditedTexts = editedTexts;
+                faceWritePending = true;
+                return true;
+            }
+        }
+
+        public bool RequestHairWrite(uint pointer, int seat,
+            int[] original, int[] edited)
+        {
+            if (disposed || !mem.IsAttached || pointer == 0 ||
+                original == null || edited == null)
+                return false;
+
+            lock (hairWriteSync)
+            {
+                if (hairWritePending) return false;
+                hairWritePointer = pointer;
+                hairWriteSeat = seat;
+                hairWriteOriginal = original;
+                hairWriteEdited = edited;
+                hairWritePending = true;
+                return true;
+            }
+        }
+
+        public bool RequestOutfitWrite(uint pointer, int seat,
+            int[] original, int[] edited)
+        {
+            if (disposed || !mem.IsAttached || pointer == 0 ||
+                original == null || edited == null)
+                return false;
+
+            lock (outfitWriteSync)
+            {
+                if (outfitWritePending) return false;
+                outfitWritePointer = pointer;
+                outfitWriteSeat = seat;
+                outfitWriteOriginal = original;
+                outfitWriteEdited = edited;
+                outfitWritePending = true;
+                return true;
+            }
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -194,6 +283,9 @@ namespace AA2Trainer.WpfPrototype
             CharacterWriteCompleted = null;
             TraitWriteCompleted = null;
             BodyWriteCompleted = null;
+            FaceWriteCompleted = null;
+            HairWriteCompleted = null;
+            OutfitWriteCompleted = null;
         }
 
         private void Poll(object state)
@@ -251,8 +343,9 @@ namespace AA2Trainer.WpfPrototype
             ctx = new GameContext();
             bool hasClass = ctx.Refresh(mem, 0);
             names.Load(NameMap.FindGameRoot() ?? "");
-            characterOptions = BuildCharacterOptions();
-            clubSignature = BuildClubSignature();
+            selectedGender = ReadSelectedGender();
+            characterOptions = BuildCharacterOptions(selectedGender);
+            clubSignature = BuildClubSignature() + "/g" + selectedGender;
             live.PublishRoster(ctx.Characters, ctx.Selected);
             health = hasClass ? PointerHealth.Run(mem, ctx) : null;
             lastContextUtc = DateTime.UtcNow;
@@ -266,6 +359,9 @@ namespace AA2Trainer.WpfPrototype
             CancelPendingWrite("Detached.");
             CancelPendingTraitWrite("Detached.");
             CancelPendingBodyWrite("Detached.");
+            CancelPendingFaceWrite("Detached.");
+            CancelPendingHairWrite("Detached.");
+            CancelPendingOutfitWrite("Detached.");
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
@@ -287,6 +383,9 @@ namespace AA2Trainer.WpfPrototype
             ProcessCharacterWrite();
             ProcessTraitWrite();
             ProcessBodyWrite();
+            ProcessFaceWrite();
+            ProcessHairWrite();
+            ProcessOutfitWrite();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
@@ -364,6 +463,11 @@ namespace AA2Trainer.WpfPrototype
             snapshot.TraitValues = selectedTraitValues;
             snapshot.RiskValues = selectedRiskValues;
             snapshot.BodyValues = selectedBodyValues;
+            snapshot.SelectedGender = selectedGender;
+            snapshot.FaceValues = selectedFaceValues;
+            snapshot.FaceTexts = selectedFaceTexts;
+            snapshot.HairValues = selectedHairValues;
+            snapshot.OutfitValues = selectedOutfitValues;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -493,6 +597,10 @@ namespace AA2Trainer.WpfPrototype
                 selectedTraitValues = null;
                 selectedRiskValues = null;
                 selectedBodyValues = null;
+                selectedFaceValues = null;
+                selectedFaceTexts = null;
+                selectedHairValues = null;
+                selectedOutfitValues = null;
                 return;
             }
 
@@ -506,6 +614,10 @@ namespace AA2Trainer.WpfPrototype
                 selectedTraitValues = null;
                 selectedRiskValues = null;
                 selectedBodyValues = null;
+                selectedFaceValues = null;
+                selectedFaceTexts = null;
+                selectedHairValues = null;
+                selectedOutfitValues = null;
                 return;
             }
 
@@ -526,9 +638,50 @@ namespace AA2Trainer.WpfPrototype
             string bodyError;
             selectedBodyValues = BodyEditor.TryRead(mem, ctx.Selected,
                 out body, out bodyError) ? body : null;
+
+            selectedGender = ReadSelectedGender();
+
+            FaceSnapshot face;
+            string faceError;
+            if (FaceEditor.TryRead(mem, ctx.Selected, out face, out faceError))
+            {
+                selectedFaceValues = face.Values;
+                selectedFaceTexts = face.Texts;
+            }
+            else
+            {
+                selectedFaceValues = null;
+                selectedFaceTexts = null;
+            }
+
+            int[] hair;
+            string hairError;
+            selectedHairValues = HairEditor.TryRead(mem, ctx.Selected,
+                out hair, out hairError) ? hair : null;
+
+            OutfitSnapshot outfit;
+            string outfitError;
+            selectedOutfitValues = OutfitEditor.TryRead(mem, ctx.Selected,
+                out outfit, out outfitError) ? outfit.Values : null;
         }
 
-        private CharacterOptions BuildCharacterOptions()
+        private int ReadSelectedGender()
+        {
+            if (mem == null || !mem.IsAttached || ctx == null ||
+                ctx.Selected == null)
+                return 0;
+
+            uint characterData;
+            string error;
+            if (!CharacterEditor.TryGetCharacterData(mem, ctx.Selected,
+                out characterData, out error))
+                return 0;
+
+            byte? gender = mem.ReadU8(characterData + 0x3C);
+            return gender.HasValue && gender.Value != 0 ? 1 : 0;
+        }
+
+        private CharacterOptions BuildCharacterOptions(int gender)
         {
             CharacterOptions options = new CharacterOptions();
             options.Personality = BuildOptions("PERSONALITY", 0, 29);
@@ -542,7 +695,63 @@ namespace AA2Trainer.WpfPrototype
             options.ClubLevels = BuildNumbers(0, 8);
             options.Grades = BuildGrades();
             options.BodyChoices = BuildBodyChoices();
+            options.FaceChoices = BuildFaceChoices(gender);
+            options.HairChoices = BuildHairChoices();
+            options.OutfitChoices = BuildOutfitChoices(gender);
             return options;
+        }
+
+        private Dictionary<string, List<CharacterOption>> BuildFaceChoices(int gender)
+        {
+            Dictionary<string, List<CharacterOption>> map =
+                new Dictionary<string, List<CharacterOption>>(StringComparer.Ordinal);
+            map["FaceType"] = BuildNameOptions(
+                gender == 0 ? "FACETYPE_M" : "FACETYPE_F", true);
+            map["IrisShape"] = BuildNameOptions("IRISSHAPE");
+            map["IrisType"] = BuildNameOptions("IRISTYPE");
+            map["HightlightType"] = BuildNameOptions("HIGHLIGHTTYPE");
+            map["BrowShape"] = BuildNameOptions("EYEBROWSHAPE");
+            map["Eyelid"] = BuildNameOptions("EYELIDTYPE");
+            map["UpperEyelid"] = BuildNameOptions("EYELIDTYPEU");
+            map["LowerEyelid"] = BuildNameOptions("EYELIDTYPEL");
+            map["Glasses"] = BuildNameOptions("GLASSESTYPE");
+            map["LipsticColor"] = BuildNameOptions("LIPSTICKCOLOR");
+            return map;
+        }
+
+        private Dictionary<string, List<CharacterOption>> BuildHairChoices()
+        {
+            List<CharacterOption> styles = BuildNumbers(0, 255);
+            Dictionary<string, List<CharacterOption>> map =
+                new Dictionary<string, List<CharacterOption>>(StringComparer.Ordinal);
+            map["FrontHair"] = styles;
+            map["SideHair"] = styles;
+            map["BackHair"] = styles;
+            map["ExtHair"] = styles;
+            return map;
+        }
+
+        private Dictionary<string, List<CharacterOption>> BuildOutfitChoices(int gender)
+        {
+            string clothes = gender == 0 ? "CLOTHES_M" : "CLOTHES_F";
+            string socks = gender == 0 ? "SOCKS_M" : "SOCKS_F";
+            string shoes = gender == 0 ? "SHOES_M" : "SHOES_F";
+
+            List<CharacterOption> outfitTypes = BuildNameOptions(clothes, true);
+            List<CharacterOption> sockTypes = BuildNameOptions(socks);
+            List<CharacterOption> shoeTypes = BuildNameOptions(shoes);
+
+            Dictionary<string, List<CharacterOption>> map =
+                new Dictionary<string, List<CharacterOption>>(StringComparer.Ordinal);
+            string[] prefixes = new string[] { "Outfit", "Sport", "Swim", "Club" };
+            foreach (string prefix in prefixes)
+            {
+                map[prefix + "UType"] = outfitTypes;
+                map[prefix + "Socks"] = sockTypes;
+                map[prefix + "InShoes"] = shoeTypes;
+                map[prefix + "OutShoes"] = shoeTypes;
+            }
+            return map;
         }
 
         private Dictionary<string, List<CharacterOption>> BuildBodyChoices()
@@ -578,6 +787,11 @@ namespace AA2Trainer.WpfPrototype
 
         private List<CharacterOption> BuildNameOptions(string key)
         {
+            return BuildNameOptions(key, false);
+        }
+
+        private List<CharacterOption> BuildNameOptions(string key, bool showIndex)
+        {
             List<CharacterOption> list = new List<CharacterOption>();
             foreach (KeyValuePair<int, string> pair in names.Entries(key))
             {
@@ -585,7 +799,9 @@ namespace AA2Trainer.WpfPrototype
                 list.Add(new CharacterOption
                 {
                     Value = pair.Key,
-                    Text = pair.Value
+                    Text = showIndex
+                        ? pair.Key.ToString("D2") + "  " + pair.Value
+                        : pair.Value
                 });
             }
             return list;
@@ -593,10 +809,10 @@ namespace AA2Trainer.WpfPrototype
 
         private void RefreshCharacterOptions()
         {
-            string signature = BuildClubSignature();
+            string signature = BuildClubSignature() + "/g" + selectedGender;
             if (signature == clubSignature) return;
             clubSignature = signature;
-            characterOptions = BuildCharacterOptions();
+            characterOptions = BuildCharacterOptions(selectedGender);
         }
 
         private string BuildClubSignature()
@@ -1098,6 +1314,341 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (disposed) return;
                 Action<BodyWriteResult> handler = BodyWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void ProcessFaceWrite()
+        {
+            uint pointer;
+            int seat;
+            int[] originalValues;
+            int[] editedValues;
+            string[] originalTexts;
+            string[] editedTexts;
+
+            lock (faceWriteSync)
+            {
+                if (!faceWritePending) return;
+                pointer = faceWritePointer;
+                seat = faceWriteSeat;
+                originalValues = faceWriteOriginalValues;
+                editedValues = faceWriteEditedValues;
+                originalTexts = faceWriteOriginalTexts;
+                editedTexts = faceWriteEditedTexts;
+                faceWritePending = false;
+                faceWriteOriginalValues = null;
+                faceWriteEditedValues = null;
+                faceWriteOriginalTexts = null;
+                faceWriteEditedTexts = null;
+            }
+
+            FaceWriteResult result = new FaceWriteResult
+            {
+                Pointer = pointer,
+                Seat = seat
+            };
+
+            try
+            {
+                CharacterInfo info = ctx.FindByPointer(pointer);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        FaceSnapshot original = new FaceSnapshot
+                        {
+                            Values = originalValues,
+                            Texts = originalTexts
+                        };
+                        FaceSnapshot edited = new FaceSnapshot
+                        {
+                            Values = editedValues,
+                            Texts = editedTexts
+                        };
+                        string changed;
+                        string error;
+                        if (FaceEditor.TryWrite(mem, info, original, edited,
+                            out changed, out error))
+                        {
+                            result.Success = true;
+                            result.Changed = changed ?? "";
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                            if (ctx.Selected != null &&
+                                ctx.Selected.Pointer == pointer)
+                            {
+                                RefreshSelectedCharacter();
+                            }
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "Write failed." : error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishFaceWrite(result);
+        }
+
+        private void CancelPendingFaceWrite(string error)
+        {
+            FaceWriteResult result;
+            lock (faceWriteSync)
+            {
+                if (!faceWritePending) return;
+                faceWritePending = false;
+                result = new FaceWriteResult
+                {
+                    Pointer = faceWritePointer,
+                    Seat = faceWriteSeat,
+                    Error = error
+                };
+                faceWriteOriginalValues = null;
+                faceWriteEditedValues = null;
+                faceWriteOriginalTexts = null;
+                faceWriteEditedTexts = null;
+            }
+            PublishFaceWrite(result);
+        }
+
+        private void PublishFaceWrite(FaceWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<FaceWriteResult> handler = FaceWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void ProcessHairWrite()
+        {
+            uint pointer;
+            int seat;
+            int[] original;
+            int[] edited;
+
+            lock (hairWriteSync)
+            {
+                if (!hairWritePending) return;
+                pointer = hairWritePointer;
+                seat = hairWriteSeat;
+                original = hairWriteOriginal;
+                edited = hairWriteEdited;
+                hairWritePending = false;
+                hairWriteOriginal = null;
+                hairWriteEdited = null;
+            }
+
+            HairWriteResult result = new HairWriteResult
+            {
+                Pointer = pointer,
+                Seat = seat
+            };
+
+            try
+            {
+                CharacterInfo info = ctx.FindByPointer(pointer);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        string changed;
+                        string error;
+                        if (HairEditor.TryWrite(mem, info, original, edited,
+                            out changed, out error))
+                        {
+                            result.Success = true;
+                            result.Changed = changed ?? "";
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                            if (ctx.Selected != null &&
+                                ctx.Selected.Pointer == pointer)
+                            {
+                                RefreshSelectedCharacter();
+                            }
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "Write failed." : error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishHairWrite(result);
+        }
+
+        private void CancelPendingHairWrite(string error)
+        {
+            HairWriteResult result;
+            lock (hairWriteSync)
+            {
+                if (!hairWritePending) return;
+                hairWritePending = false;
+                result = new HairWriteResult
+                {
+                    Pointer = hairWritePointer,
+                    Seat = hairWriteSeat,
+                    Error = error
+                };
+                hairWriteOriginal = null;
+                hairWriteEdited = null;
+            }
+            PublishHairWrite(result);
+        }
+
+        private void PublishHairWrite(HairWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<HairWriteResult> handler = HairWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void ProcessOutfitWrite()
+        {
+            uint pointer;
+            int seat;
+            int[] original;
+            int[] edited;
+
+            lock (outfitWriteSync)
+            {
+                if (!outfitWritePending) return;
+                pointer = outfitWritePointer;
+                seat = outfitWriteSeat;
+                original = outfitWriteOriginal;
+                edited = outfitWriteEdited;
+                outfitWritePending = false;
+                outfitWriteOriginal = null;
+                outfitWriteEdited = null;
+            }
+
+            OutfitWriteResult result = new OutfitWriteResult
+            {
+                Pointer = pointer,
+                Seat = seat
+            };
+
+            try
+            {
+                CharacterInfo info = ctx.FindByPointer(pointer);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        OutfitSnapshot originalSnapshot = new OutfitSnapshot
+                        {
+                            Values = original
+                        };
+                        OutfitSnapshot editedSnapshot = new OutfitSnapshot
+                        {
+                            Values = edited
+                        };
+                        string changed;
+                        string error;
+                        if (OutfitEditor.TryWrite(mem, info, originalSnapshot,
+                            editedSnapshot, out changed, out error))
+                        {
+                            result.Success = true;
+                            result.Changed = changed ?? "";
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                            if (ctx.Selected != null &&
+                                ctx.Selected.Pointer == pointer)
+                            {
+                                RefreshSelectedCharacter();
+                            }
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "Write failed." : error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishOutfitWrite(result);
+        }
+
+        private void CancelPendingOutfitWrite(string error)
+        {
+            OutfitWriteResult result;
+            lock (outfitWriteSync)
+            {
+                if (!outfitWritePending) return;
+                outfitWritePending = false;
+                result = new OutfitWriteResult
+                {
+                    Pointer = outfitWritePointer,
+                    Seat = outfitWriteSeat,
+                    Error = error
+                };
+                outfitWriteOriginal = null;
+                outfitWriteEdited = null;
+            }
+            PublishOutfitWrite(result);
+        }
+
+        private void PublishOutfitWrite(OutfitWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<OutfitWriteResult> handler = OutfitWriteCompleted;
                 if (handler != null) handler(result);
             }));
         }

@@ -61,5 +61,41 @@ namespace AA2Trainer.WpfPrototype.Views
             MainViewModel viewModel = DataContext as MainViewModel;
             if (viewModel != null) viewModel.RevertBodyEdits();
         }
+
+        private void ApplyFace_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyFaceEdits();
+        }
+
+        private void RevertFace_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertFaceEdits();
+        }
+
+        private void ApplyHair_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyHairEdits();
+        }
+
+        private void RevertHair_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertHairEdits();
+        }
+
+        private void ApplyOutfit_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyOutfitEdits();
+        }
+
+        private void RevertOutfit_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertOutfitEdits();
+        }
     }
 }

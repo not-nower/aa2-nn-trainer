@@ -35,6 +35,11 @@ namespace AA2Trainer.WpfPrototype
         public bool[] TraitValues;
         public int[,] RiskValues;
         public int[] BodyValues;
+        public int SelectedGender;
+        public int[] FaceValues;
+        public string[] FaceTexts;
+        public int[] HairValues;
+        public int[] OutfitValues;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }

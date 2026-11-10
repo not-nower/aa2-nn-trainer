@@ -27,5 +27,11 @@ namespace AA2Trainer.WpfPrototype
         public List<CharacterOption> Grades { get; set; } = new List<CharacterOption>();
         public Dictionary<string, List<CharacterOption>> BodyChoices { get; set; } =
             new Dictionary<string, List<CharacterOption>>();
+        public Dictionary<string, List<CharacterOption>> FaceChoices { get; set; } =
+            new Dictionary<string, List<CharacterOption>>();
+        public Dictionary<string, List<CharacterOption>> HairChoices { get; set; } =
+            new Dictionary<string, List<CharacterOption>>();
+        public Dictionary<string, List<CharacterOption>> OutfitChoices { get; set; } =
+            new Dictionary<string, List<CharacterOption>>();
     }
 }
