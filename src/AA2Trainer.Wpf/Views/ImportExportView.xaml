@@ -1,0 +1,175 @@
+<UserControl x:Class="AA2Trainer.WpfPrototype.Views.ImportExportView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Save"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center" />
+            <TextBox x:Name="SavePathBox" Grid.Column="1"
+                     IsReadOnly="True"
+                     ToolTip="AA2 class save (.sav)" />
+            <Button Content="Select Save..."
+                    Grid.Column="2"
+                    Margin="6,0,0,0"
+                    Click="SelectSave_Click" />
+
+            <TextBlock Text="Character"
+                       Grid.Row="1"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       Margin="0,6,0,0" />
+            <ComboBox x:Name="CharacterCombo"
+                      Grid.Row="1" Grid.Column="1"
+                      Margin="0,6,0,0"
+                      SelectionChanged="CharacterCombo_SelectionChanged">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding Seat, StringFormat={}{0:D2}}" />
+                            <Run Text="  " />
+                            <Run Text="{Binding Card.Name}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <TextBlock Text="Card to import"
+                       Grid.Row="2"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       Margin="0,6,0,0" />
+            <TextBox x:Name="CardPathBox"
+                     Grid.Row="2" Grid.Column="1"
+                     Margin="0,6,0,0"
+                     IsReadOnly="True"
+                     ToolTip="AA2 character card (.png)" />
+            <Button Content="Select Card..."
+                    Grid.Row="2" Grid.Column="2"
+                    Margin="6,6,0,0"
+                    Click="SelectCard_Click" />
+            <Button Content="Export Card..."
+                    Grid.Row="2" Grid.Column="3"
+                    Margin="6,6,0,0"
+                    Click="ExportCard_Click" />
+
+            <StackPanel Grid.Column="4" Grid.RowSpan="3"
+                        Orientation="Horizontal"
+                        Margin="12,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="In save"
+                               Style="{StaticResource CaptionText}"
+                               Margin="0,0,0,2" />
+                    <Image x:Name="SaveFaceImage"
+                           Width="90" Height="126"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                </StackPanel>
+                <StackPanel Margin="8,0,0,0">
+                    <TextBlock Text="Card"
+                               Style="{StaticResource CaptionText}"
+                               Margin="0,0,0,2" />
+                    <Image x:Name="CardFaceImage"
+                           Width="90" Height="126"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <WrapPanel x:Name="SectionsPanel"
+                   Grid.Row="1"
+                   Margin="0,0,0,8" />
+
+        <DataGrid x:Name="DiffGrid"
+                  Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  Margin="0,0,0,8">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Section"
+                                    Binding="{Binding Section}"
+                                    Width="110" />
+                <DataGridTextColumn Header="Field"
+                                    Binding="{Binding Field}"
+                                    Width="180" />
+                <DataGridTextColumn Header="In save"
+                                    Binding="{Binding Current}"
+                                    Width="*" />
+                <DataGridTextColumn Header="From card"
+                                    Binding="{Binding Incoming}"
+                                    Width="*">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Changed}" Value="True">
+                                    <Setter Property="Foreground"
+                                            Value="{DynamicResource Danger}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding AppliesHere}" Value="False">
+                                    <Setter Property="Foreground"
+                                            Value="{DynamicResource TextDisabled}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="ShowUnchangedCheck"
+                      Content="Show unchanged"
+                      VerticalAlignment="Center"
+                      Checked="ShowUnchanged_Changed"
+                      Unchecked="ShowUnchanged_Changed" />
+            <Button Content="All" Grid.Column="1"
+                    Margin="10,0,0,0"
+                    Click="SelectAll_Click" />
+            <Button Content="None" Grid.Column="2"
+                    Margin="6,0,0,0"
+                    Click="SelectNone_Click" />
+            <TextBlock x:Name="StatusText"
+                       Grid.Column="3"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Margin="10,0,0,0" />
+            <Button Content="Apply"
+                    Grid.Column="4"
+                    Width="76"
+                    Click="ApplyChanges_Click" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,7 +1,8 @@
 <UserControl x:Class="AA2Trainer.WpfPrototype.Views.CharacterView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:AA2Trainer.WpfPrototype.Controls">
+             xmlns:controls="clr-namespace:AA2Trainer.WpfPrototype.Controls"
+             xmlns:views="clr-namespace:AA2Trainer.WpfPrototype.Views">
     <UserControl.Resources>
         <DataTemplate x:Key="FieldGroupTemplate">
             <StackPanel Margin="0,0,0,10">
@@ -856,10 +857,7 @@
             </Grid>
         </TabItem>
         <TabItem Header="Import/Export">
-            <TextBlock Text="Prototype - Import/Export in M2."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <views:ImportExportView />
         </TabItem>
     </TabControl>
 </UserControl>

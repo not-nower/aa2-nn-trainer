@@ -632,9 +632,15 @@ namespace AA2Trainer.WpfPrototype
         {
             if (session == null) return;
             if (session.IsAttached)
+            {
+                LogSession("Detach requested.");
                 session.RequestDetach();
+            }
             else
+            {
+                LogSession("Attach requested.");
                 session.RequestAttach();
+            }
         }
 
         public void PlayAs(SeatItem seat)
@@ -708,6 +714,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(RosterStatus, result.Success ? "Info" : "Error");
         }
 
         private void OnRosterActionCompleted(RosterActionResult result)
@@ -718,6 +725,7 @@ namespace AA2Trainer.WpfPrototype
                 : "Action failed: " +
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
+            LogSession(RosterStatus, result.Success ? "Info" : "Error");
         }
 
         public void ApplyCharacterEdits()
@@ -770,6 +778,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(CharacterStatus, result.Success ? "Info" : "Error");
         }
 
         private void CharacterDraft_PropertyChanged(object sender,
@@ -838,6 +847,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(TraitStatus, result.Success ? "Info" : "Error");
         }
 
         private void TraitDraft_PropertyChanged(object sender,
@@ -903,6 +913,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(BodyStatus, result.Success ? "Info" : "Error");
         }
 
         private void BodyDraft_PropertyChanged(object sender,
@@ -970,6 +981,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(FaceStatus, result.Success ? "Info" : "Error");
         }
 
         private void FaceDraft_PropertyChanged(object sender,
@@ -1036,6 +1048,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(HairStatus, result.Success ? "Info" : "Error");
         }
 
         private void HairDraft_PropertyChanged(object sender,
@@ -1105,6 +1118,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(OutfitStatus, result.Success ? "Info" : "Error");
         }
 
         private void OutfitDraft_PropertyChanged(object sender,
@@ -1158,12 +1172,18 @@ namespace AA2Trainer.WpfPrototype
                     ? ScheduleDraft.TimeMilliseconds
                     : (liveSchedule != null ? liveSchedule.TimeMilliseconds : 0);
                 if (session.RequestTimeFreeze(milliseconds))
+                {
                     IsTimeFrozen = true;
+                    LogSession("Time frozen at " +
+                        (milliseconds / 60000).ToString("00") + ":" +
+                        ((milliseconds / 1000) % 60).ToString("00") + ".");
+                }
             }
             else
             {
                 session.RequestTimeUnfreeze();
                 IsTimeFrozen = false;
+                LogSession("Time freeze stopped.");
             }
         }
 
@@ -1186,6 +1206,7 @@ namespace AA2Trainer.WpfPrototype
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
             }
+            LogSession(ScheduleStatus, result.Success ? "Info" : "Error");
         }
 
         private void ScheduleDraft_PropertyChanged(object sender,
@@ -1849,39 +1870,18 @@ namespace AA2Trainer.WpfPrototype
 
         private void SeedLogs()
         {
-            string[] live =
-            {
-                "seat 00  move=7 action=23 partner=03 conv=0 talk=1 loc=19",
-                "seat 03  move=7 action=23 partner=00 conv=1 talk=0 loc=19",
-                "seat 01  move=1 action=-1 partner=00 conv=0 talk=0 loc=19",
-                "seat 02  move=2 action=-1 partner=- conv=0 talk=0 loc=21",
-                "seat 03  move=3 action=44 partner=00 conv=0 talk=0 loc=10",
-                "seat 00  move=7 action=-1 partner=03 conv=0 talk=0 loc=10",
-                "seat 03  move=0 action=-1 partner=- conv=0 talk=0 loc=10",
-                "seat 02  move=2 action=108 partner=- conv=0 talk=0 loc=1",
-                "seat 01  move=8 action=-1 partner=00 conv=0 talk=0 loc=19"
-            };
-            for (int i = 0; i < live.Length; i++)
-            {
-                string time = "12:34:" + (10 + i).ToString("00") + "." +
-                    (120 + i * 7).ToString("000");
-                LiveLines.Add(new LogLine(time, live[i]));
-            }
+            LiveLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
+                "AA2 Trainer ready. Attach to AA2Play to begin."));
+            PlannerLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
+                "Planner log is wired in M3."));
+        }
 
-            PlannerLines.Add(new LogLine("12:34:10.120",
-                "Plan started for seat 03 (4 steps, Forced perform)."));
-            PlannerLines.Add(new LogLine("12:34:10.220",
-                "  seat 03 step 1/4: queued for key 0x211B11C8 (slot 0)"));
-            PlannerLines.Add(new LogLine("12:34:10.340",
-                "  seat 03 direct perform action 44 in place."));
-            PlannerLines.Add(new LogLine("12:34:10.460",
-                "  seat 03 step 1/4 done: Pet -> seat 00."));
-            PlannerLines.Add(new LogLine("12:34:10.480",
-                "  seat 03 skipped 1 disabled step(s)."));
-            PlannerLines.Add(new LogLine("12:34:11.020",
-                "  seat 03 step 3/4: queued for key 0x211B11C8 (slot 0)"));
-            PlannerLines.Add(new LogLine("12:34:11.140",
-                "  seat 03 step 3/4 running: Encourage -> seat 00."));
+        public void LogSession(string text, string level = "Info")
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            while (LiveLines.Count >= 5000) LiveLines.RemoveAt(0);
+            LiveLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
+                text, level));
         }
 
         private void SeedDebug()

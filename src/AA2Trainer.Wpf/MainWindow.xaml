@@ -12,6 +12,7 @@
         FontSize="12"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
+        Loaded="MainWindow_Loaded"
         TextOptions.TextFormattingMode="Display">
 
     <Window.Resources>

@@ -52,6 +52,11 @@ dotnet build -c Release
 - **Schedule:** click the game-time chip in the top bar to edit weekday, week,
   period, duration, and time, or to freeze/pin the current time. Academy, year,
   class, and save name stay read-only.
+- **Import/Export:** offline class-save editor. Select a save, a character, and
+  a card; choose sections; review the side-by-side comparison; apply with a
+  timestamped backup or export the character as a standalone card.
+- **Live log:** the Gameplay drawer records attach/detach requests, write
+  results, player switches, relationship actions, and schedule/freeze events.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.

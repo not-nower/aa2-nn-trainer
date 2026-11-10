@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -166,6 +167,30 @@ namespace AA2Trainer.WpfPrototype
         {
             logCollapsed = !logCollapsed;
             ApplyShellForTab();
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            MainViewModel vm = DataContext as MainViewModel;
+            if (vm == null) return;
+            vm.LiveLines.CollectionChanged += LiveLines_CollectionChanged;
+            vm.PlannerLines.CollectionChanged += PlannerLines_CollectionChanged;
+        }
+
+        private void LiveLines_CollectionChanged(object sender,
+            NotifyCollectionChangedEventArgs e)
+        {
+            if (LiveLogList != null && LiveLogList.Items.Count > 0)
+                LiveLogList.ScrollIntoView(
+                    LiveLogList.Items[LiveLogList.Items.Count - 1]);
+        }
+
+        private void PlannerLines_CollectionChanged(object sender,
+            NotifyCollectionChangedEventArgs e)
+        {
+            if (PlannerLogList != null && PlannerLogList.Items.Count > 0)
+                PlannerLogList.ScrollIntoView(
+                    PlannerLogList.Items[PlannerLogList.Items.Count - 1]);
         }
 
         private void PlayAs_Click(object sender, RoutedEventArgs e)
