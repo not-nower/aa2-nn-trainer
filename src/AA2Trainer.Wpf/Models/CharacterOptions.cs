@@ -25,5 +25,7 @@ namespace AA2Trainer.WpfPrototype
         public List<CharacterOption> Levels { get; set; } = new List<CharacterOption>();
         public List<CharacterOption> ClubLevels { get; set; } = new List<CharacterOption>();
         public List<CharacterOption> Grades { get; set; } = new List<CharacterOption>();
+        public Dictionary<string, List<CharacterOption>> BodyChoices { get; set; } =
+            new Dictionary<string, List<CharacterOption>>();
     }
 }

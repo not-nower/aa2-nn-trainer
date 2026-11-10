@@ -39,6 +39,9 @@ dotnet build -c Release
 - **Traits:** trait, extra, and H-preference checkboxes plus the two-week risk
   schedule. Apply writes changed traits/risk cells in one queued batch after a
   pointer-health check; Revert restores live values.
+- **Body:** body, breast, and skin fields with number, choice, and hex-color
+  controls. Apply writes changed body fields through the session queue; Revert
+  restores live values.
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.
@@ -84,7 +87,7 @@ stores them; no translation or romanization is applied.
 
 ## Not implemented (next phases)
 
-- M2: Body/Face/Hair/Outfits; remaining Character Data fields; Import/Export.
+- M2: Face/Hair/Outfits; remaining Character Data fields; Import/Export.
 - M3: real planner runner, logs, and Gameplay sub-tabs.
 - M4: Options/Debug parity.
 - M5: focus/accessibility/performance pass; full keyboard navigation deferred.

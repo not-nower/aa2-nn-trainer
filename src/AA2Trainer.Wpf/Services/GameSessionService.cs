@@ -32,6 +32,7 @@ namespace AA2Trainer.WpfPrototype
         private CharacterSnapshot selectedCharacterSnapshot;
         private bool[] selectedTraitValues;
         private int[,] selectedRiskValues;
+        private int[] selectedBodyValues;
         private CharacterOptions characterOptions;
         private string clubSignature = "";
         private readonly object writeSync = new object();
@@ -48,6 +49,12 @@ namespace AA2Trainer.WpfPrototype
         private bool[] traitWriteEdited;
         private int[,] riskWriteOriginal;
         private int[,] riskWriteEdited;
+        private readonly object bodyWriteSync = new object();
+        private bool bodyWritePending;
+        private uint bodyWritePointer;
+        private int bodyWriteSeat = -1;
+        private int[] bodyWriteOriginal;
+        private int[] bodyWriteEdited;
         private readonly Dictionary<int, string> relationships =
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
@@ -75,6 +82,7 @@ namespace AA2Trainer.WpfPrototype
         public event Action<SessionSnapshot> SnapshotReady;
         public event Action<CharacterWriteResult> CharacterWriteCompleted;
         public event Action<TraitWriteResult> TraitWriteCompleted;
+        public event Action<BodyWriteResult> BodyWriteCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -150,6 +158,25 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestBodyWrite(uint pointer, int seat,
+            int[] original, int[] edited)
+        {
+            if (disposed || !mem.IsAttached || pointer == 0 ||
+                original == null || edited == null)
+                return false;
+
+            lock (bodyWriteSync)
+            {
+                if (bodyWritePending) return false;
+                bodyWritePointer = pointer;
+                bodyWriteSeat = seat;
+                bodyWriteOriginal = original;
+                bodyWriteEdited = edited;
+                bodyWritePending = true;
+                return true;
+            }
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -166,6 +193,7 @@ namespace AA2Trainer.WpfPrototype
             SnapshotReady = null;
             CharacterWriteCompleted = null;
             TraitWriteCompleted = null;
+            BodyWriteCompleted = null;
         }
 
         private void Poll(object state)
@@ -237,6 +265,7 @@ namespace AA2Trainer.WpfPrototype
         {
             CancelPendingWrite("Detached.");
             CancelPendingTraitWrite("Detached.");
+            CancelPendingBodyWrite("Detached.");
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
@@ -246,6 +275,7 @@ namespace AA2Trainer.WpfPrototype
             selectedCharacterSnapshot = null;
             selectedTraitValues = null;
             selectedRiskValues = null;
+            selectedBodyValues = null;
             lastContextUtc = DateTime.MinValue;
             lastHealthUtc = DateTime.MinValue;
             lastDisconnectedUtc = DateTime.MinValue;
@@ -256,6 +286,7 @@ namespace AA2Trainer.WpfPrototype
         {
             ProcessCharacterWrite();
             ProcessTraitWrite();
+            ProcessBodyWrite();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
@@ -332,6 +363,7 @@ namespace AA2Trainer.WpfPrototype
             snapshot.SelectedPointer = ctx.Selected == null ? 0 : ctx.Selected.Pointer;
             snapshot.TraitValues = selectedTraitValues;
             snapshot.RiskValues = selectedRiskValues;
+            snapshot.BodyValues = selectedBodyValues;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -460,6 +492,7 @@ namespace AA2Trainer.WpfPrototype
                 selectedCharacterSnapshot = null;
                 selectedTraitValues = null;
                 selectedRiskValues = null;
+                selectedBodyValues = null;
                 return;
             }
 
@@ -472,6 +505,7 @@ namespace AA2Trainer.WpfPrototype
                 selectedCharacterSnapshot = null;
                 selectedTraitValues = null;
                 selectedRiskValues = null;
+                selectedBodyValues = null;
                 return;
             }
 
@@ -487,6 +521,11 @@ namespace AA2Trainer.WpfPrototype
             string riskError;
             selectedRiskValues = RiskSchedule.TryRead(mem, ctx.Selected,
                 out risk, out riskError) ? risk : null;
+
+            int[] body;
+            string bodyError;
+            selectedBodyValues = BodyEditor.TryRead(mem, ctx.Selected,
+                out body, out bodyError) ? body : null;
         }
 
         private CharacterOptions BuildCharacterOptions()
@@ -502,7 +541,54 @@ namespace AA2Trainer.WpfPrototype
             options.Levels = BuildOptions("LOW_HIGHPLUS", 0, 4);
             options.ClubLevels = BuildNumbers(0, 8);
             options.Grades = BuildGrades();
+            options.BodyChoices = BuildBodyChoices();
             return options;
+        }
+
+        private Dictionary<string, List<CharacterOption>> BuildBodyChoices()
+        {
+            Dictionary<string, List<CharacterOption>> map =
+                new Dictionary<string, List<CharacterOption>>(StringComparer.Ordinal);
+            map["BodyType"] = BuildLabels("Delicate", "Standard", "Tall", "Fat");
+            map["Heights"] = BuildLabels("Low", "Standard", "High");
+            map["Figure"] = BuildLabels("Slim", "Standard", "Fat");
+            map["BreastShape"] = BuildNameOptions("BREASTSHAPE");
+            map["BreastSoftness"] = BuildNameOptions("BREASTFIRMNESS");
+            map["PubHairType"] = BuildNameOptions("PUBICHAIR");
+            map["NippleType"] = BuildNameOptions("NIPPLETYPE");
+            map["NippleColor"] = BuildNameOptions("NIPPLECOLOR");
+            map["TanMark"] = BuildNameOptions("TANMARKS");
+            map["PussyMosaic"] = BuildNameOptions("MOSAICCOLOR");
+            return map;
+        }
+
+        private static List<CharacterOption> BuildLabels(params string[] labels)
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            for (int i = 0; i < labels.Length; i++)
+            {
+                list.Add(new CharacterOption
+                {
+                    Value = i,
+                    Text = labels[i]
+                });
+            }
+            return list;
+        }
+
+        private List<CharacterOption> BuildNameOptions(string key)
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            foreach (KeyValuePair<int, string> pair in names.Entries(key))
+            {
+                if (string.IsNullOrEmpty(pair.Value)) continue;
+                list.Add(new CharacterOption
+                {
+                    Value = pair.Key,
+                    Text = pair.Value
+                });
+            }
+            return list;
         }
 
         private void RefreshCharacterOptions()
@@ -909,6 +995,109 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (disposed) return;
                 Action<TraitWriteResult> handler = TraitWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void ProcessBodyWrite()
+        {
+            uint pointer;
+            int seat;
+            int[] original;
+            int[] edited;
+
+            lock (bodyWriteSync)
+            {
+                if (!bodyWritePending) return;
+                pointer = bodyWritePointer;
+                seat = bodyWriteSeat;
+                original = bodyWriteOriginal;
+                edited = bodyWriteEdited;
+                bodyWritePending = false;
+                bodyWriteOriginal = null;
+                bodyWriteEdited = null;
+            }
+
+            BodyWriteResult result = new BodyWriteResult
+            {
+                Pointer = pointer,
+                Seat = seat
+            };
+
+            try
+            {
+                CharacterInfo info = ctx.FindByPointer(pointer);
+                if (info == null)
+                {
+                    result.Error = "The selected character is no longer loaded.";
+                }
+                else
+                {
+                    PointerHealth check = PointerHealth.Run(mem, ctx);
+                    if (!check.Clean)
+                    {
+                        result.Error = "Pointer health check failed: " +
+                            check.ShortStatus;
+                    }
+                    else
+                    {
+                        string changed;
+                        string error;
+                        if (BodyEditor.TryWrite(mem, info, original, edited,
+                            out changed, out error))
+                        {
+                            result.Success = true;
+                            result.Changed = changed ?? "";
+                            lastContextUtc = DateTime.MinValue;
+                            lastHealthUtc = DateTime.MinValue;
+                            if (ctx.Selected != null &&
+                                ctx.Selected.Pointer == pointer)
+                            {
+                                RefreshSelectedCharacter();
+                            }
+                        }
+                        else
+                        {
+                            result.Error = string.IsNullOrEmpty(error)
+                                ? "Write failed." : error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishBodyWrite(result);
+        }
+
+        private void CancelPendingBodyWrite(string error)
+        {
+            BodyWriteResult result;
+            lock (bodyWriteSync)
+            {
+                if (!bodyWritePending) return;
+                bodyWritePending = false;
+                result = new BodyWriteResult
+                {
+                    Pointer = bodyWritePointer,
+                    Seat = bodyWriteSeat,
+                    Error = error
+                };
+                bodyWriteOriginal = null;
+                bodyWriteEdited = null;
+            }
+            PublishBodyWrite(result);
+        }
+
+        private void PublishBodyWrite(BodyWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<BodyWriteResult> handler = BodyWriteCompleted;
                 if (handler != null) handler(result);
             }));
         }

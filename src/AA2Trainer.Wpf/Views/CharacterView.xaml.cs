@@ -33,5 +33,17 @@ namespace AA2Trainer.WpfPrototype.Views
             MainViewModel viewModel = DataContext as MainViewModel;
             if (viewModel != null) viewModel.RevertTraitEdits();
         }
+
+        private void ApplyBody_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyBodyEdits();
+        }
+
+        private void RevertBody_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertBodyEdits();
+        }
     }
 }

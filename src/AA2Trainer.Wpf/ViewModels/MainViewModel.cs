@@ -25,15 +25,19 @@ namespace AA2Trainer.WpfPrototype
         private CharacterDetail selectedCharacter;
         private CharacterDraft characterDraft;
         private TraitDraft traitDraft;
+        private BodyDraft bodyDraft;
         private CharacterOptions characterOptions;
         private CharacterSnapshot liveCharacter;
         private uint livePointer;
         private bool[] liveTraits;
         private int[,] liveRisk;
+        private int[] liveBodyValues;
         private string characterStatus = "No changes.";
         private string traitStatus = "No changes.";
+        private string bodyStatus = "No changes.";
         private bool characterWriteBusy;
         private bool traitWriteBusy;
+        private bool bodyWriteBusy;
         private bool railCollapsed;
         private bool applyingSnapshot;
         private bool isAttached;
@@ -69,6 +73,7 @@ namespace AA2Trainer.WpfPrototype
             session.SnapshotReady += ApplySnapshot;
             session.CharacterWriteCompleted += OnCharacterWriteCompleted;
             session.TraitWriteCompleted += OnTraitWriteCompleted;
+            session.BodyWriteCompleted += OnBodyWriteCompleted;
             LoadCardsAsync();
         }
 
@@ -141,6 +146,58 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CanApplyTraits));
                 OnPropertyChanged(nameof(CanRevertTraits));
+            }
+        }
+
+        public BodyDraft BodyDraft
+        {
+            get { return bodyDraft; }
+            private set
+            {
+                if (bodyDraft == value) return;
+                if (bodyDraft != null)
+                    bodyDraft.PropertyChanged -= BodyDraft_PropertyChanged;
+                bodyDraft = value;
+                if (bodyDraft != null)
+                    bodyDraft.PropertyChanged += BodyDraft_PropertyChanged;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanApplyBody));
+                OnPropertyChanged(nameof(CanRevertBody));
+            }
+        }
+
+        public string BodyStatus
+        {
+            get { return bodyStatus; }
+            private set { Set(ref bodyStatus, value); }
+        }
+
+        public bool IsBodyWriteBusy
+        {
+            get { return bodyWriteBusy; }
+            private set
+            {
+                if (!Set(ref bodyWriteBusy, value)) return;
+                OnPropertyChanged(nameof(CanApplyBody));
+                OnPropertyChanged(nameof(CanRevertBody));
+            }
+        }
+
+        public bool CanApplyBody
+        {
+            get
+            {
+                return bodyDraft != null && bodyDraft.IsDirty &&
+                    !bodyWriteBusy && isAttached;
+            }
+        }
+
+        public bool CanRevertBody
+        {
+            get
+            {
+                return bodyDraft != null && bodyDraft.IsDirty &&
+                    !bodyWriteBusy;
             }
         }
 
@@ -240,6 +297,7 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(AttachButtonText));
                 OnPropertyChanged(nameof(CanApply));
                 OnPropertyChanged(nameof(CanApplyTraits));
+                OnPropertyChanged(nameof(CanApplyBody));
             }
         }
 
@@ -439,6 +497,67 @@ namespace AA2Trainer.WpfPrototype
                 TraitStatus = "Unsaved changes.";
         }
 
+        public void ApplyBodyEdits()
+        {
+            if (session == null || BodyDraft == null ||
+                !BodyDraft.IsDirty || bodyWriteBusy)
+                return;
+
+            IsBodyWriteBusy = true;
+            BodyStatus = "Writing...";
+
+            bool queued = session.RequestBodyWrite(
+                BodyDraft.Pointer, BodyDraft.SeatIndex,
+                BodyDraft.OriginalValues, BodyDraft.ToValues());
+            if (!queued)
+            {
+                IsBodyWriteBusy = false;
+                BodyStatus = "Write request was not accepted.";
+            }
+        }
+
+        public void RevertBodyEdits()
+        {
+            if (BodyDraft == null || liveBodyValues == null) return;
+            BodyDraft.Load(liveBodyValues, livePointer, BodyDraft.SeatIndex);
+            BodyStatus = "Reverted to live values.";
+        }
+
+        private void OnBodyWriteCompleted(BodyWriteResult result)
+        {
+            IsBodyWriteBusy = false;
+            if (result == null) return;
+
+            if (result.Success)
+            {
+                if (BodyDraft != null && BodyDraft.Pointer == result.Pointer)
+                    BodyDraft.MarkSaved();
+                BodyStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Saved: " + result.Changed;
+            }
+            else
+            {
+                BodyStatus = "Write failed: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+            }
+        }
+
+        private void BodyDraft_PropertyChanged(object sender,
+            System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName) &&
+                e.PropertyName != nameof(BodyDraft.IsDirty))
+                return;
+
+            OnPropertyChanged(nameof(CanApplyBody));
+            OnPropertyChanged(nameof(CanRevertBody));
+            if (BodyDraft != null && BodyDraft.IsDirty && !bodyWriteBusy)
+                BodyStatus = "Unsaved changes.";
+        }
+
         public void Dispose()
         {
             disposed = true;
@@ -446,6 +565,7 @@ namespace AA2Trainer.WpfPrototype
             session.SnapshotReady -= ApplySnapshot;
             session.CharacterWriteCompleted -= OnCharacterWriteCompleted;
             session.TraitWriteCompleted -= OnTraitWriteCompleted;
+            session.BodyWriteCompleted -= OnBodyWriteCompleted;
             session.Dispose();
         }
 
@@ -467,6 +587,7 @@ namespace AA2Trainer.WpfPrototype
                 if (snapshot.Options != null) CharacterOptions = snapshot.Options;
                 UpdateCharacterDraft(snapshot);
                 UpdateTraitDraft(snapshot);
+                UpdateBodyDraft(snapshot);
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -574,6 +695,37 @@ namespace AA2Trainer.WpfPrototype
             {
                 TraitDraft.Load(snapshot.TraitValues, snapshot.RiskValues,
                     snapshot.SelectedPointer, snapshot.SelectedSeat);
+            }
+        }
+
+        private void UpdateBodyDraft(SessionSnapshot snapshot)
+        {
+            if (snapshot.SelectedPointer == 0 || snapshot.BodyValues == null)
+            {
+                liveBodyValues = null;
+                BodyDraft = null;
+                BodyStatus = "No character selected.";
+                return;
+            }
+
+            bool rawChanged = !ReferenceEquals(liveBodyValues, snapshot.BodyValues);
+            bool sameCharacter = BodyDraft != null &&
+                BodyDraft.Pointer == snapshot.SelectedPointer;
+
+            liveBodyValues = snapshot.BodyValues;
+
+            if (!sameCharacter)
+            {
+                BodyDraft draft = new BodyDraft(CharacterOptions);
+                draft.Load(snapshot.BodyValues, snapshot.SelectedPointer,
+                    snapshot.SelectedSeat);
+                BodyDraft = draft;
+                BodyStatus = "No changes.";
+            }
+            else if (!BodyDraft.IsDirty && rawChanged)
+            {
+                BodyDraft.Load(snapshot.BodyValues, snapshot.SelectedPointer,
+                    snapshot.SelectedSeat);
             }
         }
 

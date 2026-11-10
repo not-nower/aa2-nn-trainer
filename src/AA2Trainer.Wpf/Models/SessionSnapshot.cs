@@ -34,6 +34,7 @@ namespace AA2Trainer.WpfPrototype
         public CharacterOptions Options;
         public bool[] TraitValues;
         public int[,] RiskValues;
+        public int[] BodyValues;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }
