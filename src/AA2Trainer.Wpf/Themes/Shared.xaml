@@ -277,13 +277,16 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="1" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <TabPanel Grid.Row="0"
                                   IsItemsHost="True"
                                   Background="Transparent"
                                   Margin="8,0,0,0" />
-                        <ContentPresenter Grid.Row="1"
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource Border}" />
+                        <ContentPresenter Grid.Row="2"
                                           ContentSource="SelectedContent" />
                     </Grid>
                 </ControlTemplate>
@@ -296,18 +299,26 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TabItem">
-                    <Border x:Name="TabBorder"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            BorderThickness="0,0,0,2"
-                            Padding="12,5">
-                        <ContentPresenter ContentSource="Header"
-                                          VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <Border x:Name="TabBorder"
+                                Background="Transparent"
+                                Padding="12,5">
+                            <ContentPresenter ContentSource="Header"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <Border x:Name="TabUnderline"
+                                Height="2"
+                                VerticalAlignment="Bottom"
+                                Background="Transparent" />
+                        <Rectangle x:Name="TabDivider"
+                                   Width="1"
+                                   HorizontalAlignment="Right"
+                                   Fill="{DynamicResource Border}" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource Hover}" />
-                            <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                            <Setter TargetName="TabUnderline" Property="Background" Value="{DynamicResource Accent}" />
                             <Setter Property="Foreground" Value="{DynamicResource Text}" />
                         </Trigger>
                         <MultiTrigger>
