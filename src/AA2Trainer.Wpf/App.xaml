@@ -10,8 +10,8 @@
             <!-- The default ScrollViewer template sizes its scrollbars from
                  these system keys, so override them here to shrink the whole
                  scrollbar rather than just the thumb inset. -->
-            <sys:Double x:Key="{x:Static win:SystemParameters.VerticalScrollBarWidthKey}">6</sys:Double>
-            <sys:Double x:Key="{x:Static win:SystemParameters.HorizontalScrollBarHeightKey}">6</sys:Double>
+            <sys:Double x:Key="{x:Static win:SystemParameters.VerticalScrollBarWidthKey}">10</sys:Double>
+            <sys:Double x:Key="{x:Static win:SystemParameters.HorizontalScrollBarHeightKey}">10</sys:Double>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/Shared.xaml" />
                 <ResourceDictionary Source="Themes/Light.xaml" />
