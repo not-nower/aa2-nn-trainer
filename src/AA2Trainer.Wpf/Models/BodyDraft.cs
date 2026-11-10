@@ -11,6 +11,7 @@ namespace AA2Trainer.WpfPrototype
     public sealed class BodyFieldItem : ObservableObject
     {
         private int value;
+        private string colorInput;
 
         public BodyFieldItem(int index, BodyFieldDef def,
             IEnumerable<CharacterOption> options)
@@ -39,6 +40,7 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 if (!Set(ref this.value, value)) return;
+                colorInput = null;
                 OnPropertyChanged(nameof(ColorText));
                 OnPropertyChanged(nameof(R));
                 OnPropertyChanged(nameof(G));
@@ -51,6 +53,7 @@ namespace AA2Trainer.WpfPrototype
         {
             get
             {
+                if (colorInput != null) return colorInput;
                 return "#" + (value & 0xFFFFFF).ToString("X6");
             }
             set
@@ -62,9 +65,16 @@ namespace AA2Trainer.WpfPrototype
                     NumberStyles.HexNumber, CultureInfo.InvariantCulture,
                     out rgb))
                 {
+                    colorInput = null;
                     Value = unchecked((int)(0xFF000000u | (uint)rgb));
                 }
-                OnPropertyChanged();
+                else
+                {
+                    // Keep the partial input visible while the user is typing.
+                    // WPF re-reads the source after each keystroke, so returning
+                    // the formatted value here would erase the edit.
+                    colorInput = value;
+                }
             }
         }
 
