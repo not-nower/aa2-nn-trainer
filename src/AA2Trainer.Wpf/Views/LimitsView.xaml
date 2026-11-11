@@ -8,7 +8,15 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+        <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="{Binding LimitTargetText}"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0" />
+            <TextBlock Text="{Binding LimitCharacterStatus}"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,14,0" />
             <CheckBox Content="Enable limit actions"
                       IsChecked="{Binding LimitEnabled, Mode=TwoWay}"
                       VerticalAlignment="Center" />
@@ -16,14 +24,14 @@
                       IsChecked="{Binding LimitApplyToPc, Mode=TwoWay}"
                       Margin="14,0,0,0"
                       VerticalAlignment="Center" />
-            <Button Content="Clear" Margin="14,0,0,0"
+            <Button Content="Clear this character" Margin="14,0,0,0"
                     Style="{StaticResource ToolbarButton}"
                     Click="Clear_Click" />
             <TextBlock Text="{Binding LimitStatus}"
                        Style="{StaticResource CaptionText}"
                        Margin="14,0,0,0"
                        VerticalAlignment="Center" />
-        </StackPanel>
+        </WrapPanel>
 
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding LimitActions}"
@@ -35,9 +43,15 @@
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="Block"
-                                        Width="52"
-                                        Binding="{Binding IsLimited, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridTemplateColumn Header="Block" Width="52">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsLimited, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Action"
                                     Width="*"
                                     IsReadOnly="True"
@@ -46,7 +60,7 @@
         </DataGrid>
 
         <TextBlock Grid.Row="2"
-                   Text="Warning: stopping an action can leave an NPC briefly stuck in place while the AI picks another action."
+                   Text="Warning: stopping an action can leave that character briefly stuck in place while the AI picks another action."
                    Style="{StaticResource CaptionText}"
                    TextWrapping="Wrap"
                    Margin="0,6,0,0" />

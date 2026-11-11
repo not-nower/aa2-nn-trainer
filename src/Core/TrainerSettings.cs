@@ -34,11 +34,16 @@ namespace AA2Trainer
 
         public static int[] LoadLimitActions()
         {
+            return LoadLimitActions(null);
+        }
+
+        public static int[] LoadLimitActions(string key)
+        {
             lock (Gate)
             {
                 EnsureLoaded();
                 string raw;
-                if (!Values.TryGetValue(LimitActionsKey, out raw))
+                if (!Values.TryGetValue(LimitKey(key), out raw))
                     return new int[0];
 
                 List<int> ids = new List<int>();
@@ -60,6 +65,11 @@ namespace AA2Trainer
 
         public static void SaveLimitActions(int[] actionIds)
         {
+            SaveLimitActions(null, actionIds);
+        }
+
+        public static void SaveLimitActions(string key, int[] actionIds)
+        {
             lock (Gate)
             {
                 EnsureLoaded();
@@ -78,9 +88,14 @@ namespace AA2Trainer
                 string[] parts = new string[sorted.Count];
                 for (int i = 0; i < sorted.Count; i++)
                     parts[i] = sorted[i].ToString(CultureInfo.InvariantCulture);
-                Values[LimitActionsKey] = string.Join(",", parts);
+                Values[LimitKey(key)] = string.Join(",", parts);
                 Save();
             }
+        }
+
+        private static string LimitKey(string key)
+        {
+            return string.IsNullOrEmpty(key) ? LimitActionsKey : key;
         }
 
         public static string LoadLastSavePath()

@@ -26,7 +26,9 @@ namespace AA2Trainer.WpfPrototype
         private readonly NameMap names = new NameMap();
         private readonly Dispatcher dispatcher;
         private readonly PlannerService planner;
-        private readonly ActionLimitList actionLimits = new ActionLimitList();
+        private readonly Dictionary<int, ActionLimitList> seatLimits =
+            new Dictionary<int, ActionLimitList>();
+        private readonly object seatLimitsSync = new object();
         private readonly ActionLimiter actionLimiter;
 
         private GameContext ctx = new GameContext();
@@ -162,7 +164,13 @@ namespace AA2Trainer.WpfPrototype
             debugStateReader = new ActionStateReader(mem);
             portraits = new PortraitService(mem);
             planner = new PlannerService(mem, dispatcher);
-            actionLimiter = new ActionLimiter(actionLimits, null);
+            for (int seat = 0; seat < 25; seat++)
+            {
+                seatLimits[seat] = new ActionLimitList(
+                    "limit-actions-" + seat.ToString("D2"));
+            }
+            actionLimiter = new ActionLimiter(IsActionLimited,
+                AnyActionLimits, null);
             timer = new System.Threading.Timer(Poll, null, 0, PollMs);
         }
 
@@ -227,25 +235,52 @@ namespace AA2Trainer.WpfPrototype
             get { return actionLimiter.LastBlocked; }
         }
 
-        public void SetActionLimit(int actionId, bool limited)
+        public void SetActionLimit(int seat, int actionId, bool limited)
         {
-            if (limited) actionLimits.Add(actionId);
-            else actionLimits.Remove(actionId);
+            ActionLimitList list = LimitsFor(seat);
+            if (list == null) return;
+            if (limited) list.Add(actionId);
+            else list.Remove(actionId);
         }
 
-        public bool IsActionLimited(int actionId)
+        public bool IsActionLimited(int seat, int actionId)
         {
-            return actionLimits.Contains(actionId);
+            ActionLimitList list = LimitsFor(seat);
+            return list != null && list.Contains(actionId);
         }
 
-        public int[] LimitedActions()
+        public int[] LimitedActions(int seat)
         {
-            return actionLimits.Snapshot();
+            ActionLimitList list = LimitsFor(seat);
+            return list == null ? new int[0] : list.Snapshot();
         }
 
-        public void ClearActionLimits()
+        public void ClearActionLimits(int seat)
         {
-            actionLimits.Clear();
+            ActionLimitList list = LimitsFor(seat);
+            if (list != null) list.Clear();
+        }
+
+        private ActionLimitList LimitsFor(int seat)
+        {
+            if (seat < 0 || seat > 24) return null;
+            lock (seatLimitsSync)
+            {
+                ActionLimitList list;
+                return seatLimits.TryGetValue(seat, out list) ? list : null;
+            }
+        }
+
+        private bool AnyActionLimits()
+        {
+            lock (seatLimitsSync)
+            {
+                foreach (ActionLimitList list in seatLimits.Values)
+                {
+                    if (list != null && list.Count > 0) return true;
+                }
+            }
+            return false;
         }
 
         public event Action<SessionSnapshot> SnapshotReady;

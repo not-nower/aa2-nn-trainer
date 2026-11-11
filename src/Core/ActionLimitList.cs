@@ -11,11 +11,17 @@ namespace AA2Trainer
     {
         private readonly object gate = new object();
         private readonly HashSet<int> ids = new HashSet<int>();
+        private readonly string settingsKey;
 
         public event Action Changed;
 
-        public ActionLimitList()
+        public ActionLimitList() : this(null)
         {
+        }
+
+        public ActionLimitList(string settingsKey)
+        {
+            this.settingsKey = settingsKey;
             Load();
         }
 
@@ -79,13 +85,13 @@ namespace AA2Trainer
 
         private void Load()
         {
-            foreach (int id in TrainerSettings.LoadLimitActions())
+            foreach (int id in TrainerSettings.LoadLimitActions(settingsKey))
                 ids.Add(id);
         }
 
         private void Save()
         {
-            TrainerSettings.SaveLimitActions(Snapshot());
+            TrainerSettings.SaveLimitActions(settingsKey, Snapshot());
         }
     }
 }

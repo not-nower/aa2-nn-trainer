@@ -14,7 +14,7 @@ Fully vibe coded.
 ## Features
 
 - **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
-- **Gameplay** — Action/Planner (single action plus per-character multi-step plans), Relationship, Behavior History, Lover, Promises, and Limits (a persistent list of actions NPCs may not perform).
+- **Gameplay** — Action/Planner (single action plus per-character multi-step plans), Relationship, Behavior History, Lover, Promises, and Limits (per-character persistent lists of actions that character may not perform; select the character in the roster to edit their list).
 - **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
 - **Option** — live-refresh settings, portable save Backup/Restore (including AAUnlimited `.json` data), and bundled name-table updates, plus game System/Sound/Additional options.
 - **Debug** — pointer/definition browser and filters, plus the experimental Status Preview.
@@ -96,6 +96,9 @@ ObserveOnly=0
 - `LiveRefresh` - pause/resume live polling (writes still process while paused)
 - `RefreshIntervalMs` - poll interval, 50-2000 ms
 - `ObserveOnly` - remember the planner observe-only choice for the next hook install
+
+Action limits are per character in `AA2Trainer.ini` beside the exe as
+`limit-actions-00` through `limit-actions-24`.
 
 The legacy WinForms build stores its own settings beside `bin\AA2Trainer.exe` in
 `AA2Trainer.ini` (`limit-actions`, `last-save`).

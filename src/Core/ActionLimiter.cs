@@ -16,6 +16,8 @@ namespace AA2Trainer
     public sealed class ActionLimiter : IDisposable
     {
         private readonly ActionLimitList limits;
+        private readonly Func<int, int, bool> seatLimitProvider;
+        private readonly Func<bool> anyLimits;
         private readonly Func<bool> externalWriteCheck;
         private readonly object gate = new object();
         private readonly Dictionary<uint, DateTime> cooldowns =
@@ -37,6 +39,14 @@ namespace AA2Trainer
         public ActionLimiter(ActionLimitList limits, Func<bool> externalWriteCheck)
         {
             this.limits = limits;
+            this.externalWriteCheck = externalWriteCheck;
+        }
+
+        public ActionLimiter(Func<int, int, bool> seatLimitProvider,
+            Func<bool> anyLimits, Func<bool> externalWriteCheck)
+        {
+            this.seatLimitProvider = seatLimitProvider;
+            this.anyLimits = anyLimits;
             this.externalWriteCheck = externalWriteCheck;
         }
 
@@ -146,7 +156,10 @@ namespace AA2Trainer
                 if (memory == null || context == null || stateReader == null ||
                     planner == null || !memory.IsAttached || !memory.CanWrite || !writes)
                     return;
-                if (limits.Count == 0) return;
+                bool hasLimits = limits != null
+                    ? limits.Count > 0
+                    : anyLimits != null && anyLimits();
+                if (!hasLimits) return;
                 if (externalWriteCheck != null && !externalWriteCheck()) return;
 
                 List<CharacterInfo> roster = new List<CharacterInfo>();
@@ -178,7 +191,11 @@ namespace AA2Trainer
                         continue;
                     }
                     if (st == null || st.ActionId < 0) continue;
-                    if (!limits.Contains(st.ActionId)) continue;
+                    bool limited = limits != null
+                        ? limits.Contains(st.ActionId)
+                        : seatLimitProvider != null &&
+                            seatLimitProvider(character.Seat, st.ActionId);
+                    if (!limited) continue;
 
                     // Too late to stop cleanly: the NPC is already talking or
                     // animation-locked. Let the interaction finish.
@@ -214,8 +231,9 @@ namespace AA2Trainer
                         {
                             cooldowns[cooldownKey] = now;
                             blockedCount++;
-                            lastBlocked = st.ActionId + " " +
-                                DisplayText.ActionLabel(st.ActionId);
+                            lastBlocked = character.Seat + " " +
+                                (character.Name ?? "") + " - " + st.ActionId +
+                                " " + DisplayText.ActionLabel(st.ActionId);
                             lastError = "";
                         }
                     }

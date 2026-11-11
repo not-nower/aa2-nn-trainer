@@ -101,6 +101,8 @@ namespace AA2Trainer.WpfPrototype
         private bool limitEnabled;
         private bool limitApplyToPc;
         private string limitStatus = "Blocked: 0";
+        private string limitTargetText = "Limits: no character";
+        private string limitCharacterStatus = "";
         private OptionSnapshot liveGameOptions;
         private string gameOptionsStatus = "Game options: waiting for the game.";
         private bool gameOptionsBusy;
@@ -205,6 +207,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref selectedSeat, value)) return;
                 ResetGameplayEditors();
+                RefreshLimitActionsForCurrentSeat();
                 if (!applyingSnapshot && isAttached && value != null &&
                     value.SeatIndex >= 0)
                 {
@@ -1030,6 +1033,23 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref limitStatus, value); }
         }
 
+        public string LimitTargetText
+        {
+            get { return limitTargetText; }
+            private set { Set(ref limitTargetText, value); }
+        }
+
+        public string LimitCharacterStatus
+        {
+            get { return limitCharacterStatus; }
+            private set { Set(ref limitCharacterStatus, value); }
+        }
+
+        private int LimitSeat
+        {
+            get { return SelectedSeat == null ? -1 : SelectedSeat.SeatIndex; }
+        }
+
         public string GameOptionsStatus
         {
             get { return gameOptionsStatus; }
@@ -1786,18 +1806,46 @@ namespace AA2Trainer.WpfPrototype
             OnPropertyChanged(nameof(CanEditLovers));
         }
 
-        private void OnLimitActionChanged(int actionId, bool limited)
+        private void OnLimitActionChanged(int seat, int actionId, bool limited)
         {
-            if (session != null) session.SetActionLimit(actionId, limited);
+            if (session != null) session.SetActionLimit(seat, actionId, limited);
+            UpdateLimitCharacterStatus();
         }
 
         public void ClearLimits()
         {
-            if (session == null) return;
-            session.ClearActionLimits();
+            int seat = LimitSeat;
+            if (session == null || seat < 0) return;
+            session.ClearActionLimits(seat);
             foreach (LimitActionItem item in LimitActions)
                 item.SetLimitedSilently(false);
-            LimitStatus = "Blocked: 0";
+            UpdateLimitCharacterStatus();
+        }
+
+        private void RefreshLimitActionsForCurrentSeat()
+        {
+            if (characterOptions != null)
+                RefreshLimitActions(characterOptions);
+            UpdateLimitCharacterStatus();
+        }
+
+        private void UpdateLimitCharacterStatus()
+        {
+            int seat = LimitSeat;
+            if (seat < 0 || SelectedSeat == null)
+            {
+                LimitTargetText = "Limits: no character";
+                LimitCharacterStatus = "";
+                return;
+            }
+
+            LimitTargetText = "Limits for " + SelectedSeat.Seat + "  " +
+                SelectedSeat.Name;
+            int count = session == null
+                ? 0 : session.LimitedActions(seat).Length;
+            LimitCharacterStatus = count == 1
+                ? "1 blocked action for this character"
+                : count + " blocked actions for this character";
         }
 
         public void SetRelationshipFeeling(int feeling)
@@ -1861,16 +1909,26 @@ namespace AA2Trainer.WpfPrototype
         {
             LimitActions.Clear();
             if (options == null) return;
+            int seat = LimitSeat;
+            if (seat < 0)
+            {
+                UpdateLimitCharacterStatus();
+                return;
+            }
+
             HashSet<int> limited = session == null
                 ? new HashSet<int>()
-                : new HashSet<int>(session.LimitedActions());
+                : new HashSet<int>(session.LimitedActions(seat));
             foreach (CharacterOption option in options.Actions)
             {
+                int actionId = option.Value;
                 LimitActionItem item = new LimitActionItem(
-                    option.Value, option.Text, OnLimitActionChanged);
-                item.SetLimitedSilently(limited.Contains(option.Value));
+                    actionId, option.Text,
+                    (id, value) => OnLimitActionChanged(seat, id, value));
+                item.SetLimitedSilently(limited.Contains(actionId));
                 LimitActions.Add(item);
             }
+            UpdateLimitCharacterStatus();
         }
 
         private void RefreshGameplayTables(SessionSnapshot snapshot)
