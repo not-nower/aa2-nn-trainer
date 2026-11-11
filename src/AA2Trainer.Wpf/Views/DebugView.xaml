@@ -8,33 +8,42 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="Definitions" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Live definitions" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Values refresh with the game session."
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       Margin="16,0,0,0" />
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <TextBox Width="180" ToolTip="Filter (wired in M4)" />
-                <ComboBox Width="110" Margin="6,0,0,0" SelectedIndex="0">
+                <TextBox Width="180"
+                         ToolTip="Filter name, address, type, value, or note"
+                         Text="{Binding DebugFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <ComboBox Width="110" Margin="6,0,0,0"
+                          SelectedIndex="{Binding DebugTypeIndex, Mode=TwoWay}">
                     <ComboBoxItem Content="All types" />
-                    <ComboBoxItem Content="Character" />
-                    <ComboBoxItem Content="Activity" />
+                    <ComboBoxItem Content="Pointer" />
+                    <ComboBoxItem Content="Integer" />
+                    <ComboBoxItem Content="Text" />
+                    <ComboBoxItem Content="Boolean" />
                 </ComboBox>
-                <CheckBox Content="Only changed" Margin="10,0,0,0"
-                          VerticalAlignment="Center" />
-                <Button Content="Refresh" Style="{StaticResource ToolbarButton}"
-                        Margin="10,0,0,0" />
-                <Button Content="Clear" Style="{StaticResource ToolbarButton}"
-                        Margin="6,0,0,0" />
             </StackPanel>
         </DockPanel>
 
         <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding DebugFields}"
+                  ItemsSource="{Binding DebugFieldsView}"
                   IsReadOnly="True"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  EnableRowVirtualization="True"
                   AlternatingRowBackground="{DynamicResource SurfaceAlt}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" Width="150" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Name" Width="180" Binding="{Binding Name}" />
                 <DataGridTextColumn Header="Address" Width="105" Binding="{Binding Address}"
                                     ElementStyle="{StaticResource MonoText}" />
-                <DataGridTextColumn Header="Type" Width="55" Binding="{Binding Type}" />
-                <DataGridTextColumn Header="Value" Width="150" Binding="{Binding Value}"
+                <DataGridTextColumn Header="Type" Width="60" Binding="{Binding Type}" />
+                <DataGridTextColumn Header="Value" Width="200" Binding="{Binding Value}"
                                     ElementStyle="{StaticResource MonoText}" />
                 <DataGridTextColumn Header="Note" Width="*" Binding="{Binding Note}" />
             </DataGrid.Columns>

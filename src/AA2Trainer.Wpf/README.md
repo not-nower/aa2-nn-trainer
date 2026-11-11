@@ -107,7 +107,15 @@ dotnet build -c Release
   - compact step editor;
   - plan-level Repeat/Shuffle/Mode/Trigger on the plan bar;
   - Live events / Planner log tabs.
-- Options and Debug sample surfaces, including a virtualized field grid.
+- **Options** reads all live game options through `OptionEditor` and groups
+  them into System, Sound, Additional (1–3). Toggles, choices, and sliders
+  update `OptionSnapshot` values; Apply writes only changed fields on the poll
+  thread, and Revert restores the last live values.
+- **Debug** lists live definitions and values: attach state, module/global
+  roots, class/roster pointers, selected CharacterInfo and characterData,
+  live action/location/movement/reffTo/NPC target/mood/flags, status records,
+  schedule/save, time freeze, and option availability. Text and type filters
+  run over the live rows.
 - Custom compact scrollbars, tab strip, combo box, checkbox, and buttons.
 - Layout verified at **1180×760** and **1024×680** (125% DPI): the 5×5 roster
   fits without a scrollbar at the minimum size.
@@ -121,10 +129,8 @@ or romanization is applied.
 
 ## Not implemented (next phases)
 
-- M2: Face/Hair/Outfits; remaining Character Data fields; Import/Export.
-- M3: real planner runner, logs, and Gameplay sub-tabs.
-- M4: Options/Debug parity.
-- M5: focus/accessibility/performance pass; full keyboard navigation deferred.
+- M5: trainer settings/backups/name-table wiring; focus/accessibility/
+  performance pass; full keyboard navigation deferred.
 - M6: cutover to `AA2Trainer.exe`.
 
 ## Design notes

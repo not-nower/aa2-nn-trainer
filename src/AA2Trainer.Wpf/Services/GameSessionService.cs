@@ -38,6 +38,12 @@ namespace AA2Trainer.WpfPrototype
         private int[,] selectedRiskValues;
         private int[] selectedBodyValues;
         private CharacterOptions characterOptions;
+        private OptionSnapshot gameOptions;
+        private string gameOptionsError = "";
+        private readonly object optionWriteSync = new object();
+        private bool optionWritePending;
+        private OptionSnapshot optionWriteOriginal;
+        private OptionSnapshot optionWriteEdited;
         private string clubSignature = "";
         private readonly object writeSync = new object();
         private bool writePending;
@@ -203,6 +209,7 @@ namespace AA2Trainer.WpfPrototype
         public event Action<PlayerSwitchResult> PlayerSwitchCompleted;
         public event Action<RosterActionResult> RosterActionCompleted;
         public event Action<ScheduleWriteResult> ScheduleWriteCompleted;
+        public event Action<OptionWriteResult> OptionWriteCompleted;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -427,6 +434,22 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestOptionWrite(OptionSnapshot original,
+            OptionSnapshot edited)
+        {
+            if (disposed || !mem.IsAttached || original == null || edited == null)
+                return false;
+
+            lock (optionWriteSync)
+            {
+                if (optionWritePending) return false;
+                optionWriteOriginal = original;
+                optionWriteEdited = edited;
+                optionWritePending = true;
+                return true;
+            }
+        }
+
         public bool RequestTimeFreeze(int milliseconds)
         {
             if (disposed || !mem.IsAttached) return false;
@@ -469,6 +492,7 @@ namespace AA2Trainer.WpfPrototype
             PlayerSwitchCompleted = null;
             RosterActionCompleted = null;
             ScheduleWriteCompleted = null;
+            OptionWriteCompleted = null;
         }
 
         private void Poll(object state)
@@ -528,6 +552,7 @@ namespace AA2Trainer.WpfPrototype
             names.Load(NameMap.FindGameRoot() ?? "");
             selectedGender = ReadSelectedGender();
             characterOptions = BuildCharacterOptions(selectedGender);
+            RefreshGameOptions();
             clubSignature = BuildClubSignature() + "/g" + selectedGender;
             live.PublishRoster(ctx.Characters, ctx.Selected);
             health = hasClass ? PointerHealth.Run(mem, ctx) : null;
@@ -549,6 +574,7 @@ namespace AA2Trainer.WpfPrototype
             CancelPendingRosterAction("Detached.");
             lock (relationshipFreezeSync) relationshipFreezes.Clear();
             CancelPendingScheduleWrite("Detached.");
+            CancelPendingOptionWrite("Detached.");
             timeFreezeMilliseconds = null;
             actionLimiter.Enabled = false;
             actionLimiter.SetTarget(null, null);
@@ -558,6 +584,8 @@ namespace AA2Trainer.WpfPrototype
             ctx = new GameContext();
             health = null;
             schedule = null;
+            gameOptions = null;
+            gameOptionsError = "";
             selectedCharacterDetail = null;
             selectedCharacterSnapshot = null;
             selectedTraitValues = null;
@@ -581,6 +609,7 @@ namespace AA2Trainer.WpfPrototype
             ProcessRosterAction();
             RestoreRelationshipFreezes();
             ProcessScheduleWrite();
+            ProcessOptionWrite();
             PinTime();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
@@ -625,6 +654,7 @@ namespace AA2Trainer.WpfPrototype
                 string scheduleError;
                 schedule = ScheduleEditor.TryRead(mem, ctx, out readSchedule,
                     out scheduleError) ? readSchedule : null;
+                RefreshGameOptions();
             }
 
             if ((now - lastHealthUtc).TotalMilliseconds >= HealthRefreshMs)
@@ -659,6 +689,8 @@ namespace AA2Trainer.WpfPrototype
             snapshot.Character = selectedCharacterDetail;
             snapshot.RawCharacter = selectedCharacterSnapshot;
             snapshot.Options = characterOptions;
+            snapshot.GameOptions = gameOptions;
+            snapshot.GameOptionsError = gameOptionsError;
             snapshot.SelectedPointer = ctx.Selected == null ? 0 : ctx.Selected.Pointer;
             snapshot.TraitValues = selectedTraitValues;
             snapshot.RiskValues = selectedRiskValues;
@@ -677,6 +709,7 @@ namespace AA2Trainer.WpfPrototype
             snapshot.LoverRows = selectedLoverRows;
             snapshot.PromiseRows = selectedPromiseRows;
             snapshot.RosterCharacters = selectedRosterCharacters;
+            snapshot.DebugFields = BuildDebugFields(liveSnapshot);
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -758,6 +791,162 @@ namespace AA2Trainer.WpfPrototype
             }
 
             return snapshot;
+        }
+
+        private List<DebugFieldItem> BuildDebugFields(LiveSnapshot liveSnapshot)
+        {
+            List<DebugFieldItem> fields = new List<DebugFieldItem>();
+            AddDebug(fields, "Attach state", 0, "state",
+                mem.IsAttached ? "attached" : "detached",
+                "game process connection");
+            AddDebug(fields, "Process", 0, "string",
+                mem.ProcessName ?? "", "attached executable");
+            AddDebug(fields, "Game version", 0, "string",
+                mem.GameVersion ?? "", "");
+            AddDebug(fields, "Module base", mem.ModuleBase, "ptr",
+                Hex(mem.ModuleBase), "AA2Play.exe image base");
+            AddDebug(fields, "Global root", ctx.GlobalRoot, "ptr",
+                Hex(ctx.GlobalRoot), "S = [module + 0x376164]");
+            AddDebug(fields, "Class data", ctx.ClassData, "ptr",
+                Hex(ctx.ClassData), "[S + 0x28]");
+            AddDebug(fields, "Class array", ctx.ClassArray, "ptr",
+                Hex(ctx.ClassArray), "[S + 0x6C] start");
+            AddDebug(fields, "Class array end", ctx.ClassArrayEnd, "ptr",
+                Hex(ctx.ClassArrayEnd), "[S + 0x70] end");
+            AddDebug(fields, "Roster version", 0, "int",
+                ctx.RosterVersion.ToString(), "increments on class/save change");
+            AddDebug(fields, "Roster count", 0, "int",
+                ctx.Characters.Count.ToString(), "loaded character slots");
+
+            CharacterInfo selected = ctx.Selected;
+            AddDebug(fields, "Selected seat", 0, "int",
+                selected == null ? "-" : selected.Seat.ToString(), "");
+            AddDebug(fields, "Selected name", 0, "string",
+                selected == null ? "" : selected.Name ?? "", "");
+            AddDebug(fields, "Selected char", ctx.SelectedChar, "ptr",
+                Hex(ctx.SelectedChar), "CharacterInfo pointer");
+            AddDebug(fields, "Selected data", ctx.SelectedCharData, "ptr",
+                Hex(ctx.SelectedCharData), "characterData block");
+            AddDebug(fields, "Status", ctx.Status, "ptr", Hex(ctx.Status),
+                "[selected + 0xF6C]");
+            AddDebug(fields, "Activity", ctx.Activity, "ptr", Hex(ctx.Activity),
+                "[status + 0x28]");
+            AddDebug(fields, "Relations", ctx.Relations, "ptr",
+                Hex(ctx.Relations), "relationship table");
+
+            LiveCharacterState state = null;
+            if (liveSnapshot != null && selected != null &&
+                liveSnapshot.Characters != null)
+            {
+                foreach (LiveCharacterState candidate in liveSnapshot.Characters)
+                {
+                    if (candidate != null && candidate.Seat == selected.Seat)
+                    {
+                        state = candidate;
+                        break;
+                    }
+                }
+            }
+
+            AddDebug(fields, "Live status", state == null ? 0 : state.Status,
+                "ptr", state == null ? "-" : Hex(state.Status), "");
+            AddDebug(fields, "Live activity", state == null ? 0 : state.Activity,
+                "ptr", state == null ? "-" : Hex(state.Activity), "");
+            AddDebug(fields, "Live NPC data", state == null ? 0 : state.NpcData,
+                "ptr", state == null ? "-" : Hex(state.NpcData), "");
+            AddDebug(fields, "Live reffTo", state == null ? 0 : state.ReffTo,
+                "ptr", state == null ? "-" : Hex(state.ReffTo),
+                "target character or activity");
+            AddDebug(fields, "Live NPC target",
+                state == null ? 0 : state.NpcTarget, "ptr",
+                state == null ? "-" : Hex(state.NpcTarget), "");
+            AddDebug(fields, "Live action", 0, "int",
+                state == null || state.ActionId < 0 ? "-" :
+                    state.ActionId + " " + ActionName(state.ActionId), "");
+            AddDebug(fields, "Live movement", 0, "int",
+                state == null ? "-" : state.MovementType.ToString(), "");
+            AddDebug(fields, "Live location", 0, "int",
+                state == null || state.Location < 0 ? "-" :
+                    state.Location + " " + LocationName(state.Location), "");
+            AddDebug(fields, "Live mood", 0, "int",
+                state == null ? "-" : state.MoodAction.ToString(),
+                "MoodAction");
+            AddDebug(fields, "Live flags", 0, "string",
+                state == null ? "-" :
+                    "anim=" + state.AnimLocked + " load=" + state.Loading +
+                    " talk=" + state.InConversation, "");
+
+            LiveCharacterStatus status = liveSnapshot == null
+                ? null : liveSnapshot.SelectedStatus;
+            if (status != null)
+            {
+                AddDebug(fields, "Victory count", 0, "int",
+                    status.VictoryCount.ToString(), "");
+                AddDebug(fields, "Class skip", 0, "int",
+                    status.ClassSkip.ToString(), "");
+                AddDebug(fields, "Winning over", 0, "int",
+                    status.WinningOver.ToString(), "");
+                AddDebug(fields, "Partner", 0, "int",
+                    status.Partner.ToString(), "");
+                AddDebug(fields, "Rejected", 0, "int",
+                    status.Rejected.ToString(), "");
+                AddDebug(fields, "Intelligence grade", 0, "int",
+                    status.IntelligenceGrade.ToString(), "");
+                AddDebug(fields, "Strength grade", 0, "int",
+                    status.StrengthGrade.ToString(), "");
+                AddDebug(fields, "Club grade", 0, "int",
+                    status.ClubGrade.ToString(), "");
+                AddDebug(fields, "Sex intercourse", 0, "int",
+                    status.SexIntercourse.ToString(), "");
+                AddDebug(fields, "Sex partner", 0, "int",
+                    status.SexPartner.ToString(), "");
+                AddDebug(fields, "Experiences", 0, "string",
+                    "sex=" + status.SexExperience +
+                    " anal=" + status.AnalExperience, "");
+            }
+
+            if (schedule != null)
+            {
+                AddDebug(fields, "Save name", 0, "string",
+                    schedule.SaveName ?? "", "class save");
+                AddDebug(fields, "Academy", 0, "string",
+                    schedule.Academy ?? "", "");
+                AddDebug(fields, "Week", 0, "int",
+                    schedule.Week + " / day " + schedule.GameDay, "");
+                AddDebug(fields, "Weekday", 0, "int",
+                    schedule.Weekday.ToString(), "");
+                AddDebug(fields, "Period", 0, "int",
+                    schedule.Period + " (" + schedule.PeriodDuration + " slots)",
+                    "");
+                AddDebug(fields, "Game time", 0, "int",
+                    schedule.TimeMilliseconds + " ms", "");
+            }
+
+            AddDebug(fields, "Time freeze", 0, "string",
+                timeFreezeMilliseconds.HasValue
+                    ? timeFreezeMilliseconds.Value + " ms" : "off", "");
+            AddDebug(fields, "Game options", 0, "string",
+                gameOptions == null ? gameOptionsError : "readable",
+                "OptionEditor live block");
+            return fields;
+        }
+
+        private static void AddDebug(List<DebugFieldItem> fields, string name,
+            uint address, string type, string value, string note)
+        {
+            fields.Add(new DebugFieldItem
+            {
+                Name = name ?? "",
+                Address = address == 0 ? "" : Hex(address),
+                Type = type ?? "",
+                Value = value ?? "",
+                Note = note ?? ""
+            });
+        }
+
+        private static string Hex(uint value)
+        {
+            return "0x" + value.ToString("X8");
         }
 
         private void RefreshRelations()
@@ -2370,6 +2559,87 @@ namespace AA2Trainer.WpfPrototype
                 Action<ScheduleWriteResult> handler = ScheduleWriteCompleted;
                 if (handler != null) handler(result);
             }));
+        }
+
+        private void ProcessOptionWrite()
+        {
+            OptionSnapshot original;
+            OptionSnapshot edited;
+            lock (optionWriteSync)
+            {
+                if (!optionWritePending) return;
+                original = optionWriteOriginal;
+                edited = optionWriteEdited;
+                optionWritePending = false;
+                optionWriteOriginal = null;
+                optionWriteEdited = null;
+            }
+
+            OptionWriteResult result = new OptionWriteResult();
+            try
+            {
+                string changed;
+                string error;
+                if (OptionEditor.TryWrite(mem, ctx, original, edited,
+                    out changed, out error))
+                {
+                    result.Success = true;
+                    result.Changed = changed ?? "";
+                    RefreshGameOptions();
+                }
+                else
+                {
+                    result.Error = string.IsNullOrEmpty(error)
+                        ? "Write failed." : error;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishOptionWrite(result);
+        }
+
+        private void CancelPendingOptionWrite(string error)
+        {
+            OptionWriteResult result;
+            lock (optionWriteSync)
+            {
+                if (!optionWritePending) return;
+                optionWritePending = false;
+                result = new OptionWriteResult { Error = error };
+                optionWriteOriginal = null;
+                optionWriteEdited = null;
+            }
+            PublishOptionWrite(result);
+        }
+
+        private void PublishOptionWrite(OptionWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<OptionWriteResult> handler = OptionWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void RefreshGameOptions()
+        {
+            OptionSnapshot read;
+            string error;
+            if (OptionEditor.TryRead(mem, ctx, out read, out error))
+            {
+                gameOptions = read;
+                gameOptionsError = "";
+            }
+            else
+            {
+                gameOptionsError = string.IsNullOrEmpty(error)
+                    ? "Game options are unavailable." : error;
+            }
         }
 
         private void PinTime()

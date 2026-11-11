@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace AA2Trainer.WpfPrototype
@@ -91,9 +93,17 @@ namespace AA2Trainer.WpfPrototype
         private bool limitEnabled;
         private bool limitApplyToPc;
         private string limitStatus = "Blocked: 0";
+        private OptionSnapshot liveGameOptions;
+        private string gameOptionsStatus = "Game options: waiting for the game.";
+        private bool gameOptionsBusy;
+        private readonly Dictionary<int, GameOptionItem> gameOptionItems =
+            new Dictionary<int, GameOptionItem>();
         private string gameplayTableSignature = "";
         private int selectedRelationshipIndex = -1;
         private int selectedLoverIndex = -1;
+        private string debugFilter = "";
+        private int debugTypeIndex;
+        private ICollectionView debugFieldsView;
 
         public MainViewModel()
         {
@@ -109,15 +119,22 @@ namespace AA2Trainer.WpfPrototype
             BehaviorRows = new ObservableCollection<BehaviorRowItem>();
             LoverRows = new ObservableCollection<LoverRowItem>();
             PromiseRows = new ObservableCollection<PromiseRowItem>();
+            SystemOptionSections = new ObservableCollection<GameOptionSection>();
+            SoundOptionSections = new ObservableCollection<GameOptionSection>();
+            Additional1OptionSections = new ObservableCollection<GameOptionSection>();
+            Additional2OptionSections = new ObservableCollection<GameOptionSection>();
+            Additional3OptionSections = new ObservableCollection<GameOptionSection>();
             LiveLines = new ObservableCollection<LogLine>();
             PlannerLines = new ObservableCollection<LogLine>();
             DebugFields = new ObservableCollection<DebugFieldItem>();
+            debugFieldsView = CollectionViewSource.GetDefaultView(DebugFields);
+            debugFieldsView.Filter = FilterDebugField;
 
             SeedSeats();
             selectedSeat = Seats[0];
             SeedPlan();
             SeedLogs();
-            SeedDebug();
+            BuildGameOptionSections();
 
             Dispatcher dispatcher = Application.Current != null
                 ? Application.Current.Dispatcher
@@ -133,6 +150,7 @@ namespace AA2Trainer.WpfPrototype
             session.PlayerSwitchCompleted += OnPlayerSwitchCompleted;
             session.RosterActionCompleted += OnRosterActionCompleted;
             session.ScheduleWriteCompleted += OnScheduleWriteCompleted;
+            session.OptionWriteCompleted += OnOptionWriteCompleted;
             session.Planner.Log += OnPlannerLog;
             session.Planner.StateChanged += RefreshPlannerNow;
             LoadCardsAsync();
@@ -146,6 +164,11 @@ namespace AA2Trainer.WpfPrototype
         public ObservableCollection<CharacterOption> PlannerActions { get; private set; }
         public ObservableCollection<CharacterOption> PlannerRooms { get; private set; }
         public ObservableCollection<LimitActionItem> LimitActions { get; private set; }
+        public ObservableCollection<GameOptionSection> SystemOptionSections { get; private set; }
+        public ObservableCollection<GameOptionSection> SoundOptionSections { get; private set; }
+        public ObservableCollection<GameOptionSection> Additional1OptionSections { get; private set; }
+        public ObservableCollection<GameOptionSection> Additional2OptionSections { get; private set; }
+        public ObservableCollection<GameOptionSection> Additional3OptionSections { get; private set; }
         public ObservableCollection<RelationshipRowItem> RelationshipRows { get; private set; }
         public ObservableCollection<BehaviorRowItem> BehaviorRows { get; private set; }
         public ObservableCollection<LoverRowItem> LoverRows { get; private set; }
@@ -603,6 +626,8 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(CanApply));
                 OnPropertyChanged(nameof(CanApplyTraits));
                 OnPropertyChanged(nameof(CanApplyBody));
+                OnPropertyChanged(nameof(CanApplyOptions));
+                OnPropertyChanged(nameof(CanRevertOptions));
             }
         }
 
@@ -850,6 +875,325 @@ namespace AA2Trainer.WpfPrototype
         {
             get { return limitStatus; }
             private set { Set(ref limitStatus, value); }
+        }
+
+        public string GameOptionsStatus
+        {
+            get { return gameOptionsStatus; }
+            private set { Set(ref gameOptionsStatus, value); }
+        }
+
+        public bool IsGameOptionsBusy
+        {
+            get { return gameOptionsBusy; }
+        }
+
+        public bool CanApplyOptions
+        {
+            get
+            {
+                return isAttached && !gameOptionsBusy &&
+                    liveGameOptions != null && AnyGameOptionDirty();
+            }
+        }
+
+        public bool CanRevertOptions
+        {
+            get { return !gameOptionsBusy && AnyGameOptionDirty(); }
+        }
+
+        public void ApplyGameOptions()
+        {
+            if (session == null || gameOptionsBusy || liveGameOptions == null ||
+                !AnyGameOptionDirty())
+                return;
+
+            OptionSnapshot original = BuildGameOptionSnapshot(true);
+            OptionSnapshot edited = BuildGameOptionSnapshot(false);
+            if (original == null || edited == null) return;
+
+            if (!session.RequestOptionWrite(original, edited))
+            {
+                GameOptionsStatus = "Write request was not accepted.";
+                return;
+            }
+
+            gameOptionsBusy = true;
+            GameOptionsStatus = "Writing...";
+            NotifyOptionButtons();
+        }
+
+        public void RevertGameOptions()
+        {
+            if (gameOptionsBusy) return;
+            foreach (GameOptionItem item in gameOptionItems.Values)
+                item.SetLive(item.LiveValue);
+            GameOptionsStatus = "Reverted to live values.";
+            NotifyOptionButtons();
+        }
+
+        private void OnGameOptionEdited(GameOptionItem item)
+        {
+            if (gameOptionsBusy) return;
+            GameOptionsStatus = "Unsaved changes.";
+            NotifyOptionButtons();
+        }
+
+        private void OnOptionWriteCompleted(OptionWriteResult result)
+        {
+            gameOptionsBusy = false;
+            if (result != null && result.Success)
+            {
+                foreach (GameOptionItem item in gameOptionItems.Values)
+                    item.MarkClean();
+                GameOptionsStatus = string.IsNullOrEmpty(result.Changed) ||
+                    result.Changed == "No changes."
+                    ? "No changes."
+                    : "Applied: " + result.Changed;
+            }
+            else
+            {
+                string error = result == null || string.IsNullOrEmpty(result.Error)
+                    ? "unknown error" : result.Error;
+                GameOptionsStatus = "Write failed: " + error;
+            }
+            NotifyOptionButtons();
+        }
+
+        private void NotifyOptionButtons()
+        {
+            OnPropertyChanged(nameof(IsGameOptionsBusy));
+            OnPropertyChanged(nameof(CanApplyOptions));
+            OnPropertyChanged(nameof(CanRevertOptions));
+        }
+
+        private bool AnyGameOptionDirty()
+        {
+            foreach (GameOptionItem item in gameOptionItems.Values)
+            {
+                if (item.IsDirty) return true;
+            }
+            return false;
+        }
+
+        private OptionSnapshot BuildGameOptionSnapshot(bool live)
+        {
+            if (liveGameOptions == null) return null;
+            OptionSnapshot snapshot = liveGameOptions.Clone();
+            foreach (GameOptionItem item in gameOptionItems.Values)
+            {
+                if (item.Index < 0 ||
+                    item.Index >= snapshot.Values.Length)
+                    continue;
+                snapshot.Values[item.Index] = live
+                    ? item.LiveValue : item.Value;
+            }
+            return snapshot;
+        }
+
+        private void UpdateGameOptions(SessionSnapshot sessionSnapshot)
+        {
+            if (sessionSnapshot.GameOptions != null)
+            {
+                liveGameOptions = sessionSnapshot.GameOptions;
+                foreach (GameOptionItem item in gameOptionItems.Values)
+                {
+                    if (item.IsDirty) continue;
+                    if (item.Index >= 0 &&
+                        item.Index < liveGameOptions.Values.Length)
+                    {
+                        item.SetLive(liveGameOptions.Values[item.Index]);
+                    }
+                }
+
+                if (!gameOptionsBusy && !AnyGameOptionDirty())
+                    GameOptionsStatus = "Game options: live";
+            }
+            else if (!string.IsNullOrEmpty(sessionSnapshot.GameOptionsError))
+            {
+                GameOptionsStatus = "Game options: " +
+                    sessionSnapshot.GameOptionsError;
+            }
+
+            NotifyOptionButtons();
+        }
+
+        private void BuildGameOptionSections()
+        {
+            AddOptionSection(SystemOptionSections, "Display",
+                "DisplayShadow", "DisplayOutline", "DisplayCrosshair");
+            AddOptionSection(SystemOptionSections, "H-Scene Settings",
+                "DisplayPlayer", "DisplayNPC", "DisplayPenis", "CameraAngle",
+                "DisplayBGChar", "Display3D", "ClickFocus");
+            AddOptionSection(SystemOptionSections,
+                "Monochrome/Transparent Setting",
+                "MonoMan", "MonoManOpa", "MonoManRed", "MonoManGreen",
+                "MonoManBlue");
+
+            AddOptionSection(SoundOptionSections, "General",
+                "BGM", "BGMVal", "Sound", "SoundVal", "Voice", "VoiceVal",
+                "HSound", "HSoundVal");
+
+            AddOptionSection(Additional1OptionSections, "Misc",
+                "NPCConversion", "NPCConversionVal", "BGExternal",
+                "ReleaseMouse");
+            AddOptionSection(Additional1OptionSections, "Movement",
+                "PlayerMove", "PlayerMoveVal", "NPCMove", "NPCMoveVal",
+                "WorldMove", "WorldMoveVal");
+            AddOptionSection(Additional1OptionSections, "Time & Risk",
+                "CustomBell", "CustomBellVal", "OverrideRisk",
+                "OverrideRiskVal", "OverrideCondom", "OverrideCondomVal");
+
+            AddOptionSection(Additional2OptionSections, "Interaction",
+                "DisableInteractionNPCtoPlayer",
+                "DisableInteruptionNPCtoPlayer",
+                "DisableInteractionNPCtoNPC",
+                "DisableInteruptionNPCtoNPC",
+                "DisableInteractionAutoPCtoNPC",
+                "DisableInteruptionAutoPCtoNPC");
+            AddOptionSection(Additional2OptionSections, "Disabled Actions",
+                "DisableABUSEActions", "DisableViolenceActions",
+                "DisableContestActions", "DisableNPCEscape",
+                "DisableCOMMANDActions", "DisableJOINCLUBActions",
+                "DisableBELOVERAction", "DisableBREAKUPAction",
+                "DisableSKINSHIP", "DisableSEXAction",
+                "DisableSexualExceptSex", "DisableEveryoneCommand",
+                "DisableNPCGoingHome", "DisableNPCTraining");
+
+            AddOptionSection(Additional3OptionSections,
+                "Relationship Rate Modifiers",
+                "LOVEorLIKEModPlayertoNPC", "LOVEorLIKEModPlayertoNPCVal",
+                "DISLIKEorHATEModPlayertoNPC",
+                "DISLIKEorHATEModPlayertoNPCVal",
+                "LOVEorLIKEModNPCtoPlayer", "LOVEorLIKEModNPCtoPlayerVal",
+                "DISLIKEorHATEModNPCtoPlayer",
+                "DISLIKEorHATEModNPCtoPlayerVal",
+                "LOVEorLIKEModNPCtoNPC", "LOVEorLIKEModNPCtoNPCval",
+                "DISLIKEorHATEModNPCtoNPC",
+                "DISLIKEorHATEModNPCtoNPCval");
+            AddOptionSection(Additional3OptionSections, "Other",
+                "PositiveRespontoPlayer", "SuccessfulTraining", "SkipHScane",
+                "EveryoneHMood");
+        }
+
+        private void AddOptionSection(
+            ObservableCollection<GameOptionSection> sections, string title,
+            params string[] names)
+        {
+            GameOptionSection section = new GameOptionSection { Title = title };
+            foreach (string name in names)
+            {
+                int index = OptionEditor.IndexOf(name);
+                if (index < 0) continue;
+                OptionFieldDef definition = OptionEditor.Fields[index];
+                GameOptionItem item = new GameOptionItem(index, definition,
+                    OnGameOptionEdited);
+                section.Items.Add(item);
+                gameOptionItems[index] = item;
+            }
+            if (section.Items.Count > 0) sections.Add(section);
+        }
+
+        public ICollectionView DebugFieldsView
+        {
+            get { return debugFieldsView; }
+        }
+
+        public string DebugFilter
+        {
+            get { return debugFilter; }
+            set
+            {
+                if (!Set(ref debugFilter, value ?? "")) return;
+                if (debugFieldsView != null) debugFieldsView.Refresh();
+            }
+        }
+
+        public int DebugTypeIndex
+        {
+            get { return debugTypeIndex; }
+            set
+            {
+                if (!Set(ref debugTypeIndex, value)) return;
+                if (debugFieldsView != null) debugFieldsView.Refresh();
+            }
+        }
+
+        private bool FilterDebugField(object item)
+        {
+            DebugFieldItem field = item as DebugFieldItem;
+            if (field == null) return false;
+
+            if (!string.IsNullOrEmpty(debugFilter))
+            {
+                if (!ContainsText(field.Name) &&
+                    !ContainsText(field.Address) &&
+                    !ContainsText(field.Type) &&
+                    !ContainsText(field.Value) &&
+                    !ContainsText(field.Note))
+                    return false;
+            }
+
+            switch (debugTypeIndex)
+            {
+                case 1:
+                    return field.Type == "ptr";
+                case 2:
+                    return IsIntegerType(field.Type);
+                case 3:
+                    return field.Type == "string";
+                case 4:
+                    return field.Type == "bool";
+                default:
+                    return true;
+            }
+        }
+
+        private bool ContainsText(string value)
+        {
+            return !string.IsNullOrEmpty(value) &&
+                value.IndexOf(debugFilter, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsIntegerType(string type)
+        {
+            return type == "int" || type == "uint" || type == "u32" ||
+                type == "i32" || type == "long" || type == "short" ||
+                type == "byte" || type == "u8";
+        }
+
+        private void ApplyDebugFields(SessionSnapshot sessionSnapshot)
+        {
+            List<DebugFieldItem> source = sessionSnapshot.DebugFields;
+            if (source == null || debugFieldsView == null) return;
+
+            bool rebuild = DebugFields.Count != source.Count;
+            if (!rebuild)
+            {
+                for (int i = 0; i < DebugFields.Count; i++)
+                {
+                    if (DebugFields[i].Name != source[i].Name)
+                    {
+                        rebuild = true;
+                        break;
+                    }
+                }
+            }
+
+            if (rebuild)
+            {
+                DebugFields.Clear();
+                foreach (DebugFieldItem field in source)
+                    DebugFields.Add(field);
+            }
+            else
+            {
+                for (int i = 0; i < DebugFields.Count; i++)
+                    DebugFields[i].Apply(source[i]);
+            }
+
+            if (!string.IsNullOrEmpty(debugFilter) || debugTypeIndex != 0)
+                debugFieldsView.Refresh();
         }
 
         public int SelectedRelationshipIndex
@@ -2083,6 +2427,7 @@ namespace AA2Trainer.WpfPrototype
             session.PlayerSwitchCompleted -= OnPlayerSwitchCompleted;
             session.RosterActionCompleted -= OnRosterActionCompleted;
             session.ScheduleWriteCompleted -= OnScheduleWriteCompleted;
+            session.OptionWriteCompleted -= OnOptionWriteCompleted;
             session.Planner.Log -= OnPlannerLog;
             session.Planner.StateChanged -= RefreshPlannerNow;
             session.Dispose();
@@ -2112,6 +2457,8 @@ namespace AA2Trainer.WpfPrototype
                 UpdateOutfitDraft(snapshot);
                 UpdateScheduleDraft(snapshot);
                 IsTimeFrozen = snapshot.TimeFrozen;
+                UpdateGameOptions(snapshot);
+                ApplyDebugFields(snapshot);
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -2762,58 +3109,5 @@ namespace AA2Trainer.WpfPrototype
                 text, level));
         }
 
-        private void SeedDebug()
-        {
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "Status", Address = "0x21DE2E28", Type = "ptr",
-                Value = "0x21DE2F10", Note = "character status"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "Action", Address = "0x21DE2F50", Type = "i32",
-                Value = "44", Note = "Pet"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "MovementType", Address = "0x21DE2F4C", Type = "i32",
-                Value = "3", Note = "walk to character"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "Location", Address = "0x21DE2F58", Type = "i32",
-                Value = "10", Note = "Outside Toilets"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "Response", Address = "0x21DE2F6C", Type = "i32",
-                Value = "1", Note = "Yes"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "TargetNpc", Address = "0x21DE2F7C", Type = "u32",
-                Value = "0x211B11C8", Note = "activity"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "WalkTarget", Address = "0x21DE2F80", Type = "u32",
-                Value = "0x21DE2E58", Note = "interface"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "RoomPointer", Address = "0x21DE2F84", Type = "u32",
-                Value = "0x21DE32A0", Note = "room block"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "AnimLocked", Address = "0x21DE2F24", Type = "u8",
-                Value = "0", Note = "byte"
-            });
-            DebugFields.Add(new DebugFieldItem
-            {
-                Name = "InConversation", Address = "0x21DE2F29", Type = "u8",
-                Value = "1", Note = "byte"
-            });
-        }
     }
 }

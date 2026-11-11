@@ -39,6 +39,8 @@ namespace AA2Trainer.WpfPrototype
         public CharacterDetail Character;
         public CharacterSnapshot RawCharacter;
         public CharacterOptions Options;
+        public OptionSnapshot GameOptions;
+        public string GameOptionsError = "";
         public bool[] TraitValues;
         public int[,] RiskValues;
         public int[] BodyValues;
@@ -55,6 +57,7 @@ namespace AA2Trainer.WpfPrototype
         public List<LoverEntry> LoverRows;
         public List<PromiseEntry> PromiseRows;
         public List<CharacterInfo> RosterCharacters;
+        public List<DebugFieldItem> DebugFields;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }
