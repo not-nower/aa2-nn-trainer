@@ -30,6 +30,11 @@ namespace AA2Trainer.WpfPrototype.Views
             if (ViewModel != null) ViewModel.TogglePlannerHook();
         }
 
+        private void RepairHook_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel != null) ViewModel.RepairPlannerHook();
+        }
+
         private void Observe_Changed(object sender, RoutedEventArgs e)
         {
             CheckBox box = sender as CheckBox;

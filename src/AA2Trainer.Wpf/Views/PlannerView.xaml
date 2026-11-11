@@ -38,6 +38,10 @@
                     Style="{StaticResource ToolbarButton}"
                     Click="Hook_Click"
                     Margin="0,0,6,0" />
+            <Button Content="Repair hook"
+                    Style="{StaticResource ToolbarButton}"
+                    Click="RepairHook_Click"
+                    Margin="0,0,10,0" />
             <CheckBox Content="Observe only"
                       VerticalAlignment="Center"
                       IsChecked="{Binding PlannerObserveOnly, Mode=OneWay}"

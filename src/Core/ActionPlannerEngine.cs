@@ -57,6 +57,11 @@ namespace AA2Trainer
             return hook.Uninstall(out message);
         }
 
+        public bool RepairHook(out string message)
+        {
+            return hook.Repair(out message);
+        }
+
         public void Dispose()
         {
             hook.Dispose();

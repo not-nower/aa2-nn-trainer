@@ -85,6 +85,35 @@ namespace AA2Trainer.WpfPrototype
             return ok;
         }
 
+        public bool RepairHook(out string message)
+        {
+            message = null;
+            if (engine == null)
+            {
+                message = "The planner engine is unavailable.";
+                return false;
+            }
+            if (!engine.RepairHook(out message))
+            {
+                PublishLog("Hook repair failed: " +
+                    (message ?? "unknown error"));
+                RaiseState();
+                return false;
+            }
+
+            string installMessage;
+            bool installed = engine.InstallHook(out installMessage);
+            message = installed
+                ? installMessage
+                : "Vanilla bytes restored, but reinstall failed: " +
+                    (installMessage ?? "unknown error");
+            PublishLog(installed
+                ? "Planner hook repaired and reinstalled."
+                : message);
+            RaiseState();
+            return installed;
+        }
+
         public bool SetObserveOnly(bool enabled)
         {
             if (engine == null) return false;

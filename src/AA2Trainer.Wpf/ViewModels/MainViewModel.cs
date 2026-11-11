@@ -2172,16 +2172,36 @@ namespace AA2Trainer.WpfPrototype
         {
             if (session == null) return;
             string message;
-            bool ok = plannerHookInstalled
+            bool wasInstalled = plannerHookInstalled;
+            bool ok = wasInstalled
                 ? session.Planner.UninstallHook(out message)
                 : session.Planner.InstallHook(out message);
-            if (!ok && !string.IsNullOrEmpty(message))
+            if (ok)
+            {
+                RosterStatus = wasInstalled
+                    ? "Planner hook uninstalled."
+                    : "Planner hook installed.";
+            }
+            else if (!string.IsNullOrEmpty(message))
             {
                 RosterStatus = message;
                 LogPlanner(message);
             }
             if (ok && !plannerHookInstalled && trainerSettings.ObserveOnly)
                 session.Planner.SetObserveOnly(true);
+            RefreshPlannerNow();
+        }
+
+        public void RepairPlannerHook()
+        {
+            if (session == null) return;
+            string message;
+            bool ok = session.Planner.RepairHook(out message);
+            if (!string.IsNullOrEmpty(message))
+            {
+                RosterStatus = message;
+                LogPlanner(message);
+            }
             RefreshPlannerNow();
         }
 

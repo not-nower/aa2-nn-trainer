@@ -156,7 +156,8 @@ namespace AA2Trainer
                 message = "No usable hook point. 0x" + callSite.ToString("X8") +
                     " = " + Describe(callSiteBytes) + "; 0x" +
                     plannerEntry.ToString("X8") + " = " + Describe(plannerBytes) +
-                    ". Another mod may be hooking both.";
+                    ". Another mod may be hooking both. If the trainer was " +
+                    "force-closed while installed, use Repair hook.";
                 lastError = message;
                 return false;
             }
@@ -247,6 +248,68 @@ namespace AA2Trainer
                 mode = Mode.None;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Explicit recovery for a stale patch left behind by a force-closed
+        /// trainer. Restores the known vanilla bytes at both candidate hook
+        /// points when they currently start with a jump. This is deliberately
+        /// user-triggered because another mod could be using a jump there too.
+        /// </summary>
+        public bool Repair(out string message)
+        {
+            message = null;
+            if (mem == null || !mem.IsAttached)
+            {
+                message = "The game is not attached.";
+                return false;
+            }
+            if (!mem.CanWrite)
+            {
+                message = "The trainer does not have write access. Run it as administrator.";
+                return false;
+            }
+
+            uint callSite = mem.ModuleBase + CallSiteRva;
+            uint plannerEntry = mem.ModuleBase + PlannerEntryRva;
+            byte[] callBytes = mem.ReadBytes(callSite, VanillaCallSite.Length);
+            byte[] plannerBytes = mem.ReadBytes(plannerEntry,
+                VanillaPlannerEntry.Length);
+
+            bool callPatched = callBytes != null && callBytes.Length > 0 &&
+                callBytes[0] == 0xE9 && !Matches(callBytes, VanillaCallSite);
+            bool plannerPatched = plannerBytes != null &&
+                plannerBytes.Length > 0 && plannerBytes[0] == 0xE9 &&
+                !Matches(plannerBytes, VanillaPlannerEntry);
+
+            if (!callPatched && !plannerPatched)
+            {
+                message = "No stale jump patch was found at the planner hook points.";
+                return false;
+            }
+
+            if (callPatched && !mem.WriteCodeBytes(callSite, VanillaCallSite))
+            {
+                message = "Restoring the call-site bytes failed: " +
+                    mem.WriteError;
+                lastError = message;
+                return false;
+            }
+            if (plannerPatched &&
+                !mem.WriteCodeBytes(plannerEntry, VanillaPlannerEntry))
+            {
+                message = "Restoring the planner-entry bytes failed: " +
+                    mem.WriteError;
+                lastError = message;
+                return false;
+            }
+
+            installed = false;
+            page = 0;
+            originalBytes = null;
+            mode = Mode.None;
+            message = "Vanilla planner bytes restored. Install the hook again.";
+            return true;
         }
 
         /// <summary>
