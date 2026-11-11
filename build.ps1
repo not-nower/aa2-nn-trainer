@@ -1,20 +1,29 @@
 param(
+    [switch]$Legacy,
     [switch]$KeepRunning
 )
 
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$project = Join-Path $root "AA2Trainer.csproj"
-$output = Join-Path $root "bin\AA2Trainer.exe"
+$project = if ($Legacy) {
+    Join-Path $root "AA2Trainer.csproj"
+} else {
+    Join-Path $root "src\AA2Trainer.Wpf\AA2Trainer.WpfPrototype.csproj"
+}
+$output = if ($Legacy) {
+    Join-Path $root "bin\AA2Trainer.exe"
+} else {
+    Join-Path $root "bin\WPF\AA2Trainer.exe"
+}
+$label = if ($Legacy) { "WinForms legacy" } else { "WPF" }
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     throw "dotnet SDK not found. Install the .NET SDK 8 or newer."
 }
 
-# The build writes bin\AA2Trainer.exe, so a running copy would lock the file
-# and fail the copy step with a retry storm. Poll by process name rather than
-# by Process object state, which can lag behind an exiting process.
+# Both builds use the same process name, so a running copy of either app would
+# lock the output. Poll by process name rather than Process object state.
 function Test-TrainerRunning {
     return @(Get-Process -Name AA2Trainer -ErrorAction SilentlyContinue).Count -gt 0
 }
@@ -32,7 +41,7 @@ $running = @(Get-Process -Name AA2Trainer -ErrorAction SilentlyContinue)
 if ($running.Count -gt 0) {
     $ids = ($running | ForEach-Object { $_.Id }) -join ", "
     if ($KeepRunning) {
-        throw "AA2Trainer.exe is running (PID $ids) and would lock bin\AA2Trainer.exe. Close it first or omit -KeepRunning."
+        throw "AA2Trainer.exe is running (PID $ids) and would lock the build output. Close it first or omit -KeepRunning."
     }
 
     Write-Host "Stopping running AA2Trainer.exe (PID $ids) so the build can replace it."
@@ -65,7 +74,7 @@ if (Test-Path $output) {
     }
 }
 
-Write-Host "Building AA2Trainer.exe ..."
+Write-Host "Building $label AA2Trainer.exe ..."
 dotnet build $project -c Release --nologo -v:m
 
 if ($LASTEXITCODE -ne 0) {
@@ -73,3 +82,6 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Built: $output"
+if (-not $Legacy) {
+    Write-Host "Legacy WinForms build remains available with: build.ps1 -Legacy"
+}

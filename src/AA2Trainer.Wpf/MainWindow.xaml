@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:AA2Trainer.WpfPrototype.Views"
-        Title="AA2 Trainer - WPF prototype"
+        Title="AA2 Trainer"
         Width="1180" Height="760"
         MinWidth="1024" MinHeight="680"
         WindowStartupLocation="CenterScreen"

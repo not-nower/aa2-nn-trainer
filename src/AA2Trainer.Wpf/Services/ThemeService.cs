@@ -25,10 +25,11 @@ namespace AA2Trainer.WpfPrototype
             IsDark = mode == ThemeMode.Dark ||
                 (mode == ThemeMode.System && !IsSystemLight());
 
+            string assembly = typeof(ThemeService).Assembly.GetName().Name;
             ResourceDictionary dictionary = new ResourceDictionary
             {
                 Source = new Uri(
-                    "pack://application:,,,/AA2Trainer.WpfPrototype;component/Themes/" +
+                    "pack://application:,,,/" + assembly + ";component/Themes/" +
                     (IsDark ? "Dark.xaml" : "Light.xaml"),
                     UriKind.Absolute)
             };

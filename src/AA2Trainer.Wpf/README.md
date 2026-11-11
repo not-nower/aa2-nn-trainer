@@ -1,22 +1,19 @@
-# AA2Trainer WPF prototype (M1.1)
+# AA2 Trainer (WPF)
 
-Standalone WPF **.NET Framework 4.8 / x86** prototype for the planned UI rebuild.
-It references `AA2Trainer.Core`, attaches to AA2Play, and reads live game data on
-a background poller. The shipping WinForms app remains the parity fallback.
+WPF **.NET Framework 4.8 / x86** app. It references `AA2Trainer.Core`, attaches
+to AA2Play, and reads live game data on a background poller. The WinForms app
+remains available as a legacy fallback via `build.ps1 -Legacy`.
 
 ## Run
 
 ```powershell
-cd src\AA2Trainer.Wpf
-dotnet run -c Release
+cd ..\..
+powershell -ExecutionPolicy Bypass -File build.ps1
+.\bin\WPF\AA2Trainer.exe
 ```
 
-Or build and launch:
-
-```powershell
-dotnet build -c Release
-.\bin\Release\net48\AA2Trainer.WpfPrototype.exe
-```
+For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
+`bin\WPF\AA2Trainer.exe`.
 
 ## Implemented
 

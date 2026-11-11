@@ -84,25 +84,25 @@ restore so stale in-memory card data cannot overwrite the restored file.
 
 ## Portable settings
 
-Trainer settings are stored beside `AA2Trainer.exe` in `AA2Trainer.ini`:
+The default WPF build stores its preferences beside `AA2Trainer.exe` in
+`AA2Trainer.settings`:
 
 ```ini
-limit-actions=14,19,40,48,102
-last-save=D:\...\Class01.sav
+LiveRefresh=1
+RefreshIntervalMs=250
+ObserveOnly=0
 ```
 
-- `limit-actions` — actions blocked by Gameplay → Limits
-- `last-save` — last save used by Option → Trainer → Save backups
-- The file is created on first use.
-- Copying or moving the exe folder carries the settings with it.
-- The trainer does not write to `%APPDATA%`.
-- If the folder is read-only, the trainer still runs but cannot remember changes.
+- `LiveRefresh` - pause/resume live polling (writes still process while paused)
+- `RefreshIntervalMs` - poll interval, 50-2000 ms
+- `ObserveOnly` - remember the planner observe-only choice for the next hook install
 
-`NameData.local.tsv` remains a separate portable file beside the exe.
+The legacy WinForms build stores its own settings beside `bin\AA2Trainer.exe` in
+`AA2Trainer.ini` (`limit-actions`, `last-save`).
 
-`AA2TrainerPlans.xml` (created by **Save plans**) follows the same rule: it is
-written beside `AA2Trainer.exe`, never to `%APPDATA%`. A read-only folder means
-Save plans fails; the trainer still runs.
+Both formats are portable: copying or moving the exe folder carries the
+settings with it. The trainer does not write to `%APPDATA%`. If the folder is
+read-only, the trainer still runs but cannot remember changes.
 
 ## Plan Multiple Action
 
@@ -138,9 +138,10 @@ in the same spirit as TAA2's Plan Multiple Action.
 - **Live events** — the first log tab records per-seat state changes every
   250 ms with the partner name. **Planner log** holds the runner trace.
   Clear and Save Log act on the active tab.
-- **Planner hook** — installed automatically on Start and stays installed until
-  you turn off **Use planner hook**, clear, or detach. AAUnlimited is optional;
-  plans use the game's planner entry either way.
+- **Planner hook** — explicit **Install hook** / **Uninstall hook** in Gameplay ? Planner.
+  Normal close restores the original game bytes; **Repair hook** recovers a
+  patch left behind by a force-closed trainer. AAUnlimited is optional; plans
+  use the game's planner entry either way.
 
 ## Build
 
@@ -150,13 +151,22 @@ Requires the .NET SDK 8 or newer (`dotnet --version`). End users only need .NET 
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-Output: `bin\AA2Trainer.exe` (x86, .NET Framework 4.8) plus
-`bin\AA2Trainer.Core.dll`. Keep both together.
+Default output is the WPF app: `bin\WPF\AA2Trainer.exe` (x86, .NET Framework
+4.8) plus its `AA2Trainer.Core.dll`, WPF assemblies, `.config`, and manifest.
+Keep the whole folder together; that folder is the portable deployment.
+
+The WinForms build is kept as a legacy fallback for one release:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build.ps1 -Legacy
+```
+
+That writes `bin\AA2Trainer.exe` plus `bin\AA2Trainer.Core.dll`.
 
 `build.ps1` stops a running trainer before building. `-KeepRunning` opts out,
-but the build will fail while the trainer is running. The WinForms project is
-`AA2Trainer.csproj`; `dotnet build AA2Trainer.sln -c Release` also works, with
-the same running-app caveat.
+but the build will fail while the trainer is running.
+`dotnet build AA2Trainer.sln -c Release` also works, with the same running-app
+caveat.
 
 ## Dependencies
 
@@ -170,7 +180,7 @@ the same running-app caveat.
 
 ## Layout
 
-- `AA2Trainer.sln` — solution for the WinForms app, Core library, and WPF prototype.
+- `AA2Trainer.sln` — solution for the WPF app (default), WinForms legacy app, and Core library.
 - `src/`
   - `Program.cs` — application entry point
   - `MainForm.cs` — main window, tab shell, attach/refresh, fail-safe pointer gate
@@ -226,11 +236,11 @@ the same running-app caveat.
     - `NameData.tsv` — action, location, personality and name tables (embedded in Core)
     - `TraitEffects.tsv` — trait effect tooltip text (embedded in Core)
     - `CardFields.tsv` — card edit-data field table (embedded in Core)
-- `src\AA2Trainer.Wpf\` — WPF prototype with live session polling (M1.1); kept in the solution but not part of the WinForms release
+- `src\AA2Trainer.Wpf\` — WPF app with live session polling; default build output is `bin\WPF\AA2Trainer.exe`
 - `tools/ExportNameData.py` — regenerates `NameData.tsv` from the game or AA2QtEdit XML (merge-only)
 - `tools/ExportCardFields.py` — regenerates `CardFields.tsv` from AA2QtEdit `chardata.xml`
 - `tools/README.md` — exporter usage notes
-- `build.ps1` — stops a running trainer, then builds x86 `bin/AA2Trainer.exe` plus `AA2Trainer.Core.dll`
+- `build.ps1` — stops a running trainer, then builds the WPF x86 app to `bin\WPF\AA2Trainer.exe`; `-Legacy` builds WinForms to `bin\AA2Trainer.exe`
 - `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 WinForms app; references `src/Core/AA2Trainer.Core.csproj`
 
 ## Troubleshooting
@@ -266,3 +276,4 @@ the same running-app caveat.
 ## License
 
 GNU General Public License v3.0 — see [LICENSE](LICENSE).
+
