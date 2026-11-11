@@ -5,6 +5,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
@@ -24,46 +25,144 @@
                        VerticalAlignment="Center" />
         </StackPanel>
 
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding RelationshipRows}"
-                  SelectedIndex="{Binding SelectedRelationshipIndex, Mode=TwoWay}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  VirtualizingStackPanel.IsVirtualizing="True"
-                  VirtualizingStackPanel.VirtualizationMode="Recycling">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Seat / Name"
-                                    Width="*"
-                                    Binding="{Binding SourceText}" />
-                <DataGridTextColumn Header="Love"
-                                    Width="82"
-                                    Binding="{Binding LoveText}" />
-                <DataGridTextColumn Header="Like"
-                                    Width="82"
-                                    Binding="{Binding LikeText}" />
-                <DataGridTextColumn Header="Dislike"
-                                    Width="82"
-                                    Binding="{Binding DislikeText}" />
-                <DataGridTextColumn Header="Hate"
-                                    Width="82"
-                                    Binding="{Binding HateText}" />
-                <DataGridTextColumn Header="Latest"
-                                    Width="140"
-                                    Binding="{Binding Latest}">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridCheckBoxColumn Header="Lover"
-                                        Width="54"
-                                        Binding="{Binding IsLover, Mode=OneWay}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding RelationshipRows}"
+                      SelectedIndex="{Binding SelectedRelationshipIndex, Mode=TwoWay}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      VirtualizingStackPanel.IsVirtualizing="True"
+                      VirtualizingStackPanel.VirtualizationMode="Recycling">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Seat / Name"
+                                        Width="*"
+                                        Binding="{Binding SourceText}" />
+                    <DataGridTextColumn Header="Love"
+                                        Width="82"
+                                        Binding="{Binding LoveText}" />
+                    <DataGridTextColumn Header="Like"
+                                        Width="82"
+                                        Binding="{Binding LikeText}" />
+                    <DataGridTextColumn Header="Dislike"
+                                        Width="82"
+                                        Binding="{Binding DislikeText}" />
+                    <DataGridTextColumn Header="Hate"
+                                        Width="82"
+                                        Binding="{Binding HateText}" />
+                    <DataGridTextColumn Header="Latest"
+                                        Width="100"
+                                        Binding="{Binding Latest}" />
+                    <DataGridCheckBoxColumn Header="Lover"
+                                            Width="54"
+                                            Binding="{Binding IsLover, Mode=OneWay}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <StackPanel Margin="8"
+                            DataContext="{Binding RelationshipDraft}">
+                    <TextBlock Text="Counts, points, level"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,0,0,6" />
+
+                    <Grid Margin="0,0,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="72" />
+                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Feeling"
+                                   Style="{StaticResource CaptionText}" />
+                        <TextBlock Grid.Column="1" Text="Count"
+                                   Style="{StaticResource CaptionText}" />
+                        <TextBlock Grid.Column="2" Text="Points"
+                                   Style="{StaticResource CaptionText}" />
+                        <TextBlock Grid.Column="3" Text="Level"
+                                   Style="{StaticResource CaptionText}" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Feelings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="72" />
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}"
+                                               VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1"
+                                             Margin="0,0,4,0"
+                                             Text="{Binding Count, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Grid.Column="2"
+                                             Margin="0,0,4,0"
+                                             Text="{Binding Points, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <ComboBox Grid.Column="3"
+                                              ItemsSource="{Binding LevelChoices}"
+                                              SelectedIndex="{Binding LevelIndex, Mode=TwoWay}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="Latest change"
+                                   Style="{StaticResource CaptionText}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,6,0" />
+                        <ComboBox Width="110"
+                                  ItemsSource="{Binding LatestChoices}"
+                                  SelectedIndex="{Binding LatestIndex, Mode=TwoWay}"
+                                  IsEnabled="{Binding HasHistory}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Select a classmate."
+                               Margin="0,8,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock"
+                                   BasedOn="{StaticResource CaptionText}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <DockPanel Grid.Row="2" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Apply"
+                        Style="{StaticResource ToolbarButton}"
+                        IsEnabled="{Binding CanApplyRelationship}"
+                        Click="ApplyRelationship_Click" />
+                <Button Content="Revert"
+                        Style="{StaticResource ToolbarButton}"
+                        Margin="6,0,0,0"
+                        IsEnabled="{Binding CanRevertRelationship}"
+                        Click="RevertRelationship_Click" />
+            </StackPanel>
+            <TextBlock Text="{Binding RelationshipEditStatus}"
+                       Style="{StaticResource CaptionText}"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center" />
+        </DockPanel>
     </Grid>
 </UserControl>

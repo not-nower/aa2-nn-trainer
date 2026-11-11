@@ -5,47 +5,120 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Feeling history is stored oldest first; the game keeps no timestamps or action names."
-                   Style="{StaticResource CaptionText}"
-                   Margin="0,0,0,8" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Set all events:"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,6,0" />
+            <Button Content="Love" Style="{StaticResource ToolbarButton}"
+                    Click="AllLove_Click" />
+            <Button Content="Like" Style="{StaticResource ToolbarButton}"
+                    Margin="4,0,0,0" Click="AllLike_Click" />
+            <Button Content="Dislike" Style="{StaticResource ToolbarButton}"
+                    Margin="4,0,0,0" Click="AllDislike_Click" />
+            <Button Content="Hate" Style="{StaticResource ToolbarButton}"
+                    Margin="4,0,0,0" Click="AllHate_Click" />
+            <TextBlock Text="Feeling history is stored oldest first."
+                       Style="{StaticResource CaptionText}"
+                       Margin="14,0,0,0"
+                       VerticalAlignment="Center" />
+        </StackPanel>
 
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding BehaviorRows}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  VirtualizingStackPanel.IsVirtualizing="True"
-                  VirtualizingStackPanel.VirtualizationMode="Recycling">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Seat / Name"
-                                    Width="220"
-                                    Binding="{Binding SourceText}" />
-                <DataGridTextColumn Header="History"
-                                    Width="*"
-                                    Binding="{Binding History}">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                            <Setter Property="ToolTip" Value="{Binding History}" />
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Latest"
-                                    Width="140"
-                                    Binding="{Binding Latest}">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding BehaviorRows}"
+                      SelectedIndex="{Binding SelectedBehaviorIndex, Mode=TwoWay}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      VirtualizingStackPanel.IsVirtualizing="True"
+                      VirtualizingStackPanel.VirtualizationMode="Recycling">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Seat / Name"
+                                        Width="220"
+                                        Binding="{Binding SourceText}" />
+                    <DataGridTextColumn Header="History"
+                                        Width="*"
+                                        Binding="{Binding History}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource Text}" />
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                <Setter Property="ToolTip" Value="{Binding History}" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Latest"
+                                        Width="110"
+                                        Binding="{Binding Latest}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <DockPanel Margin="8">
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="History events"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,0,0,6" />
+                    <TextBlock DockPanel.Dock="Bottom"
+                               Text="Select an event and change its feeling."
+                               Style="{StaticResource CaptionText}"
+                               TextWrapping="Wrap"
+                               Margin="0,6,0,0" />
+                    <DataGrid ItemsSource="{Binding BehaviorDraft.Events}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#"
+                                                Width="36"
+                                                IsReadOnly="True"
+                                                Binding="{Binding Index}" />
+                            <DataGridTemplateColumn Header="Feeling" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Choices}"
+                                                  SelectedIndex="{Binding Feeling, Mode=TwoWay}"
+                                                  Margin="2" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <DockPanel Grid.Row="2" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Apply events"
+                        Style="{StaticResource ToolbarButton}"
+                        IsEnabled="{Binding CanApplyBehavior}"
+                        Click="ApplyBehavior_Click" />
+                <Button Content="Revert"
+                        Style="{StaticResource ToolbarButton}"
+                        Margin="6,0,0,0"
+                        IsEnabled="{Binding CanRevertBehavior}"
+                        Click="RevertBehavior_Click" />
+            </StackPanel>
+            <TextBlock Text="{Binding BehaviorEditStatus}"
+                       Style="{StaticResource CaptionText}"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center" />
+        </DockPanel>
     </Grid>
 </UserControl>

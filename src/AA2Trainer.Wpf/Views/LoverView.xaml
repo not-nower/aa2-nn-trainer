@@ -5,6 +5,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
@@ -12,7 +13,17 @@
                     Click="SetLover_Click" />
             <Button Content="Break Up" Style="{StaticResource ToolbarButton}"
                     Margin="6,0,0,0" Click="BreakUp_Click" />
-            <TextBlock Text="Lover flags are incoming only (each classmate's view of the selected character)"
+            <Button Content="Apply days / compatibility"
+                    Style="{StaticResource ToolbarButton}"
+                    Margin="12,0,0,0"
+                    IsEnabled="{Binding CanEditLovers}"
+                    Click="ApplyLover_Click" />
+            <Button Content="Revert"
+                    Style="{StaticResource ToolbarButton}"
+                    Margin="6,0,0,0"
+                    IsEnabled="{Binding CanEditLovers}"
+                    Click="RevertLover_Click" />
+            <TextBlock Text="Lover flags are incoming only"
                        Style="{StaticResource CaptionText}"
                        Margin="14,0,0,0"
                        VerticalAlignment="Center" />
@@ -22,7 +33,6 @@
                   ItemsSource="{Binding LoverRows}"
                   SelectedIndex="{Binding SelectedLoverIndex, Mode=TwoWay}"
                   AutoGenerateColumns="False"
-                  IsReadOnly="True"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
                   HeadersVisibility="Column"
@@ -32,17 +42,25 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Seat / Name"
                                     Width="*"
+                                    IsReadOnly="True"
                                     Binding="{Binding SourceText}" />
                 <DataGridCheckBoxColumn Header="Lover"
                                         Width="54"
+                                        IsReadOnly="True"
                                         Binding="{Binding IsLover, Mode=OneWay}" />
                 <DataGridTextColumn Header="Days"
-                                    Width="64"
-                                    Binding="{Binding Days}" />
+                                    Width="80"
+                                    Binding="{Binding Days, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                 <DataGridTextColumn Header="Compatibility"
-                                    Width="100"
-                                    Binding="{Binding Compatibility}" />
+                                    Width="110"
+                                    Binding="{Binding Compatibility, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
             </DataGrid.Columns>
         </DataGrid>
+
+        <DockPanel Grid.Row="2" Margin="0,8,0,0">
+            <TextBlock Text="{Binding LoverEditStatus}"
+                       Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
     </Grid>
 </UserControl>

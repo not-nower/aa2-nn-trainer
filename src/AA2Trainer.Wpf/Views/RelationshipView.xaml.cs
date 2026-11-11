@@ -39,5 +39,17 @@ namespace AA2Trainer.WpfPrototype.Views
             MainViewModel viewModel = DataContext as MainViewModel;
             if (viewModel != null) viewModel.ToggleRelationshipFreezeFromRow();
         }
+
+        private void ApplyRelationship_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyRelationshipEdits();
+        }
+
+        private void RevertRelationship_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertRelationshipEdits();
+        }
     }
 }

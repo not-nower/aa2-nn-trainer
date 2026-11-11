@@ -21,5 +21,17 @@ namespace AA2Trainer.WpfPrototype.Views
             MainViewModel viewModel = DataContext as MainViewModel;
             if (viewModel != null) viewModel.SetLoverFromRow(false);
         }
+
+        private void ApplyLover_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.ApplyLoverEdits();
+        }
+
+        private void RevertLover_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RevertLoverEdits();
+        }
     }
 }

@@ -108,7 +108,14 @@ namespace AA2Trainer.WpfPrototype
             new Dictionary<int, GameOptionItem>();
         private string gameplayTableSignature = "";
         private int selectedRelationshipIndex = -1;
+        private int selectedBehaviorIndex = -1;
         private int selectedLoverIndex = -1;
+        private RelationshipDraft relationshipDraft;
+        private BehaviorDraft behaviorDraft;
+        private bool gameplayWriteBusy;
+        private string relationshipEditStatus = "No changes.";
+        private string behaviorEditStatus = "No changes.";
+        private string loverEditStatus = "No changes.";
         private string debugFilter = "";
         private int debugTypeIndex;
         private ICollectionView debugFieldsView;
@@ -163,6 +170,7 @@ namespace AA2Trainer.WpfPrototype
             session.RosterActionCompleted += OnRosterActionCompleted;
             session.ScheduleWriteCompleted += OnScheduleWriteCompleted;
             session.OptionWriteCompleted += OnOptionWriteCompleted;
+            session.GameplayWriteCompleted += OnGameplayWriteCompleted;
             session.LiveLog += OnLiveLog;
             session.Planner.Log += OnPlannerLog;
             session.Planner.StateChanged += RefreshPlannerNow;
@@ -196,6 +204,7 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 if (!Set(ref selectedSeat, value)) return;
+                ResetGameplayEditors();
                 if (!applyingSnapshot && isAttached && value != null &&
                     value.SeatIndex >= 0)
                 {
@@ -1377,13 +1386,393 @@ namespace AA2Trainer.WpfPrototype
         public int SelectedRelationshipIndex
         {
             get { return selectedRelationshipIndex; }
-            set { Set(ref selectedRelationshipIndex, value); }
+            set
+            {
+                int previous = selectedRelationshipIndex;
+                if (!Set(ref selectedRelationshipIndex, value)) return;
+                if (relationshipDraft != null && relationshipDraft.IsDirty)
+                {
+                    selectedRelationshipIndex = previous;
+                    OnPropertyChanged(nameof(SelectedRelationshipIndex));
+                    RelationshipEditStatus =
+                        "Apply or revert changes before selecting another classmate.";
+                    return;
+                }
+                LoadRelationshipDraft();
+            }
+        }
+
+        public int SelectedBehaviorIndex
+        {
+            get { return selectedBehaviorIndex; }
+            set
+            {
+                int previous = selectedBehaviorIndex;
+                if (!Set(ref selectedBehaviorIndex, value)) return;
+                if (behaviorDraft != null && behaviorDraft.IsDirty)
+                {
+                    selectedBehaviorIndex = previous;
+                    OnPropertyChanged(nameof(SelectedBehaviorIndex));
+                    BehaviorEditStatus =
+                        "Apply or revert changes before selecting another classmate.";
+                    return;
+                }
+                LoadBehaviorDraft();
+            }
         }
 
         public int SelectedLoverIndex
         {
             get { return selectedLoverIndex; }
             set { Set(ref selectedLoverIndex, value); }
+        }
+
+        public RelationshipDraft RelationshipDraft
+        {
+            get { return relationshipDraft; }
+            private set
+            {
+                if (!Set(ref relationshipDraft, value)) return;
+                OnPropertyChanged(nameof(CanApplyRelationship));
+                OnPropertyChanged(nameof(CanRevertRelationship));
+            }
+        }
+
+        public BehaviorDraft BehaviorDraft
+        {
+            get { return behaviorDraft; }
+            private set
+            {
+                if (!Set(ref behaviorDraft, value)) return;
+                OnPropertyChanged(nameof(CanApplyBehavior));
+                OnPropertyChanged(nameof(CanRevertBehavior));
+            }
+        }
+
+        public bool IsGameplayWriteBusy
+        {
+            get { return gameplayWriteBusy; }
+        }
+
+        public string RelationshipEditStatus
+        {
+            get { return relationshipEditStatus; }
+            private set { Set(ref relationshipEditStatus, value); }
+        }
+
+        public string BehaviorEditStatus
+        {
+            get { return behaviorEditStatus; }
+            private set { Set(ref behaviorEditStatus, value); }
+        }
+
+        public string LoverEditStatus
+        {
+            get { return loverEditStatus; }
+            private set { Set(ref loverEditStatus, value); }
+        }
+
+        public bool CanApplyRelationship
+        {
+            get
+            {
+                return isAttached && !gameplayWriteBusy &&
+                    relationshipDraft != null && relationshipDraft.IsDirty;
+            }
+        }
+
+        public bool CanRevertRelationship
+        {
+            get
+            {
+                return !gameplayWriteBusy && relationshipDraft != null &&
+                    relationshipDraft.IsDirty;
+            }
+        }
+
+        public bool CanApplyBehavior
+        {
+            get
+            {
+                return isAttached && !gameplayWriteBusy &&
+                    behaviorDraft != null && behaviorDraft.IsDirty;
+            }
+        }
+
+        public bool CanRevertBehavior
+        {
+            get
+            {
+                return !gameplayWriteBusy && behaviorDraft != null &&
+                    behaviorDraft.IsDirty;
+            }
+        }
+
+        public bool CanEditLovers
+        {
+            get { return isAttached && !gameplayWriteBusy; }
+        }
+
+        public void ApplyRelationshipEdits()
+        {
+            if (session == null || relationshipDraft == null ||
+                !relationshipDraft.IsDirty || gameplayWriteBusy)
+                return;
+
+            GameplayWriteRequest request = relationshipDraft.BuildRequest();
+            if (!session.RequestGameplayWrite(request))
+            {
+                RelationshipEditStatus = "Write request was not accepted.";
+                return;
+            }
+            gameplayWriteBusy = true;
+            RelationshipEditStatus = "Writing...";
+            NotifyGameplayButtons();
+        }
+
+        public void RevertRelationshipEdits()
+        {
+            if (relationshipDraft == null || gameplayWriteBusy) return;
+            relationshipDraft.Revert();
+            RelationshipEditStatus = "Reverted to live values.";
+            NotifyGameplayButtons();
+        }
+
+        public void ApplyBehaviorEdits()
+        {
+            if (session == null || behaviorDraft == null ||
+                !behaviorDraft.IsDirty || gameplayWriteBusy)
+                return;
+
+            GameplayWriteRequest request = behaviorDraft.BuildRequest();
+            if (request.EventIndices == null || request.EventIndices.Length == 0)
+            {
+                BehaviorEditStatus = "No changes.";
+                return;
+            }
+            if (!session.RequestGameplayWrite(request))
+            {
+                BehaviorEditStatus = "Write request was not accepted.";
+                return;
+            }
+            gameplayWriteBusy = true;
+            BehaviorEditStatus = "Writing...";
+            NotifyGameplayButtons();
+        }
+
+        public void RevertBehaviorEdits()
+        {
+            if (behaviorDraft == null || gameplayWriteBusy) return;
+            behaviorDraft.Revert();
+            BehaviorEditStatus = "Reverted to live values.";
+            NotifyGameplayButtons();
+        }
+
+        public void SetAllBehaviorFeelings(int feeling)
+        {
+            if (session == null || behaviorDraft == null ||
+                behaviorDraft.Source == null || gameplayWriteBusy) return;
+
+            GameplayWriteRequest request = new GameplayWriteRequest
+            {
+                Kind = GameplayWriteKind.HistoryAll,
+                SourcePointer = behaviorDraft.Source.Pointer,
+                TargetSeat = behaviorDraft.TargetSeat,
+                Feeling = feeling
+            };
+            if (!session.RequestGameplayWrite(request))
+            {
+                BehaviorEditStatus = "Write request was not accepted.";
+                return;
+            }
+            gameplayWriteBusy = true;
+            BehaviorEditStatus = "Writing all events...";
+            NotifyGameplayButtons();
+        }
+
+        public void ApplyLoverEdits()
+        {
+            if (session == null || gameplayWriteBusy) return;
+            List<LoverEdit> edits = new List<LoverEdit>();
+            foreach (LoverRowItem row in LoverRows)
+            {
+                if (row != null && row.IsDirty) edits.Add(row.BuildEdit());
+            }
+            if (edits.Count == 0)
+            {
+                LoverEditStatus = "No changes.";
+                return;
+            }
+
+            GameplayWriteRequest request = new GameplayWriteRequest
+            {
+                Kind = GameplayWriteKind.LoverBatch,
+                LoverEdits = edits
+            };
+            if (!session.RequestGameplayWrite(request))
+            {
+                LoverEditStatus = "Write request was not accepted.";
+                return;
+            }
+            gameplayWriteBusy = true;
+            LoverEditStatus = "Writing...";
+            NotifyGameplayButtons();
+        }
+
+        public void RevertLoverEdits()
+        {
+            if (gameplayWriteBusy) return;
+            foreach (LoverRowItem row in LoverRows)
+                row.Revert();
+            LoverEditStatus = "Reverted to live values.";
+            NotifyGameplayButtons();
+        }
+
+        private void LoadRelationshipDraft()
+        {
+            RelationshipRowItem row = SelectedRelationshipRow();
+            if (row == null || row.Record == null)
+            {
+                RelationshipDraft = null;
+                RelationshipEditStatus = "Select a classmate.";
+                NotifyGameplayButtons();
+                return;
+            }
+            RelationshipDraft draft = new RelationshipDraft();
+            draft.Changed += OnRelationshipDraftChanged;
+            draft.Load(row.Record);
+            RelationshipDraft = draft;
+            RelationshipEditStatus = "No changes.";
+            NotifyGameplayButtons();
+        }
+
+        private void LoadBehaviorDraft()
+        {
+            BehaviorRowItem row = SelectedBehaviorRow();
+            if (row == null || SelectedSeat == null)
+            {
+                BehaviorDraft = null;
+                BehaviorEditStatus = "Select a classmate.";
+                NotifyGameplayButtons();
+                return;
+            }
+            BehaviorDraft draft = new BehaviorDraft();
+            draft.Changed += OnBehaviorDraftChanged;
+            draft.Load(new RelationshipHistoryRow
+            {
+                Source = row.Source,
+                HasRecord = row.HasRecord,
+                History = row.Values,
+                Latest = row.Values.Length > 0
+                    ? row.Values[row.Values.Length - 1] : -1
+            }, SelectedSeat.SeatIndex);
+            BehaviorDraft = draft;
+            BehaviorEditStatus = "No changes.";
+            NotifyGameplayButtons();
+        }
+
+        private BehaviorRowItem SelectedBehaviorRow()
+        {
+            if (selectedBehaviorIndex < 0 ||
+                selectedBehaviorIndex >= BehaviorRows.Count)
+                return null;
+            return BehaviorRows[selectedBehaviorIndex];
+        }
+
+        private void ResetGameplayEditors()
+        {
+            RelationshipDraft = null;
+            BehaviorDraft = null;
+            selectedRelationshipIndex = -1;
+            selectedBehaviorIndex = -1;
+            RelationshipEditStatus = "No changes.";
+            BehaviorEditStatus = "No changes.";
+            LoverEditStatus = "No changes.";
+            OnPropertyChanged(nameof(SelectedRelationshipIndex));
+            OnPropertyChanged(nameof(SelectedBehaviorIndex));
+            NotifyGameplayButtons();
+        }
+
+        private void OnRelationshipDraftChanged()
+        {
+            if (gameplayWriteBusy) return;
+            if (relationshipDraft != null && relationshipDraft.IsDirty)
+                RelationshipEditStatus = "Unsaved changes.";
+            NotifyGameplayButtons();
+        }
+
+        private void OnBehaviorDraftChanged()
+        {
+            if (gameplayWriteBusy) return;
+            if (behaviorDraft != null && behaviorDraft.IsDirty)
+                BehaviorEditStatus = "Unsaved changes.";
+            NotifyGameplayButtons();
+        }
+
+        private void OnGameplayWriteCompleted(GameplayWriteResult result)
+        {
+            gameplayWriteBusy = false;
+            string message;
+            bool success = result != null && result.Success;
+
+            if (result != null && result.Kind == GameplayWriteKind.LoverBatch)
+            {
+                if (success)
+                {
+                    foreach (LoverRowItem row in LoverRows)
+                        row.MarkClean();
+                    LoverEditStatus = "Saved lover values.";
+                }
+                else
+                {
+                    LoverEditStatus = "Write failed: " +
+                        (result.Error ?? "unknown error");
+                }
+                message = LoverEditStatus;
+            }
+            else if (result != null &&
+                (result.Kind == GameplayWriteKind.HistoryEvents ||
+                 result.Kind == GameplayWriteKind.HistoryAll))
+            {
+                if (success)
+                {
+                    if (behaviorDraft != null) behaviorDraft.MarkClean();
+                    BehaviorEditStatus = "Saved feeling history.";
+                }
+                else
+                {
+                    BehaviorEditStatus = "Write failed: " +
+                        (result.Error ?? "unknown error");
+                }
+                message = BehaviorEditStatus;
+            }
+            else
+            {
+                if (success)
+                {
+                    if (relationshipDraft != null) relationshipDraft.MarkClean();
+                    RelationshipEditStatus = "Saved relationship values.";
+                }
+                else
+                {
+                    RelationshipEditStatus = "Write failed: " +
+                        (result == null ? "unknown error" : result.Error);
+                }
+                message = RelationshipEditStatus;
+            }
+
+            LogSession(message, success ? "Info" : "Error");
+            NotifyGameplayButtons();
+        }
+
+        private void NotifyGameplayButtons()
+        {
+            OnPropertyChanged(nameof(IsGameplayWriteBusy));
+            OnPropertyChanged(nameof(CanApplyRelationship));
+            OnPropertyChanged(nameof(CanRevertRelationship));
+            OnPropertyChanged(nameof(CanApplyBehavior));
+            OnPropertyChanged(nameof(CanRevertBehavior));
+            OnPropertyChanged(nameof(CanEditLovers));
         }
 
         private void OnLimitActionChanged(int actionId, bool limited)
@@ -1502,6 +1891,8 @@ namespace AA2Trainer.WpfPrototype
                     }
                     RelationshipRows.Add(new RelationshipRowItem
                     {
+                        Source = record.Source,
+                        Record = record,
                         SourceSeat = record.Source.Seat,
                         SourceName = record.Source.Name ?? "",
                         LoveCount = record.Counts[0],
@@ -1513,7 +1904,7 @@ namespace AA2Trainer.WpfPrototype
                         DislikeLevel = record.Levels[2],
                         HateLevel = record.Levels[3],
                         Latest = record.Latest >= 0
-                            ? RelationshipStatus.Label(record.Latest) : "-",
+                            ? GameplayLabels.Feeling(record.Latest) : "-",
                         IsLover = isLover
                     });
                 }
@@ -1531,16 +1922,19 @@ namespace AA2Trainer.WpfPrototype
                         for (int i = 0; i < row.History.Length; i++)
                         {
                             if (i > 0) history += " > ";
-                            history += RelationshipStatus.Label(row.History[i]);
+                            history += GameplayLabels.Feeling(row.History[i]);
                         }
                     }
                     BehaviorRows.Add(new BehaviorRowItem
                     {
+                        Source = row.Source,
                         SourceSeat = row.Source.Seat,
                         SourceName = row.Source.Name ?? "",
                         History = history,
+                        Values = row.History ?? new int[0],
+                        HasRecord = row.HasRecord,
                         Latest = row.Latest >= 0
-                            ? RelationshipStatus.Label(row.Latest) : "-"
+                            ? GameplayLabels.Feeling(row.Latest) : "-"
                     });
                 }
             }
@@ -1549,14 +1943,15 @@ namespace AA2Trainer.WpfPrototype
             foreach (LoverEntry entry in lovers)
             {
                 if (entry == null || entry.Source == null) continue;
-                LoverRows.Add(new LoverRowItem
+                LoverRowItem loverRow = new LoverRowItem
                 {
+                    Source = entry.Source,
                     SourceSeat = entry.Source.Seat,
-                    SourceName = entry.Source.Name ?? "",
-                    IsLover = entry.IsLover,
-                    Days = entry.Days,
-                    Compatibility = entry.Compatibility
-                });
+                    SourceName = entry.Source.Name ?? ""
+                };
+                loverRow.SetLiveValues(entry.Days, entry.Compatibility,
+                    entry.IsLover);
+                LoverRows.Add(loverRow);
             }
 
             PromiseRows.Clear();
@@ -1592,6 +1987,51 @@ namespace AA2Trainer.WpfPrototype
                     });
                 }
             }
+
+            int targetSeat = SelectedSeat == null ? -1 : SelectedSeat.SeatIndex;
+            if (relationshipDraft == null ||
+                relationshipDraft.TargetSeat != targetSeat)
+            {
+                if (relationshipDraft == null || !relationshipDraft.IsDirty)
+                {
+                    if (RelationshipRows.Count > 0)
+                    {
+                        if (selectedRelationshipIndex < 0 ||
+                            selectedRelationshipIndex >= RelationshipRows.Count)
+                            selectedRelationshipIndex = 0;
+                        OnPropertyChanged(nameof(SelectedRelationshipIndex));
+                        LoadRelationshipDraft();
+                    }
+                    else
+                    {
+                        selectedRelationshipIndex = -1;
+                        RelationshipDraft = null;
+                        RelationshipEditStatus = "Select a classmate.";
+                    }
+                }
+            }
+
+            if (behaviorDraft == null || behaviorDraft.TargetSeat != targetSeat)
+            {
+                if (behaviorDraft == null || !behaviorDraft.IsDirty)
+                {
+                    if (BehaviorRows.Count > 0)
+                    {
+                        if (selectedBehaviorIndex < 0 ||
+                            selectedBehaviorIndex >= BehaviorRows.Count)
+                            selectedBehaviorIndex = 0;
+                        OnPropertyChanged(nameof(SelectedBehaviorIndex));
+                        LoadBehaviorDraft();
+                    }
+                    else
+                    {
+                        selectedBehaviorIndex = -1;
+                        BehaviorDraft = null;
+                        BehaviorEditStatus = "Select a classmate.";
+                    }
+                }
+            }
+            NotifyGameplayButtons();
         }
 
         private static string BuildGameplaySignature(SessionSnapshot snapshot)
@@ -2618,6 +3058,7 @@ namespace AA2Trainer.WpfPrototype
             session.RosterActionCompleted -= OnRosterActionCompleted;
             session.ScheduleWriteCompleted -= OnScheduleWriteCompleted;
             session.OptionWriteCompleted -= OnOptionWriteCompleted;
+            session.GameplayWriteCompleted -= OnGameplayWriteCompleted;
             session.LiveLog -= OnLiveLog;
             session.Planner.Log -= OnPlannerLog;
             session.Planner.StateChanged -= RefreshPlannerNow;

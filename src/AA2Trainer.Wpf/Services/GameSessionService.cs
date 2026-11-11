@@ -96,6 +96,9 @@ namespace AA2Trainer.WpfPrototype
         private int rosterActionTargetSeat = -1;
         private int rosterActionFeeling;
         private bool rosterActionFlag;
+        private readonly object gameplayWriteSync = new object();
+        private bool gameplayWritePending;
+        private GameplayWriteRequest gameplayWriteRequest;
         private readonly object relationshipFreezeSync = new object();
         private readonly Dictionary<long, FrozenRelationship> relationshipFreezes =
             new Dictionary<long, FrozenRelationship>();
@@ -256,6 +259,7 @@ namespace AA2Trainer.WpfPrototype
         public event Action<RosterActionResult> RosterActionCompleted;
         public event Action<ScheduleWriteResult> ScheduleWriteCompleted;
         public event Action<OptionWriteResult> OptionWriteCompleted;
+        public event Action<GameplayWriteResult> GameplayWriteCompleted;
         public event Action<string> LiveLog;
 
         public bool IsAttached { get { return mem.IsAttached; } }
@@ -497,6 +501,18 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool RequestGameplayWrite(GameplayWriteRequest request)
+        {
+            if (disposed || !mem.IsAttached || request == null) return false;
+            lock (gameplayWriteSync)
+            {
+                if (gameplayWritePending) return false;
+                gameplayWriteRequest = request;
+                gameplayWritePending = true;
+                return true;
+            }
+        }
+
         public bool RequestTimeFreeze(int milliseconds)
         {
             if (disposed || !mem.IsAttached) return false;
@@ -540,6 +556,8 @@ namespace AA2Trainer.WpfPrototype
             RosterActionCompleted = null;
             ScheduleWriteCompleted = null;
             OptionWriteCompleted = null;
+            GameplayWriteCompleted = null;
+            LiveLog = null;
         }
 
         private void Poll(object state)
@@ -623,6 +641,7 @@ namespace AA2Trainer.WpfPrototype
             lock (relationshipFreezeSync) relationshipFreezes.Clear();
             CancelPendingScheduleWrite("Detached.");
             CancelPendingOptionWrite("Detached.");
+            CancelPendingGameplayWrite("Detached.");
             timeFreezeMilliseconds = null;
             actionLimiter.Enabled = false;
             actionLimiter.SetTarget(null, null);
@@ -658,6 +677,7 @@ namespace AA2Trainer.WpfPrototype
             RestoreRelationshipFreezes();
             ProcessScheduleWrite();
             ProcessOptionWrite();
+            ProcessGameplayWrite();
             PollPlannerObservation();
             ProcessNameRequests();
             PinTime();
@@ -2774,6 +2794,182 @@ namespace AA2Trainer.WpfPrototype
                 Action<OptionWriteResult> handler = OptionWriteCompleted;
                 if (handler != null) handler(result);
             }));
+        }
+
+        private void ProcessGameplayWrite()
+        {
+            GameplayWriteRequest request;
+            lock (gameplayWriteSync)
+            {
+                if (!gameplayWritePending) return;
+                request = gameplayWriteRequest;
+                gameplayWritePending = false;
+                gameplayWriteRequest = null;
+            }
+
+            GameplayWriteResult result = new GameplayWriteResult
+            {
+                Kind = request.Kind,
+                SourcePointer = request.SourcePointer,
+                TargetSeat = request.TargetSeat
+            };
+
+            try
+            {
+                string error;
+                switch (request.Kind)
+                {
+                    case GameplayWriteKind.RelationshipValues:
+                        result.Success = RelationshipEditor.TryWrite(mem,
+                            request.SourcePointer, request.TargetSeat,
+                            request.Counts, request.Points, request.Levels,
+                            request.Latest, request.WriteLatest, out error);
+                        if (!result.Success) result.Error = error;
+                        break;
+
+                    case GameplayWriteKind.HistoryEvents:
+                    {
+                        int[] indices = request.EventIndices ?? new int[0];
+                        int[] feelings = request.EventFeelings ?? new int[0];
+                        int count = Math.Min(indices.Length, feelings.Length);
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (!RelationshipEditor.TryWriteHistory(mem,
+                                request.SourcePointer, request.TargetSeat,
+                                indices[i], feelings[i], out error))
+                            {
+                                result.Error = error;
+                                break;
+                            }
+                        }
+                        result.Success = string.IsNullOrEmpty(result.Error);
+                        break;
+                    }
+
+                    case GameplayWriteKind.HistoryAll:
+                        result.Success = RelationshipEditor.TryWriteHistoryAll(mem,
+                            request.SourcePointer, request.TargetSeat,
+                            request.Feeling, out error);
+                        if (!result.Success) result.Error = error;
+                        break;
+
+                    case GameplayWriteKind.LoverBatch:
+                    {
+                        List<LoverEdit> edits = request.LoverEdits ??
+                            new List<LoverEdit>();
+                        foreach (LoverEdit edit in edits)
+                        {
+                            if (edit == null) continue;
+                            CharacterInfo source = ctx.FindByPointer(
+                                edit.SourcePointer);
+                            if (source == null)
+                            {
+                                result.Error =
+                                    "A lover source is no longer loaded.";
+                                break;
+                            }
+                            if (edit.WriteDays &&
+                                !LoverEditor.TryWriteDays(mem, source,
+                                    edit.TargetSeat, edit.Days, out error))
+                            {
+                                result.Error = error;
+                                break;
+                            }
+                            if (edit.WriteCompatibility &&
+                                !LoverEditor.TryWriteCompatibility(mem, source,
+                                    edit.TargetSeat, edit.Compatibility,
+                                    out error))
+                            {
+                                result.Error = error;
+                                break;
+                            }
+                        }
+                        result.Success = string.IsNullOrEmpty(result.Error);
+                        break;
+                    }
+
+                    default:
+                        result.Error = "Unknown gameplay write request.";
+                        break;
+                }
+
+                if (result.Success)
+                {
+                    result.Changed = "Saved.";
+                    if (request.Kind == GameplayWriteKind.RelationshipValues ||
+                        request.Kind == GameplayWriteKind.HistoryEvents ||
+                        request.Kind == GameplayWriteKind.HistoryAll)
+                    {
+                        RefreshFrozenRelationship(request.SourcePointer,
+                            request.TargetSeat);
+                    }
+                    RefreshRelations();
+                    RefreshSelectedCharacter();
+                    lastContextUtc = DateTime.MinValue;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.Message;
+            }
+
+            PublishGameplayWrite(result);
+        }
+
+        private void CancelPendingGameplayWrite(string error)
+        {
+            GameplayWriteResult result;
+            lock (gameplayWriteSync)
+            {
+                if (!gameplayWritePending) return;
+                gameplayWritePending = false;
+                result = new GameplayWriteResult
+                {
+                    Error = error,
+                    Kind = gameplayWriteRequest == null
+                        ? GameplayWriteKind.RelationshipValues
+                        : gameplayWriteRequest.Kind,
+                    SourcePointer = gameplayWriteRequest == null
+                        ? 0 : gameplayWriteRequest.SourcePointer,
+                    TargetSeat = gameplayWriteRequest == null
+                        ? -1 : gameplayWriteRequest.TargetSeat
+                };
+                gameplayWriteRequest = null;
+            }
+            PublishGameplayWrite(result);
+        }
+
+        private void PublishGameplayWrite(GameplayWriteResult result)
+        {
+            if (disposed || result == null) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<GameplayWriteResult> handler = GameplayWriteCompleted;
+                if (handler != null) handler(result);
+            }));
+        }
+
+        private void RefreshFrozenRelationship(uint sourcePointer, int targetSeat)
+        {
+            long key = FreezeKey(sourcePointer, targetSeat);
+            lock (relationshipFreezeSync)
+            {
+                if (!relationshipFreezes.ContainsKey(key)) return;
+            }
+
+            RelationshipRecord record = RelationshipEditor.FindRecord(mem,
+                sourcePointer, targetSeat);
+            if (record == null) return;
+            lock (relationshipFreezeSync)
+            {
+                FrozenRelationship frozen;
+                if (!relationshipFreezes.TryGetValue(key, out frozen)) return;
+                Array.Copy(record.Counts, frozen.Counts, 4);
+                Array.Copy(record.Points, frozen.Points, 4);
+                Array.Copy(record.Levels, frozen.Levels, 4);
+                frozen.Latest = record.Latest;
+            }
         }
 
         private void RefreshGameOptions()
