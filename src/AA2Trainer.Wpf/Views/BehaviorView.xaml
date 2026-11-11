@@ -100,7 +100,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding Choices}"
-                                                      SelectedIndex="{Binding Feeling, Mode=TwoWay}"
+                                                      SelectedIndex="{Binding Feeling, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                       Margin="2" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

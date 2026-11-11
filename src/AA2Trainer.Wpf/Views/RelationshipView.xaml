@@ -89,7 +89,7 @@
                                 <ComboBox Grid.Column="2"
                                           Style="{StaticResource CellLevelCombo}"
                                           ItemsSource="{Binding Love.LevelChoices}"
-                                          SelectedIndex="{Binding Love.LevelIndex, Mode=TwoWay}"
+                                          SelectedIndex="{Binding Love.LevelIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           ToolTip="Love level" />
                             </Grid>
                         </DataTemplate>
@@ -115,7 +115,7 @@
                                 <ComboBox Grid.Column="2"
                                           Style="{StaticResource CellLevelCombo}"
                                           ItemsSource="{Binding Like.LevelChoices}"
-                                          SelectedIndex="{Binding Like.LevelIndex, Mode=TwoWay}"
+                                          SelectedIndex="{Binding Like.LevelIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           ToolTip="Like level" />
                             </Grid>
                         </DataTemplate>
@@ -141,7 +141,7 @@
                                 <ComboBox Grid.Column="2"
                                           Style="{StaticResource CellLevelCombo}"
                                           ItemsSource="{Binding Dislike.LevelChoices}"
-                                          SelectedIndex="{Binding Dislike.LevelIndex, Mode=TwoWay}"
+                                          SelectedIndex="{Binding Dislike.LevelIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           ToolTip="Dislike level" />
                             </Grid>
                         </DataTemplate>
@@ -167,7 +167,7 @@
                                 <ComboBox Grid.Column="2"
                                           Style="{StaticResource CellLevelCombo}"
                                           ItemsSource="{Binding Hate.LevelChoices}"
-                                          SelectedIndex="{Binding Hate.LevelIndex, Mode=TwoWay}"
+                                          SelectedIndex="{Binding Hate.LevelIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           ToolTip="Hate level" />
                             </Grid>
                         </DataTemplate>
@@ -181,7 +181,7 @@
                                       MinHeight="22"
                                       Margin="1,0"
                                       ItemsSource="{Binding LatestChoices}"
-                                      SelectedIndex="{Binding LatestIndex, Mode=TwoWay}"
+                                      SelectedIndex="{Binding LatestIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       IsEnabled="{Binding HasHistory}"
                                       ToolTip="Newest feeling change" />
                         </DataTemplate>
