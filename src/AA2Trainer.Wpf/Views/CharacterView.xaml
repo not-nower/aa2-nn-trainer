@@ -412,80 +412,77 @@
                                           SelectedValuePath="Value"
                                           DisplayMemberPath="Text" />
                             </Grid>
+
+                            <TextBlock Text="Status"
+                                       Style="{StaticResource SectionHeader}"
+                                       Margin="0,6,0,4" />
+                            <UniformGrid Columns="2" Margin="0,0,0,2">
+                                <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="Victory count"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Victory count" />
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="Classes skipped"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Classes skipped" />
+                                </DockPanel>
+                                <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="Won over"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Won over" />
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="Partners"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Partners" />
+                                </DockPanel>
+                                <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="Rejections"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Rejections" />
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="H encounters"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="H encounters" />
+                                </DockPanel>
+                                <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left" Text="H partners"
+                                               Width="104"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource CaptionText}" />
+                                    <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="H partners" />
+                                </DockPanel>
+                            </UniformGrid>
                         </StackPanel>
                     </Grid>
-
-                    <TextBlock Grid.Row="13" Grid.ColumnSpan="4"
-                               Text="Status"
-                               Style="{StaticResource SectionHeader}"
-                               Margin="0,6,0,6" />
-
-                    <UniformGrid Grid.Row="14" Grid.ColumnSpan="4"
-                                 Columns="4" Margin="0,0,0,2">
-                        <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Victory count"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="Victory count" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Classes skipped"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="Classes skipped" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Won over"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="Won over" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Partners"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="Partners" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Rejections"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="Rejections" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="H encounters"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="H encounters" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="H partners"
-                                       Width="104"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                     ToolTip="H partners" />
-                        </DockPanel>
-                    </UniformGrid>
 
                     <TextBlock Grid.Row="15" Grid.ColumnSpan="4"
                                Text="H History"
