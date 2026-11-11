@@ -21,6 +21,7 @@ namespace AA2Trainer.WpfPrototype
 
         private readonly GameMemory mem = new GameMemory();
         private readonly LiveReader live;
+        private readonly ActionStateReader debugStateReader;
         private readonly PortraitService portraits;
         private readonly NameMap names = new NameMap();
         private readonly Dispatcher dispatcher;
@@ -145,6 +146,7 @@ namespace AA2Trainer.WpfPrototype
         {
             this.dispatcher = dispatcher;
             live = new LiveReader(mem);
+            debugStateReader = new ActionStateReader(mem);
             portraits = new PortraitService(mem);
             planner = new PlannerService(mem, dispatcher);
             actionLimiter = new ActionLimiter(actionLimits, null);
@@ -796,85 +798,116 @@ namespace AA2Trainer.WpfPrototype
         private List<DebugFieldItem> BuildDebugFields(LiveSnapshot liveSnapshot)
         {
             List<DebugFieldItem> fields = new List<DebugFieldItem>();
-            AddDebug(fields, "Attach state", 0, "state",
-                mem.IsAttached ? "attached" : "detached",
-                "game process connection");
-            AddDebug(fields, "Process", 0, "string",
-                mem.ProcessName ?? "", "attached executable");
-            AddDebug(fields, "Game version", 0, "string",
-                mem.GameVersion ?? "", "");
-            AddDebug(fields, "Module base", mem.ModuleBase, "ptr",
-                Hex(mem.ModuleBase), "AA2Play.exe image base");
-            AddDebug(fields, "Global root", ctx.GlobalRoot, "ptr",
-                Hex(ctx.GlobalRoot), "S = [module + 0x376164]");
-            AddDebug(fields, "Class data", ctx.ClassData, "ptr",
-                Hex(ctx.ClassData), "[S + 0x28]");
-            AddDebug(fields, "Class array", ctx.ClassArray, "ptr",
-                Hex(ctx.ClassArray), "[S + 0x6C] start");
-            AddDebug(fields, "Class array end", ctx.ClassArrayEnd, "ptr",
-                Hex(ctx.ClassArrayEnd), "[S + 0x70] end");
-            AddDebug(fields, "Roster version", 0, "int",
-                ctx.RosterVersion.ToString(), "increments on class/save change");
-            AddDebug(fields, "Roster count", 0, "int",
-                ctx.Characters.Count.ToString(), "loaded character slots");
+
+            AddDebug(fields, "Module base", 0, "ptr",
+                PointerText(mem.ModuleBase), "AA2Play.exe image base");
+            AddDebug(fields, "Global root", mem.ModuleBase + 0x376164, "ptr",
+                PointerText(ctx.GlobalRoot), "S = [module + 0x376164]");
+            AddDebug(fields, "Class data", ctx.GlobalRoot + 0x28, "ptr",
+                PointerText(ctx.ClassData), "[S + 0x28]");
+            AddDebug(fields, "Class array", ctx.GlobalRoot + 0x6C, "ptr",
+                PointerText(ctx.ClassArray), "[S + 0x6C] start");
+            AddDebug(fields, "Class array end", ctx.GlobalRoot + 0x70, "ptr",
+                PointerText(ctx.ClassArrayEnd), "[S + 0x70] end");
+            AddDebug(fields, "Class count", 0, "int",
+                ctx.Characters.Count.ToString(), "entries between array bounds");
 
             CharacterInfo selected = ctx.Selected;
             AddDebug(fields, "Selected seat", 0, "int",
                 selected == null ? "-" : selected.Seat.ToString(), "");
             AddDebug(fields, "Selected name", 0, "string",
                 selected == null ? "" : selected.Name ?? "", "");
-            AddDebug(fields, "Selected char", ctx.SelectedChar, "ptr",
-                Hex(ctx.SelectedChar), "CharacterInfo pointer");
-            AddDebug(fields, "Selected data", ctx.SelectedCharData, "ptr",
-                Hex(ctx.SelectedCharData), "characterData block");
-            AddDebug(fields, "Status", ctx.Status, "ptr", Hex(ctx.Status),
-                "[selected + 0xF6C]");
-            AddDebug(fields, "Activity", ctx.Activity, "ptr", Hex(ctx.Activity),
-                "[status + 0x28]");
-            AddDebug(fields, "Relations", ctx.Relations, "ptr",
-                Hex(ctx.Relations), "relationship table");
 
-            LiveCharacterState state = null;
-            if (liveSnapshot != null && selected != null &&
-                liveSnapshot.Characters != null)
+            uint character = ctx.SelectedChar;
+            AddDebug(fields, "Character", 0, "ptr", PointerText(character),
+                "CharacterInfo");
+            AddDebug(fields, "Character data",
+                character != 0 ? character + 0x28 : 0, "ptr",
+                PointerText(ctx.SelectedCharData), "[character + 0x28]");
+            AddDebug(fields, "Status", character != 0 ? character + 0xF6C : 0,
+                "ptr", PointerText(ctx.Status), "[character + 0xF6C]");
+            AddDebug(fields, "Activity", ctx.Status != 0 ? ctx.Status + 0x28 : 0,
+                "ptr", PointerText(ctx.Activity), "[status + 0x28]");
+            AddDebug(fields, "Relations", 0, "ptr",
+                PointerText(ctx.Relations), "relationship table");
+
+            CharacterState state = debugStateReader.ReadState(character,
+                ctx.Characters);
+            if (state == null)
             {
-                foreach (LiveCharacterState candidate in liveSnapshot.Characters)
-                {
-                    if (candidate != null && candidate.Seat == selected.Seat)
-                    {
-                        state = candidate;
-                        break;
-                    }
-                }
+                AddDebug(fields, "Character state", 0, "string", "unavailable",
+                    "ActionStateReader returned no state");
             }
+            else
+            {
+                uint activity = state.Activity;
+                uint npc = state.NpcData;
+                uint room = state.RoomPointer;
 
-            AddDebug(fields, "Live status", state == null ? 0 : state.Status,
-                "ptr", state == null ? "-" : Hex(state.Status), "");
-            AddDebug(fields, "Live activity", state == null ? 0 : state.Activity,
-                "ptr", state == null ? "-" : Hex(state.Activity), "");
-            AddDebug(fields, "Live NPC data", state == null ? 0 : state.NpcData,
-                "ptr", state == null ? "-" : Hex(state.NpcData), "");
-            AddDebug(fields, "Live reffTo", state == null ? 0 : state.ReffTo,
-                "ptr", state == null ? "-" : Hex(state.ReffTo),
-                "target character or activity");
-            AddDebug(fields, "Live NPC target",
-                state == null ? 0 : state.NpcTarget, "ptr",
-                state == null ? "-" : Hex(state.NpcTarget), "");
-            AddDebug(fields, "Live action", 0, "int",
-                state == null || state.ActionId < 0 ? "-" :
-                    state.ActionId + " " + ActionName(state.ActionId), "");
-            AddDebug(fields, "Live movement", 0, "int",
-                state == null ? "-" : state.MovementType.ToString(), "");
-            AddDebug(fields, "Live location", 0, "int",
-                state == null || state.Location < 0 ? "-" :
-                    state.Location + " " + LocationName(state.Location), "");
-            AddDebug(fields, "Live mood", 0, "int",
-                state == null ? "-" : state.MoodAction.ToString(),
-                "MoodAction");
-            AddDebug(fields, "Live flags", 0, "string",
-                state == null ? "-" :
-                    "anim=" + state.AnimLocked + " load=" + state.Loading +
-                    " talk=" + state.InConversation, "");
+                AddDebug(fields, "AI", activity + 0xEC, "ptr",
+                    PointerText(state.Ai), "[activity + 0xEC]");
+                AddDebug(fields, "Target activity", activity + 0x38, "ptr",
+                    PointerText(state.TargetActivity), "[activity + 0x38]");
+                AddDebug(fields, "Target character", 0, "ptr",
+                    PointerText(state.TargetChar), "[target activity + 0xE0]");
+                AddDebug(fields, "Descriptor", activity + 0xE4, "ptr",
+                    PointerText(state.Descriptor), "[activity + 0xE4]");
+                AddDebug(fields, "Movement holder", 0, "ptr",
+                    PointerText(state.MovementHolder), "movement descriptor");
+                AddDebug(fields, "Walk target interface", 0, "ptr",
+                    PointerText(state.WalkTargetInterface), "holder + base + 0x130");
+                AddDebug(fields, "Walk target character", 0, "ptr",
+                    PointerText(state.WalkTargetChar), "holder + base + 0x158");
+                AddDebug(fields, "Stare target interface", activity + 0xD8, "ptr",
+                    PointerText(state.StareTargetInterface), "[activity + 0xD8]");
+                AddDebug(fields, "Stare target character", 0, "ptr",
+                    PointerText(state.StareTargetChar), "");
+                AddDebug(fields, "NPC data",
+                    character != 0 ? character + 0xF58 : 0, "ptr",
+                    PointerText(npc), "[character + 0xF58]");
+                AddDebug(fields, "Room pointer",
+                    npc != 0 ? npc + 0x1F4 : 0, "ptr",
+                    PointerText(room), "[npc data + 0x1F4]");
+                AddDebug(fields, "Room", room != 0 ? room + 0x14 : 0, "int",
+                    state.Room < 0 ? "-" :
+                        state.Room + " " + LocationName(state.Room),
+                    "[room pointer + 0x14]");
+                AddDebug(fields, "NPC target",
+                    npc != 0 ? npc + 0x26C : 0, "ptr",
+                    PointerText(state.TargetNpc), "[npc data + 0x26C]");
+                AddDebug(fields, "Movement mirror", 0, "int",
+                    state.MovementMirror.ToString(), "");
+                AddDebug(fields, "Movement type", activity + 0x3C, "int",
+                    state.MovementType.ToString(), "[activity + 0x3C]");
+                AddDebug(fields, "Action", activity + 0x40, "int",
+                    state.ActionId < 0 ? "-" :
+                        state.ActionId + " " + ActionName(state.ActionId),
+                    "[activity + 0x40]");
+                AddDebug(fields, "Conversation", activity + 0x44, "int",
+                    state.ConversationId.ToString(), "[activity + 0x44]");
+                AddDebug(fields, "Location", activity + 0x48, "int",
+                    state.Location < 0 ? "-" :
+                        state.Location + " " + LocationName(state.Location),
+                    "[activity + 0x48]");
+                AddDebug(fields, "Mood action", activity + 0x50, "int",
+                    state.MoodAction.ToString(), "[activity + 0x50]");
+                AddDebug(fields, "Response", activity + 0x5C, "int",
+                    state.Response.ToString(), "[activity + 0x5C]");
+                AddDebug(fields, "Instruction wait", activity + 0x74, "int",
+                    state.InstructionWait.ToString(), "[activity + 0x74]");
+                AddDebug(fields, "Instruction time", activity + 0x78, "int",
+                    state.InstructionTime.ToString(), "[activity + 0x78]");
+                AddDebug(fields, "Anim locked", activity + 0x14, "byte",
+                    state.AnimLocked.ToString(), "[activity + 0x14]");
+                AddDebug(fields, "Loading", activity + 0x15, "byte",
+                    state.Loading.ToString(), "[activity + 0x15]");
+                AddDebug(fields, "In conversation", activity + 0x19, "byte",
+                    state.InConversation.ToString(), "[activity + 0x19]");
+                AddDebug(fields, "Talking", activity + 0x1B, "byte",
+                    state.Talking.ToString(), "[activity + 0x1B]");
+                AddDebug(fields, "Busy", 0, "bool",
+                    state.IsBusy ? "true" : "false", "anim/load/conversation");
+            }
 
             LiveCharacterStatus status = liveSnapshot == null
                 ? null : liveSnapshot.SelectedStatus;
@@ -922,12 +955,6 @@ namespace AA2Trainer.WpfPrototype
                     schedule.TimeMilliseconds + " ms", "");
             }
 
-            AddDebug(fields, "Time freeze", 0, "string",
-                timeFreezeMilliseconds.HasValue
-                    ? timeFreezeMilliseconds.Value + " ms" : "off", "");
-            AddDebug(fields, "Game options", 0, "string",
-                gameOptions == null ? gameOptionsError : "readable",
-                "OptionEditor live block");
             return fields;
         }
 
@@ -947,6 +974,11 @@ namespace AA2Trainer.WpfPrototype
         private static string Hex(uint value)
         {
             return "0x" + value.ToString("X8");
+        }
+
+        private static string PointerText(uint value)
+        {
+            return value == 0 ? "-" : Hex(value);
         }
 
         private void RefreshRelations()

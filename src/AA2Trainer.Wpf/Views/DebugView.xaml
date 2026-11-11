@@ -8,8 +8,8 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="Live definitions" Style="{StaticResource PageTitle}" />
-            <TextBlock Text="Values refresh with the game session."
+            <TextBlock Text="Live game memory" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Read-only values read directly from the game."
                        Style="{StaticResource CaptionText}"
                        VerticalAlignment="Center"
                        Margin="16,0,0,0" />

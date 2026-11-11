@@ -111,11 +111,12 @@ dotnet build -c Release
   them into System, Sound, Additional (1–3). Toggles, choices, and sliders
   update `OptionSnapshot` values; Apply writes only changed fields on the poll
   thread, and Revert restores the last live values.
-- **Debug** lists live definitions and values: attach state, module/global
-  roots, class/roster pointers, selected CharacterInfo and characterData,
-  live action/location/movement/reffTo/NPC target/mood/flags, status records,
-  schedule/save, time freeze, and option availability. Text and type filters
-  run over the live rows.
+- **Debug** is a read-only view of game memory only: module/global roots, class
+  array bounds, selected CharacterInfo/characterData, status/activity, AI and
+  movement descriptors, walk/stare targets, room/NPC pointers and targets,
+  action/conversation/location/mood/response/instruction values, busy flags,
+  status records, and schedule/save values. Trainer state is not shown. Text
+  and type filters run over the live rows.
 - Custom compact scrollbars, tab strip, combo box, checkbox, and buttons.
 - Layout verified at **1180×760** and **1024×680** (125% DPI): the 5×5 roster
   fits without a scrollbar at the minimum size.
