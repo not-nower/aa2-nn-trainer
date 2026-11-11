@@ -21,6 +21,7 @@ namespace AA2Trainer.WpfPrototype
         private readonly HashSet<string> failedCards =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private bool cardLoadRunning;
+        private bool cardIndexRunning;
         private bool disposed;
 
         private SeatItem selectedSeat;
@@ -73,6 +74,8 @@ namespace AA2Trainer.WpfPrototype
         private string rosterFilter = "";
         private int seatFilterIndex;
         private int selectedTabIndex;
+        private string lastSaveName = "";
+        private string currentSavePath = "";
         private PlannerSeatOption selectedPlannerTarget;
         private PlannerSeatOption selectedPlannerAbout;
         private CharacterOption selectedPlannerAction;
@@ -151,6 +154,7 @@ namespace AA2Trainer.WpfPrototype
             session.RosterActionCompleted += OnRosterActionCompleted;
             session.ScheduleWriteCompleted += OnScheduleWriteCompleted;
             session.OptionWriteCompleted += OnOptionWriteCompleted;
+            session.LiveLog += OnLiveLog;
             session.Planner.Log += OnPlannerLog;
             session.Planner.StateChanged += RefreshPlannerNow;
             LoadCardsAsync();
@@ -678,6 +682,12 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref cardStatus, value); }
         }
 
+        public string CurrentSavePath
+        {
+            get { return currentSavePath; }
+            private set { Set(ref currentSavePath, value); }
+        }
+
         public string RosterStatus
         {
             get { return rosterStatus; }
@@ -1016,6 +1026,30 @@ namespace AA2Trainer.WpfPrototype
             }
 
             NotifyOptionButtons();
+        }
+
+        private void UpdateSaveContext(SessionSnapshot snapshot)
+        {
+            string saveName = snapshot.Schedule == null
+                ? "" : snapshot.Schedule.SaveName ?? "";
+            bool changed = saveName != lastSaveName;
+            if (changed)
+            {
+                string path = "";
+                if (!string.IsNullOrEmpty(saveName))
+                {
+                    string directory = SaveBackup.DefaultDirectory();
+                    if (!string.IsNullOrEmpty(directory))
+                        path = Path.Combine(directory, saveName + ".sav");
+                }
+                if (path != currentSavePath)
+                    CurrentSavePath = path;
+
+                bool reindex = !string.IsNullOrEmpty(lastSaveName);
+                lastSaveName = saveName;
+                if (reindex && !cardIndexRunning)
+                    LoadCardsAsync();
+            }
         }
 
         private void BuildGameOptionSections()
@@ -1419,6 +1453,7 @@ namespace AA2Trainer.WpfPrototype
         private static string BuildGameplaySignature(SessionSnapshot snapshot)
         {
             StringBuilder text = new StringBuilder();
+            text.Append('v').Append(snapshot.RosterVersion).Append(';');
             if (snapshot.RelationshipRows != null)
             {
                 foreach (RelationshipRecord record in snapshot.RelationshipRows)
@@ -1673,6 +1708,11 @@ namespace AA2Trainer.WpfPrototype
                 !string.IsNullOrEmpty(message))
                 RosterStatus = message;
             RefreshPlannerNow();
+        }
+
+        private void OnLiveLog(string message)
+        {
+            LogSession(message);
         }
 
         private void OnPlannerLog(string message)
@@ -2428,6 +2468,7 @@ namespace AA2Trainer.WpfPrototype
             session.RosterActionCompleted -= OnRosterActionCompleted;
             session.ScheduleWriteCompleted -= OnScheduleWriteCompleted;
             session.OptionWriteCompleted -= OnOptionWriteCompleted;
+            session.LiveLog -= OnLiveLog;
             session.Planner.Log -= OnPlannerLog;
             session.Planner.StateChanged -= RefreshPlannerNow;
             session.Dispose();
@@ -2458,6 +2499,7 @@ namespace AA2Trainer.WpfPrototype
                 UpdateScheduleDraft(snapshot);
                 IsTimeFrozen = snapshot.TimeFrozen;
                 UpdateGameOptions(snapshot);
+                UpdateSaveContext(snapshot);
                 ApplyDebugFields(snapshot);
 
                 for (int i = 0; i < Seats.Count; i++)
@@ -2481,6 +2523,9 @@ namespace AA2Trainer.WpfPrototype
                         seatSnapshot.IsLover,
                         seatSnapshot.OtherIsLover,
                         seatSnapshot.IsFrozen);
+                    seat.ApplyLiveDetails(seatSnapshot.Personality,
+                        seatSnapshot.Target, seatSnapshot.Location,
+                        seatSnapshot.Mood);
                     seat.ApplyLivePortrait(seatSnapshot.Thumbnail,
                         seatSnapshot.FullPortrait);
                 }
@@ -2797,10 +2842,14 @@ namespace AA2Trainer.WpfPrototype
 
         private async void LoadCardsAsync()
         {
+            if (cardIndexRunning) return;
+            cardIndexRunning = true;
+
             string[] roots = FindCardRoots();
             if (roots.Length == 0)
             {
                 CardStatus = "Portraits: none";
+                cardIndexRunning = false;
                 return;
             }
 
@@ -2812,7 +2861,13 @@ namespace AA2Trainer.WpfPrototype
                     string[] found = Directory.GetFiles(
                         root, "*.png", SearchOption.TopDirectoryOnly);
                     Array.Sort(found, StringComparer.OrdinalIgnoreCase);
-                    files.AddRange(found);
+                    foreach (string file in found)
+                    {
+                        string name = Path.GetFileName(file);
+                        if (name.IndexOf("_edit", StringComparison.OrdinalIgnoreCase) >= 0)
+                            continue;
+                        files.Add(file);
+                    }
                 }
                 catch { }
             }
@@ -2820,6 +2875,7 @@ namespace AA2Trainer.WpfPrototype
             if (files.Count == 0)
             {
                 CardStatus = "Portraits: none";
+                cardIndexRunning = false;
                 return;
             }
 
@@ -2845,10 +2901,15 @@ namespace AA2Trainer.WpfPrototype
             catch
             {
                 CardStatus = "Portraits: card index failed";
+                cardIndexRunning = false;
                 return;
             }
 
-            if (disposed || Application.Current == null) return;
+            if (disposed || Application.Current == null)
+            {
+                cardIndexRunning = false;
+                return;
+            }
             Application.Current.Dispatcher.Invoke(delegate
             {
                 if (disposed) return;
@@ -2859,9 +2920,11 @@ namespace AA2Trainer.WpfPrototype
                 if (cardIndex.Count == 0)
                 {
                     CardStatus = "Portraits: none";
+                    cardIndexRunning = false;
                     return;
                 }
                 AssignCards();
+                cardIndexRunning = false;
             });
         }
 
@@ -3053,11 +3116,7 @@ namespace AA2Trainer.WpfPrototype
                     Action = "None",
                     Relationship = "-",
                     HeaderRelationship = "-",
-                    Mood = "-",
-                    Energy = "-",
-                    Study = "-",
-                    Training = "-",
-                    Club = "-"
+                    Mood = "-"
                 });
             }
         }

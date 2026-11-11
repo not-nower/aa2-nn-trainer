@@ -13,10 +13,14 @@ namespace AA2Trainer.WpfPrototype
         public string GivenName = "";
         public bool IsPlayer;
         public string Room = "";
+        public string Location = "";
         public string Action = "None";
         public string Status = "Empty";
         public string Relationship = "";
         public string HeaderRelationship = "";
+        public string Personality = "";
+        public string Target = "";
+        public string Mood = "";
         public bool IsBusy;
         public bool HasRelationship;
         public bool IsLover;
@@ -36,6 +40,7 @@ namespace AA2Trainer.WpfPrototype
         public int SelectedSeat = -1;
         public uint SelectedPointer;
         public long Sequence;
+        public int RosterVersion;
         public CharacterDetail Character;
         public CharacterSnapshot RawCharacter;
         public CharacterOptions Options;

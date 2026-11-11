@@ -31,6 +31,18 @@ namespace AA2Trainer.WpfPrototype.Views
 
             BuildSectionChecks();
             UpdateComparison();
+            Loaded += ImportExportView_Loaded;
+        }
+
+        private void ImportExportView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (save != null) return;
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel == null || string.IsNullOrEmpty(viewModel.CurrentSavePath))
+                return;
+            if (!File.Exists(viewModel.CurrentSavePath)) return;
+            LoadSave(viewModel.CurrentSavePath);
+            lastSaveDirectory = Path.GetDirectoryName(viewModel.CurrentSavePath);
         }
 
         private void BuildSectionChecks()

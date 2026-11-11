@@ -137,6 +137,10 @@ namespace AA2Trainer.WpfPrototype
         private int busy;
         private int uiQueued;
         private long sequence;
+        private uint lastObservedCounter;
+        private uint lastObservedKey;
+        private bool observationSeen;
+        private DateTime lastObservationLogUtc = DateTime.MinValue;
         private volatile bool attachRequested = true;
         private volatile bool detachRequested;
         private volatile bool disposed;
@@ -212,6 +216,7 @@ namespace AA2Trainer.WpfPrototype
         public event Action<RosterActionResult> RosterActionCompleted;
         public event Action<ScheduleWriteResult> ScheduleWriteCompleted;
         public event Action<OptionWriteResult> OptionWriteCompleted;
+        public event Action<string> LiveLog;
 
         public bool IsAttached { get { return mem.IsAttached; } }
 
@@ -612,6 +617,7 @@ namespace AA2Trainer.WpfPrototype
             RestoreRelationshipFreezes();
             ProcessScheduleWrite();
             ProcessOptionWrite();
+            PollPlannerObservation();
             PinTime();
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
@@ -675,6 +681,7 @@ namespace AA2Trainer.WpfPrototype
         {
             SessionSnapshot snapshot = new SessionSnapshot();
             snapshot.Sequence = Interlocked.Increment(ref sequence);
+            snapshot.RosterVersion = ctx.RosterVersion;
             snapshot.IsAttached = mem.IsAttached;
             snapshot.AttachState = "Attached - " +
                 (string.IsNullOrEmpty(mem.ProcessName) ? "AA2Play" : mem.ProcessName) +
@@ -715,6 +722,12 @@ namespace AA2Trainer.WpfPrototype
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
+            Dictionary<uint, LiveCharacterState> byNpcData =
+                new Dictionary<uint, LiveCharacterState>();
+            Dictionary<uint, LiveCharacterState> byActivity =
+                new Dictionary<uint, LiveCharacterState>();
+            Dictionary<uint, LiveCharacterState> byPointer =
+                new Dictionary<uint, LiveCharacterState>();
             if (liveSnapshot != null && liveSnapshot.Characters != null)
             {
                 foreach (LiveCharacterState state in liveSnapshot.Characters)
@@ -723,6 +736,12 @@ namespace AA2Trainer.WpfPrototype
                         continue;
                     if (!liveBySeat.ContainsKey(state.Seat))
                         liveBySeat[state.Seat] = state;
+                    if (state.NpcData != 0 && !byNpcData.ContainsKey(state.NpcData))
+                        byNpcData[state.NpcData] = state;
+                    if (state.Activity != 0 && !byActivity.ContainsKey(state.Activity))
+                        byActivity[state.Activity] = state;
+                    if (state.Character != 0 && !byPointer.ContainsKey(state.Character))
+                        byPointer[state.Character] = state;
                 }
             }
 
@@ -756,8 +775,15 @@ namespace AA2Trainer.WpfPrototype
                 string room = locationId >= 0
                     ? locationId.ToString() + " " + LocationName(locationId)
                     : "?";
+                string location = locationId >= 0
+                    ? LocationName(locationId) : "";
                 string action = actionId >= 0
                     ? ActionName(actionId) : "None";
+                string personality = PersonalityName(liveState);
+                string target = TargetText(liveState, byNpcData, byActivity,
+                    byPointer);
+                string mood = liveState != null && liveState.MoodAction >= 0
+                    ? liveState.MoodAction.ToString() : "-";
 
                 string relationship;
                 relationships.TryGetValue(seat, out relationship);
@@ -777,10 +803,14 @@ namespace AA2Trainer.WpfPrototype
                     GivenName = info.GivenName ?? "",
                     IsPlayer = info.IsPlayer,
                     Room = room,
+                    Location = location,
                     Action = action,
                     Status = StatusLabel(liveState),
                     Relationship = relationship,
                     HeaderRelationship = headerRelationship,
+                    Personality = personality,
+                    Target = target,
+                    Mood = mood,
                     IsBusy = liveState != null && liveState.IsBusy,
                     HasRelationship = hasRelationships.ContainsKey(seat) &&
                         hasRelationships[seat],
@@ -793,6 +823,48 @@ namespace AA2Trainer.WpfPrototype
             }
 
             return snapshot;
+        }
+
+        private string PersonalityName(LiveCharacterState state)
+        {
+            if (state == null || state.CharacterData == 0) return "";
+            byte? id = mem.ReadU8(state.CharacterData + 0x445);
+            if (!id.HasValue) return "";
+            string name = names.Get("PERSONALITY", id.Value);
+            return string.IsNullOrEmpty(name)
+                ? "P" + id.Value.ToString() : name;
+        }
+
+        private string TargetText(LiveCharacterState state,
+            Dictionary<uint, LiveCharacterState> byNpcData,
+            Dictionary<uint, LiveCharacterState> byActivity,
+            Dictionary<uint, LiveCharacterState> byPointer)
+        {
+            if (state == null) return "";
+
+            LiveCharacterState target = null;
+            if (state.NpcTarget != 0)
+            {
+                if (!byNpcData.TryGetValue(state.NpcTarget, out target))
+                    byPointer.TryGetValue(state.NpcTarget, out target);
+            }
+            if (target == null && state.ReffTo != 0)
+            {
+                if (!byActivity.TryGetValue(state.ReffTo, out target))
+                    byPointer.TryGetValue(state.ReffTo, out target);
+            }
+            if (target == null)
+            {
+                return state.NpcTarget != 0 || state.ReffTo != 0
+                    ? "NPC" : "";
+            }
+
+            string text = target.Seat >= 0
+                ? target.Seat.ToString("D2") + " " + (target.Name ?? "")
+                : target.Name ?? "";
+            if (target.Location > 0)
+                text += " -> " + LocationName(target.Location);
+            return text;
         }
 
         private List<DebugFieldItem> BuildDebugFields(LiveSnapshot liveSnapshot)
@@ -2672,6 +2744,66 @@ namespace AA2Trainer.WpfPrototype
                 gameOptionsError = string.IsNullOrEmpty(error)
                     ? "Game options are unavailable." : error;
             }
+        }
+
+        private void PollPlannerObservation()
+        {
+            if (!planner.HookInstalled)
+            {
+                observationSeen = false;
+                return;
+            }
+
+            uint key;
+            byte[] parameters;
+            uint counter;
+            if (!planner.TryReadObservation(out key, out parameters, out counter))
+                return;
+
+            if (!observationSeen)
+            {
+                observationSeen = true;
+                lastObservedKey = key;
+                lastObservedCounter = counter;
+                return;
+            }
+            if (counter == lastObservedCounter && key == lastObservedKey)
+                return;
+
+            DateTime now = DateTime.UtcNow;
+            if ((now - lastObservationLogUtc).TotalMilliseconds < 500)
+                return;
+            lastObservationLogUtc = now;
+
+            uint delta = counter - lastObservedCounter;
+            lastObservedKey = key;
+            lastObservedCounter = counter;
+            PublishLiveLog("Planner observed key 0x" + key.ToString("X8") +
+                " " + DescribeActionParams(parameters) + " (+" + delta + ")");
+        }
+
+        private static string DescribeActionParams(byte[] parameters)
+        {
+            if (parameters == null || parameters.Length < 28) return "";
+            int action = BitConverter.ToInt32(parameters, 0);
+            int movement = BitConverter.ToInt32(parameters, 4);
+            int room = BitConverter.ToInt32(parameters, 8);
+            int target1 = BitConverter.ToInt32(parameters, 16);
+            int target2 = BitConverter.ToInt32(parameters, 20);
+            return "action=" + action + " move=" + movement + " room=" + room +
+                " target1=0x" + target1.ToString("X8") +
+                " target2=0x" + target2.ToString("X8");
+        }
+
+        private void PublishLiveLog(string message)
+        {
+            if (disposed || string.IsNullOrEmpty(message)) return;
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (disposed) return;
+                Action<string> handler = LiveLog;
+                if (handler != null) handler(message);
+            }));
         }
 
         private void PinTime()

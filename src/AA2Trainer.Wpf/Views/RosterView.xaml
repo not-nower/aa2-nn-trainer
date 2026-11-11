@@ -48,7 +48,8 @@
                             MinHeight="92"
                             Padding="6"
                             HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch">
+                            VerticalAlignment="Stretch"
+                            ToolTip="{Binding DetailTooltip}">
                         <Border.ContextMenu>
                             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                 <MenuItem Header="Play this character"
@@ -163,6 +164,22 @@
                                            Style="{StaticResource CaptionText}"
                                            TextTrimming="CharacterEllipsis"
                                            Margin="0,2,0,0" />
+                                <TextBlock Text="{Binding DetailLine}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Margin="0,1,0,0"
+                                           FontSize="9"
+                                           Foreground="{DynamicResource TextMuted}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DetailLine}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                     <Ellipse x:Name="StatusDot"
                                              Width="7" Height="7"

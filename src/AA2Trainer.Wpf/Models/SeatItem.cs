@@ -13,11 +13,10 @@ namespace AA2Trainer.WpfPrototype
         private string status;
         private string relationship;
         private string headerRelationship;
+        private string personality;
+        private string target;
+        private string location;
         private string mood;
-        private string energy;
-        private string study;
-        private string training;
-        private string club;
         private BitmapImage rosterImage;
         private BitmapImage cardFaceImage;
         private BitmapImage liveRosterImage;
@@ -133,6 +132,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref room, value)) return;
                 OnPropertyChanged(nameof(RoomAction));
+                OnPropertyChanged(nameof(DetailTooltip));
             }
         }
 
@@ -143,6 +143,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref action, value)) return;
                 OnPropertyChanged(nameof(RoomAction));
+                OnPropertyChanged(nameof(DetailTooltip));
             }
         }
 
@@ -180,34 +181,76 @@ namespace AA2Trainer.WpfPrototype
             set { Set(ref headerRelationship, value); }
         }
 
+        public string Personality
+        {
+            get { return personality; }
+            set
+            {
+                if (!Set(ref personality, value ?? "")) return;
+                OnPropertyChanged(nameof(DetailLine));
+                OnPropertyChanged(nameof(DetailTooltip));
+            }
+        }
+
+        public string Target
+        {
+            get { return target; }
+            set
+            {
+                if (!Set(ref target, value ?? "")) return;
+                OnPropertyChanged(nameof(DetailLine));
+                OnPropertyChanged(nameof(DetailTooltip));
+            }
+        }
+
+        public string Location
+        {
+            get { return location; }
+            set
+            {
+                if (!Set(ref location, value ?? "")) return;
+                OnPropertyChanged(nameof(DetailLine));
+                OnPropertyChanged(nameof(DetailTooltip));
+            }
+        }
+
         public string Mood
         {
             get { return mood; }
-            set { Set(ref mood, value); }
+            set
+            {
+                if (!Set(ref mood, value ?? "")) return;
+                OnPropertyChanged(nameof(DetailLine));
+                OnPropertyChanged(nameof(DetailTooltip));
+            }
         }
 
-        public string Energy
+        public string DetailLine
         {
-            get { return energy; }
-            set { Set(ref energy, value); }
+            get
+            {
+                string text = "";
+                if (!string.IsNullOrEmpty(target)) text = "T: " + target;
+                if (!string.IsNullOrEmpty(mood) && mood != "-")
+                    text += (text.Length == 0 ? "" : "  ") + "M: " + mood;
+                if (!string.IsNullOrEmpty(personality))
+                    text += (text.Length == 0 ? "" : "  ") + "P: " + personality;
+                return text;
+            }
         }
 
-        public string Study
+        public string DetailTooltip
         {
-            get { return study; }
-            set { Set(ref study, value); }
-        }
-
-        public string Training
-        {
-            get { return training; }
-            set { Set(ref training, value); }
-        }
-
-        public string Club
-        {
-            get { return club; }
-            set { Set(ref club, value); }
+            get
+            {
+                string place = string.IsNullOrEmpty(location) ? room : location;
+                return "Personality: " +
+                    (string.IsNullOrEmpty(personality) ? "-" : personality) +
+                    "\nAction: " + (string.IsNullOrEmpty(action) ? "-" : action) +
+                    "\nTarget: " + (string.IsNullOrEmpty(target) ? "-" : target) +
+                    "\nLocation: " + (string.IsNullOrEmpty(place) ? "-" : place) +
+                    "\nMood: " + (string.IsNullOrEmpty(mood) ? "-" : mood);
+            }
         }
 
         /// <summary>
@@ -331,6 +374,15 @@ namespace AA2Trainer.WpfPrototype
             IsLover = isLover;
             OtherIsLover = otherIsLover;
             IsFrozen = isFrozen;
+        }
+
+        public void ApplyLiveDetails(string personalityText, string targetText,
+            string locationText, string moodText)
+        {
+            Personality = personalityText;
+            Target = targetText;
+            Location = locationText;
+            Mood = moodText;
         }
 
         public void SetLiveName(string fullName, string familyName,
