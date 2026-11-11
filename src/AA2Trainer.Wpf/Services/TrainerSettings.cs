@@ -13,6 +13,26 @@ namespace AA2Trainer.WpfPrototype
         public bool LiveRefreshEnabled = true;
         public int RefreshIntervalMs = 250;
         public bool ObserveOnly;
+        public ThemeMode Theme = ThemeMode.System;
+
+        // Window bounds are physical screen pixels so mixed-DPI and
+        // multi-monitor restores stay exact.
+        public double WindowLeft;
+        public double WindowTop;
+        public double WindowWidth;
+        public double WindowHeight;
+        public bool WindowMaximized;
+
+        public bool RailCollapsed;
+        public bool RosterRailCollapsed = true;
+        public bool LogCollapsed;
+
+        /// <summary>
+        /// The single settings instance shared by the window and view model.
+        /// Saving always writes the whole object, so separate instances would
+        /// let one preference overwrite another.
+        /// </summary>
+        public static TrainerSettings Current { get; } = Load();
 
         public static string FilePath
         {
@@ -51,6 +71,42 @@ namespace AA2Trainer.WpfPrototype
                         case "ObserveOnly":
                             settings.ObserveOnly = value != "0";
                             break;
+                        case "Theme":
+                        {
+                            ThemeMode mode;
+                            if (Enum.TryParse(value, true, out mode) &&
+                                Enum.IsDefined(typeof(ThemeMode), mode))
+                                settings.Theme = mode;
+                            break;
+                        }
+                        case "WindowLeft":
+                            settings.WindowLeft = ParseDistance(value,
+                                settings.WindowLeft);
+                            break;
+                        case "WindowTop":
+                            settings.WindowTop = ParseDistance(value,
+                                settings.WindowTop);
+                            break;
+                        case "WindowWidth":
+                            settings.WindowWidth = ParseDistance(value,
+                                settings.WindowWidth);
+                            break;
+                        case "WindowHeight":
+                            settings.WindowHeight = ParseDistance(value,
+                                settings.WindowHeight);
+                            break;
+                        case "WindowMaximized":
+                            settings.WindowMaximized = value != "0";
+                            break;
+                        case "RailCollapsed":
+                            settings.RailCollapsed = value != "0";
+                            break;
+                        case "RosterRailCollapsed":
+                            settings.RosterRailCollapsed = value != "0";
+                            break;
+                        case "LogCollapsed":
+                            settings.LogCollapsed = value != "0";
+                            break;
                     }
                 }
             }
@@ -71,13 +127,38 @@ namespace AA2Trainer.WpfPrototype
                     "LiveRefresh=" + (LiveRefreshEnabled ? "1" : "0"),
                     "RefreshIntervalMs=" + RefreshIntervalMs.ToString(
                         CultureInfo.InvariantCulture),
-                    "ObserveOnly=" + (ObserveOnly ? "1" : "0")
+                    "ObserveOnly=" + (ObserveOnly ? "1" : "0"),
+                    "Theme=" + Theme,
+                    "WindowLeft=" + FormatDistance(WindowLeft),
+                    "WindowTop=" + FormatDistance(WindowTop),
+                    "WindowWidth=" + FormatDistance(WindowWidth),
+                    "WindowHeight=" + FormatDistance(WindowHeight),
+                    "WindowMaximized=" + (WindowMaximized ? "1" : "0"),
+                    "RailCollapsed=" + (RailCollapsed ? "1" : "0"),
+                    "RosterRailCollapsed=" + (RosterRailCollapsed ? "1" : "0"),
+                    "LogCollapsed=" + (LogCollapsed ? "1" : "0")
                 });
             }
             catch
             {
                 // Settings are best-effort; the trainer still works.
             }
+        }
+
+        private static double ParseDistance(string value, double fallback)
+        {
+            double parsed;
+            if (double.TryParse(value, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out parsed) &&
+                !double.IsNaN(parsed) && !double.IsInfinity(parsed))
+                return parsed;
+            return fallback;
+        }
+
+        private static string FormatDistance(double value)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value)) return "0";
+            return value.ToString("0.###", CultureInfo.InvariantCulture);
         }
     }
 }

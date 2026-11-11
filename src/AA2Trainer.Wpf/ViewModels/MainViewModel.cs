@@ -166,7 +166,7 @@ namespace AA2Trainer.WpfPrototype
             SeedLogs();
             BuildGameOptionSections();
 
-            trainerSettings = TrainerSettings.Load();
+            trainerSettings = TrainerSettings.Current;
 
             Dispatcher dispatcher = Application.Current != null
                 ? Application.Current.Dispatcher

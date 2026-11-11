@@ -69,7 +69,8 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
 - **Promises:** active promises involving the selected character (read-only).
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
-- **System / Light / Dark** themes with a runtime switch and dark window chrome.
+- **System / Light / Dark** themes with a runtime switch and dark window chrome;
+  the choice persists beside the exe.
 - **Roster** is a fixed **5×5 classroom grid** in Japanese seat order: columns
   run right-to-left and top-to-bottom, with teacher seat **24 at the top-middle**.
   The Class seats rail is available here and starts collapsed; the character
@@ -118,6 +119,9 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
 - Layout verified at **1180×760** and **1024×680** (125% DPI): the 5×5 roster
   fits without a scrollbar at the minimum size.
 - Rail and log drawer collapse/expand; the log is visible on Gameplay only.
+  Window bounds, maximized state, and rail/log collapse states persist. Restored
+  bounds are checked against the connected desktop, so an unplugged monitor
+  centers the window instead of stranding it off-screen.
 
 Portrait status is shown in the status bar, for example `Portraits: 11 live`
 or `Portraits: 7 live, 4 card`. Live memory is primary; card matching is by

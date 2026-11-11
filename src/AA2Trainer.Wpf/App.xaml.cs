@@ -7,7 +7,7 @@ namespace AA2Trainer.WpfPrototype
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            ThemeService.Apply(ThemeService.CurrentMode, null);
+            ThemeService.Apply(TrainerSettings.Current.Theme, null);
         }
     }
 }

@@ -91,11 +91,25 @@ The default WPF build stores its preferences beside `AA2Trainer.exe` in
 LiveRefresh=1
 RefreshIntervalMs=250
 ObserveOnly=0
+Theme=System
+WindowLeft=120
+WindowTop=80
+WindowWidth=1280
+WindowHeight=850
+WindowMaximized=0
+RailCollapsed=0
+RosterRailCollapsed=1
+LogCollapsed=0
 ```
 
 - `LiveRefresh` - pause/resume live polling (writes still process while paused)
 - `RefreshIntervalMs` - poll interval, 50-2000 ms
 - `ObserveOnly` - remember the planner observe-only choice for the next hook install
+- `Theme` - `System`, `Light`, or `Dark`
+- window keys - last physical-pixel bounds and maximized state; bounds are
+  validated against the connected desktop, so an unplugged monitor centers the
+  window instead of stranding it off-screen
+- `RailCollapsed`, `RosterRailCollapsed`, `LogCollapsed` - panel states
 
 Action limits are per character in `AA2Trainer.ini` beside the exe as
 `limit-actions-00` through `limit-actions-24`.
