@@ -926,7 +926,8 @@ namespace AA2Trainer.WpfPrototype
                         otherIsLovers[seat],
                     IsFrozen = frozenRelationships.ContainsKey(seat) &&
                         frozenRelationships[seat],
-                    HasActionLimits = HasSeatLimits(seat)
+                    HasActionLimits = actionLimiter.Enabled &&
+                        HasSeatLimits(seat)
                 });
             }
 

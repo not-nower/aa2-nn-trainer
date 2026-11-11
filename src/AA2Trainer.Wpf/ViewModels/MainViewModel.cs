@@ -1021,6 +1021,17 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref limitEnabled, value)) return;
                 if (session != null) session.LimitEnabled = value;
+                UpdateAllLimitMarkers();
+            }
+        }
+
+        private void UpdateAllLimitMarkers()
+        {
+            foreach (SeatItem seat in Seats)
+            {
+                if (seat == null || seat.SeatIndex < 0) continue;
+                seat.HasActionLimits = limitEnabled && session != null &&
+                    session.LimitedActions(seat.SeatIndex).Length > 0;
             }
         }
 
@@ -1908,7 +1919,7 @@ namespace AA2Trainer.WpfPrototype
             SeatItem item = Seats.FirstOrDefault(
                 candidate => candidate.SeatIndex == seat);
             if (item == null) return;
-            item.HasActionLimits = session != null &&
+            item.HasActionLimits = limitEnabled && session != null &&
                 session.LimitedActions(seat).Length > 0;
         }
 
@@ -2039,6 +2050,7 @@ namespace AA2Trainer.WpfPrototype
                 {
                     limitEnabled = false;
                     OnPropertyChanged(nameof(LimitEnabled));
+                    UpdateAllLimitMarkers();
                 }
             }
 
