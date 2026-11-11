@@ -28,7 +28,8 @@
                  ItemsSource="{Binding Seats}"
                  SelectedItem="{Binding SelectedSeat, Mode=TwoWay}"
                  ItemContainerStyle="{StaticResource CardItemStyle}"
-                 VerticalContentAlignment="Stretch">
+                 VerticalContentAlignment="Stretch"
+                 MouseDoubleClick="RosterList_MouseDoubleClick">
             <ListBox.Template>
                 <ControlTemplate TargetType="ListBox">
                     <ItemsPresenter />
@@ -152,6 +153,22 @@
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource Accent}" />
                                     </Border>
+                                    <Border x:Name="PcBadge"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Background="{DynamicResource Accent}"
+                                            BorderBrush="{DynamicResource Accent}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="4,1"
+                                            Margin="3"
+                                            Visibility="Collapsed"
+                                            ToolTip="Player character">
+                                        <TextBlock Text="PC"
+                                                   FontSize="8"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Surface}" />
+                                    </Border>
                                 </Grid>
                             </Border>
 
@@ -205,6 +222,13 @@
                         <DataTrigger Binding="{Binding IsTeacher}" Value="True">
                             <Setter TargetName="TeacherBadge" Property="Visibility" Value="Visible" />
                         </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsPc}" Value="True" />
+                                <Condition Binding="{Binding HasName}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter TargetName="PcBadge" Property="Visibility" Value="Visible" />
+                        </MultiDataTrigger>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding IsTeacher}" Value="True" />

@@ -2,6 +2,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace AA2Trainer.WpfPrototype.Views
 {
@@ -11,6 +12,32 @@ namespace AA2Trainer.WpfPrototype.Views
         {
             InitializeComponent();
             RosterList.PreviewKeyDown += RosterList_PreviewKeyDown;
+        }
+
+        private void RosterList_MouseDoubleClick(object sender,
+            MouseButtonEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel == null) return;
+
+            SeatItem seat = SeatFromSource(e.OriginalSource as DependencyObject);
+            if (seat == null) seat = RosterList.SelectedItem as SeatItem;
+            if (seat == null || !seat.HasName) return;
+
+            e.Handled = true;
+            viewModel.OpenInCharacter(seat);
+        }
+
+        private static SeatItem SeatFromSource(DependencyObject source)
+        {
+            while (source != null)
+            {
+                FrameworkElement element = source as FrameworkElement;
+                if (element != null && element.DataContext is SeatItem)
+                    return element.DataContext as SeatItem;
+                source = VisualTreeHelper.GetParent(source);
+            }
+            return null;
         }
 
         /// <summary>
