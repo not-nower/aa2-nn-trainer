@@ -114,6 +114,7 @@ namespace AA2Trainer.WpfPrototype
         private bool gameplayWriteBusy;
         private string relationshipEditStatus = "No changes.";
         private string behaviorEditStatus = "No changes.";
+        private string behaviorEmptyText = "";
         private string loverEditStatus = "No changes.";
         private string debugFilter = "";
         private int debugTypeIndex;
@@ -1446,6 +1447,12 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref behaviorEditStatus, value); }
         }
 
+        public string BehaviorEmptyText
+        {
+            get { return behaviorEmptyText; }
+            private set { Set(ref behaviorEmptyText, value); }
+        }
+
         public string LoverEditStatus
         {
             get { return loverEditStatus; }
@@ -1635,6 +1642,7 @@ namespace AA2Trainer.WpfPrototype
             if (row == null || SelectedSeat == null)
             {
                 BehaviorDraft = null;
+                BehaviorEmptyText = "Select a classmate.";
                 BehaviorEditStatus = "Select a classmate.";
                 NotifyGameplayButtons();
                 return;
@@ -1650,6 +1658,9 @@ namespace AA2Trainer.WpfPrototype
                     ? row.Values[row.Values.Length - 1] : -1
             }, SelectedSeat.SeatIndex);
             BehaviorDraft = draft;
+            BehaviorEmptyText = row.Values == null || row.Values.Length == 0
+                ? "No history events yet for this classmate. The game has no history buffer to edit."
+                : "";
             BehaviorEditStatus = "No changes.";
             NotifyGameplayButtons();
         }
@@ -1669,6 +1680,7 @@ namespace AA2Trainer.WpfPrototype
             selectedBehaviorIndex = -1;
             RelationshipEditStatus = "No changes.";
             BehaviorEditStatus = "No changes.";
+            BehaviorEmptyText = "";
             LoverEditStatus = "No changes.";
             OnPropertyChanged(nameof(SelectedRelationshipIndex));
             OnPropertyChanged(nameof(SelectedBehaviorIndex));

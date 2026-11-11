@@ -80,32 +80,52 @@
                                Style="{StaticResource SectionHeader}"
                                Margin="0,0,0,6" />
                     <TextBlock DockPanel.Dock="Bottom"
-                               Text="Select an event and change its feeling."
+                               Text="Existing events are editable."
                                Style="{StaticResource CaptionText}"
                                TextWrapping="Wrap"
                                Margin="0,6,0,0" />
-                    <DataGrid ItemsSource="{Binding BehaviorDraft.Events}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="#"
-                                                Width="36"
-                                                IsReadOnly="True"
-                                                Binding="{Binding Index}" />
-                            <DataGridTemplateColumn Header="Feeling" Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ComboBox ItemsSource="{Binding Choices}"
-                                                  SelectedIndex="{Binding Feeling, Mode=TwoWay}"
-                                                  Margin="2" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <Grid>
+                        <DataGrid ItemsSource="{Binding BehaviorDraft.Events}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#"
+                                                    Width="36"
+                                                    IsReadOnly="True"
+                                                    Binding="{Binding Index}" />
+                                <DataGridTemplateColumn Header="Feeling" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding Choices}"
+                                                      SelectedIndex="{Binding Feeling, Mode=TwoWay}"
+                                                      Margin="2" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="{Binding BehaviorEmptyText}"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   MaxWidth="220"
+                                   Foreground="{DynamicResource TextMuted}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding BehaviorEmptyText}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
                 </DockPanel>
             </Border>
         </Grid>
