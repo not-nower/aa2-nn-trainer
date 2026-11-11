@@ -48,5 +48,25 @@
                 <DataGridTextColumn Header="Note" Width="*" Binding="{Binding Note}" />
             </DataGrid.Columns>
         </DataGrid>
+        <TextBlock Grid.Row="1"
+                   Text="{Binding DebugEmptyText}"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="380"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsHitTestVisible="False"
+                   Foreground="{DynamicResource TextMuted}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DebugEmptyText}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
     </Grid>
 </UserControl>

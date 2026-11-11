@@ -74,6 +74,12 @@ namespace AA2Trainer.WpfPrototype
         private string rosterFilter = "";
         private int seatFilterIndex;
         private int selectedTabIndex;
+        private string rosterEmptyText = "";
+        private string limitEmptyText = "";
+        private string relationshipEmptyText = "";
+        private string loverEmptyText = "";
+        private string promiseEmptyText = "";
+        private string debugEmptyText = "";
         private string lastSaveName = "";
         private string currentSavePath = "";
         private TrainerSettings trainerSettings;
@@ -215,6 +221,7 @@ namespace AA2Trainer.WpfPrototype
                 if (!Set(ref selectedSeat, value)) return;
                 ResetGameplayEditors();
                 RefreshLimitActionsForCurrentSeat();
+                UpdateGameplayEmptyTexts();
                 if (!applyingSnapshot && isAttached && value != null &&
                     value.SeatIndex >= 0)
                 {
@@ -847,6 +854,42 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref rosterStatus, value); }
         }
 
+        public string RosterEmptyText
+        {
+            get { return rosterEmptyText; }
+            private set { Set(ref rosterEmptyText, value); }
+        }
+
+        public string LimitEmptyText
+        {
+            get { return limitEmptyText; }
+            private set { Set(ref limitEmptyText, value); }
+        }
+
+        public string RelationshipEmptyText
+        {
+            get { return relationshipEmptyText; }
+            private set { Set(ref relationshipEmptyText, value); }
+        }
+
+        public string LoverEmptyText
+        {
+            get { return loverEmptyText; }
+            private set { Set(ref loverEmptyText, value); }
+        }
+
+        public string PromiseEmptyText
+        {
+            get { return promiseEmptyText; }
+            private set { Set(ref promiseEmptyText, value); }
+        }
+
+        public string DebugEmptyText
+        {
+            get { return debugEmptyText; }
+            private set { Set(ref debugEmptyText, value); }
+        }
+
         public int SelectedTabIndex
         {
             get { return selectedTabIndex; }
@@ -1081,7 +1124,42 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref limitFilter, value ?? "")) return;
                 if (limitActionsView != null) limitActionsView.Refresh();
+                UpdateLimitEmptyText();
             }
+        }
+
+        private void UpdateLimitEmptyText()
+        {
+            if (SelectedSeat == null || !SelectedSeat.HasName)
+            {
+                LimitEmptyText = "Select a character in the roster.";
+                return;
+            }
+            if (LimitActions.Count == 0)
+            {
+                LimitEmptyText = "No action definitions loaded.";
+                return;
+            }
+            LimitEmptyText = limitActionsView != null && limitActionsView.IsEmpty
+                ? "No actions match the search." : "";
+        }
+
+        private void UpdateGameplayEmptyTexts()
+        {
+            if (SelectedSeat == null || !SelectedSeat.HasName)
+            {
+                RelationshipEmptyText = "Select a character in the roster.";
+                LoverEmptyText = "Select a character in the roster.";
+                PromiseEmptyText = "Select a character in the roster.";
+                return;
+            }
+
+            RelationshipEmptyText = RelationshipRows.Count == 0
+                ? "No relationship records for this character." : "";
+            LoverEmptyText = LoverRows.Count == 0
+                ? "No lover entries for this character." : "";
+            PromiseEmptyText = PromiseRows.Count == 0
+                ? "No active promises for this character." : "";
         }
 
         public bool CanCopyLimits
@@ -1402,6 +1480,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref debugFilter, value ?? "")) return;
                 if (debugFieldsView != null) debugFieldsView.Refresh();
+                UpdateDebugEmptyText();
             }
         }
 
@@ -1412,6 +1491,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref debugTypeIndex, value)) return;
                 if (debugFieldsView != null) debugFieldsView.Refresh();
+                UpdateDebugEmptyText();
             }
         }
 
@@ -1461,7 +1541,11 @@ namespace AA2Trainer.WpfPrototype
         private void ApplyDebugFields(SessionSnapshot sessionSnapshot)
         {
             List<DebugFieldItem> source = sessionSnapshot.DebugFields;
-            if (source == null || debugFieldsView == null) return;
+            if (source == null || debugFieldsView == null)
+            {
+                DebugEmptyText = "No debug fields available.";
+                return;
+            }
 
             bool rebuild = DebugFields.Count != source.Count;
             if (!rebuild)
@@ -1490,6 +1574,27 @@ namespace AA2Trainer.WpfPrototype
 
             if (!string.IsNullOrEmpty(debugFilter) || debugTypeIndex != 0)
                 debugFieldsView.Refresh();
+
+            UpdateDebugEmptyText();
+        }
+
+        private void UpdateDebugEmptyText()
+        {
+            if (!isAttached)
+            {
+                DebugEmptyText =
+                    "Not attached. Debug data appears when AA2Play is attached.";
+                return;
+            }
+            if (DebugFields.Count == 0)
+            {
+                DebugEmptyText = "No debug fields available.";
+                return;
+            }
+            DebugEmptyText = debugFieldsView != null &&
+                debugFieldsView.IsEmpty &&
+                (!string.IsNullOrEmpty(debugFilter) || debugTypeIndex != 0)
+                ? "No fields match the filter." : "";
         }
 
         public int SelectedRelationshipIndex
@@ -1748,11 +1853,13 @@ namespace AA2Trainer.WpfPrototype
         private void LoadBehaviorDraft()
         {
             BehaviorRowItem row = SelectedBehaviorRow();
-            if (row == null || SelectedSeat == null)
+            if (row == null || SelectedSeat == null || !SelectedSeat.HasName)
             {
                 BehaviorDraft = null;
-                BehaviorEmptyText = "Select a classmate.";
-                BehaviorEditStatus = "Select a classmate.";
+                BehaviorEmptyText = SelectedSeat == null || !SelectedSeat.HasName
+                    ? "Select a character in the roster."
+                    : "No behavior history rows for this character.";
+                BehaviorEditStatus = "No changes.";
                 NotifyGameplayButtons();
                 return;
             }
@@ -1933,7 +2040,7 @@ namespace AA2Trainer.WpfPrototype
         private void UpdateLimitCharacterStatus()
         {
             int seat = LimitSeat;
-            if (seat < 0 || SelectedSeat == null)
+            if (seat < 0 || SelectedSeat == null || !SelectedSeat.HasName)
             {
                 LimitTargetText = "Limits: no character";
                 LimitCharacterStatus = "";
@@ -2013,9 +2120,10 @@ namespace AA2Trainer.WpfPrototype
             LimitActions.Clear();
             if (options == null) return;
             int seat = LimitSeat;
-            if (seat < 0)
+            if (seat < 0 || SelectedSeat == null || !SelectedSeat.HasName)
             {
                 UpdateLimitCharacterStatus();
+                UpdateLimitEmptyText();
                 return;
             }
 
@@ -2033,6 +2141,7 @@ namespace AA2Trainer.WpfPrototype
             }
             if (limitActionsView != null) limitActionsView.Refresh();
             UpdateLimitCharacterStatus();
+            UpdateLimitEmptyText();
         }
 
         private void RefreshGameplayTables(SessionSnapshot snapshot)
@@ -2188,6 +2297,8 @@ namespace AA2Trainer.WpfPrototype
             selectedLoverIndex = FindSeatIndex(LoverRows,
                 row => row.SourceSeat, keepLoverSeat);
             OnPropertyChanged(nameof(SelectedLoverIndex));
+
+            UpdateGameplayEmptyTexts();
             NotifyGameplayButtons();
         }
 
@@ -3285,7 +3396,17 @@ namespace AA2Trainer.WpfPrototype
                 IsTimeFrozen = snapshot.TimeFrozen;
                 UpdateGameOptions(snapshot);
                 UpdateSaveContext(snapshot);
-                ApplyDebugFields(snapshot);
+                if (snapshot.IsAttached)
+                {
+                    ApplyDebugFields(snapshot);
+                }
+                else
+                {
+                    DebugFields.Clear();
+                    if (debugFieldsView != null) debugFieldsView.Refresh();
+                    DebugEmptyText =
+                        "Not attached. Debug data appears when AA2Play is attached.";
+                }
 
                 for (int i = 0; i < Seats.Count; i++)
                 {
@@ -3314,6 +3435,17 @@ namespace AA2Trainer.WpfPrototype
                     seat.ApplyLivePortrait(seatSnapshot.Thumbnail,
                         seatSnapshot.FullPortrait);
                     seat.HasActionLimits = seatSnapshot.HasActionLimits;
+                }
+
+                if (SelectedSeat == null || !SelectedSeat.HasName)
+                {
+                    if (LimitActions.Count > 0) LimitActions.Clear();
+                    UpdateLimitCharacterStatus();
+                    UpdateLimitEmptyText();
+                }
+                else if (LimitActions.Count == 0 && characterOptions != null)
+                {
+                    RefreshLimitActionsForCurrentSeat();
                 }
 
                 UpdatePortraitStatus();
@@ -3595,6 +3727,36 @@ namespace AA2Trainer.WpfPrototype
                     MatchesFilter(seat, filter);
                 seat.IsFilteredOut = hasFilter && !(typeMatch && textMatch);
             }
+            UpdateRosterEmptyState();
+        }
+
+        private void UpdateRosterEmptyState()
+        {
+            if (!isAttached)
+            {
+                RosterEmptyText =
+                    "Not attached. Start AA2Play and press Attach.";
+                return;
+            }
+
+            bool anyNamed = false;
+            int namedVisible = 0;
+            foreach (SeatItem seat in Seats)
+            {
+                if (!seat.HasName) continue;
+                anyNamed = true;
+                if (!seat.IsFilteredOut) namedVisible++;
+            }
+
+            if (namedVisible > 0)
+            {
+                RosterEmptyText = "";
+                return;
+            }
+
+            RosterEmptyText = anyNamed
+                ? "No seats match the current filter."
+                : "No class loaded. Load a class/save in AA2Play.";
         }
 
         private static bool MatchesFilter(SeatItem seat, string filter)

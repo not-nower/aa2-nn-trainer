@@ -12,7 +12,8 @@
                    Style="{StaticResource CaptionText}"
                    Margin="0,0,0,8" />
 
-        <DataGrid Grid.Row="1"
+        <Grid Grid.Row="1">
+        <DataGrid
                   ItemsSource="{Binding PromiseRows}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
@@ -43,5 +44,25 @@
                                     Binding="{Binding Flag}" />
             </DataGrid.Columns>
         </DataGrid>
+        <TextBlock Text="{Binding PromiseEmptyText}"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="360"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsHitTestVisible="False"
+                   Foreground="{DynamicResource TextMuted}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding PromiseEmptyText}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        </Grid>
     </Grid>
 </UserControl>

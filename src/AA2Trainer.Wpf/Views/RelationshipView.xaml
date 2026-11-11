@@ -43,7 +43,8 @@
                        TextTrimming="CharacterEllipsis" />
         </StackPanel>
 
-        <DataGrid Grid.Row="1"
+        <Grid Grid.Row="1">
+        <DataGrid
                   x:Name="RelationshipGrid"
                   ItemsSource="{Binding RelationshipRows}"
                   SelectedIndex="{Binding SelectedRelationshipIndex, Mode=TwoWay}"
@@ -195,6 +196,26 @@
                                         Binding="{Binding IsLover, Mode=OneWay}" />
             </DataGrid.Columns>
         </DataGrid>
+        <TextBlock Text="{Binding RelationshipEmptyText}"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="360"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsHitTestVisible="False"
+                   Foreground="{DynamicResource TextMuted}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RelationshipEmptyText}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        </Grid>
 
         <DockPanel Grid.Row="2" Margin="0,8,0,0">
             <StackPanel Orientation="Horizontal">
