@@ -102,6 +102,98 @@
         </DockPanel>
 
         <TabControl Grid.Row="1">
+            <TabItem Header="Trainer">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,8,0,0">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="Live session"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+                                <CheckBox Content="Live refresh"
+                                          IsChecked="{Binding LiveRefreshEnabled, Mode=TwoWay}"
+                                          Margin="0,0,0,6" />
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Refresh interval (ms)"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox Grid.Column="1"
+                                              ItemsSource="{Binding RefreshIntervals}"
+                                              SelectedItem="{Binding RefreshIntervalMs, Mode=TwoWay}" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="50-2000 ms. Pausing keeps writes and freezes processing."
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="10,0,0,0"
+                                               TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                                <CheckBox Content="Observe only (planner hook)"
+                                          IsChecked="{Binding PlannerObserveOnly, Mode=OneWay}"
+                                          IsEnabled="{Binding CanToggleObserve}"
+                                          Checked="Observe_Changed"
+                                          Unchecked="Observe_Changed"
+                                          Margin="0,0,0,4" />
+                                <TextBlock Text="{Binding PlannerHookState}"
+                                           Style="{StaticResource CaptionText}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="Save backups"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+                                <TextBlock Text="{Binding CurrentSavePath}"
+                                           Style="{StaticResource CaptionText}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding CurrentSavePath}"
+                                           Margin="0,0,0,6" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Backup now"
+                                            Width="100"
+                                            IsEnabled="{Binding CanBackup}"
+                                            Click="Backup_Click" />
+                                    <Button Content="Restore..."
+                                            Width="92"
+                                            Margin="6,0,0,0"
+                                            IsEnabled="{Binding CanBackup}"
+                                            Click="Restore_Click" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding BackupStatus}"
+                                           Style="{StaticResource CaptionText}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="Name tables"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Update from XMLs..."
+                                            Width="140"
+                                            Click="UpdateNames_Click" />
+                                    <Button Content="Reload"
+                                            Width="76"
+                                            Margin="6,0,0,0"
+                                            Click="ReloadNames_Click" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding NameTableStatus}"
+                                           Style="{StaticResource CaptionText}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
             <TabItem Header="System">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding SystemOptionSections}"

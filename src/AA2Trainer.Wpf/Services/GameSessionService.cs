@@ -134,6 +134,12 @@ namespace AA2Trainer.WpfPrototype
         private DateTime lastAttachUtc = DateTime.MinValue;
         private DateTime lastDisconnectedUtc = DateTime.MinValue;
         private int pendingSeat = -1;
+        private volatile bool liveRefreshEnabled = true;
+        private int refreshIntervalMs = PollMs;
+        private readonly object namesSync = new object();
+        private bool namesReloadRequested;
+        private string namesImportFolder;
+        private string nameOverlayStatus = "";
         private int busy;
         private int uiQueued;
         private long sequence;
@@ -160,6 +166,40 @@ namespace AA2Trainer.WpfPrototype
         public PlannerService Planner
         {
             get { return planner; }
+        }
+
+        public bool LiveRefreshEnabled
+        {
+            get { return liveRefreshEnabled; }
+            set { liveRefreshEnabled = value; }
+        }
+
+        public int RefreshIntervalMs
+        {
+            get { return refreshIntervalMs; }
+            set
+            {
+                int ms = Math.Max(50, Math.Min(2000, value));
+                if (ms == refreshIntervalMs) return;
+                refreshIntervalMs = ms;
+                try { timer.Change(0, ms); }
+                catch (ObjectDisposedException) { }
+            }
+        }
+
+        public void RequestNamesReload()
+        {
+            lock (namesSync) namesReloadRequested = true;
+        }
+
+        public void RequestNamesImport(string folder)
+        {
+            if (string.IsNullOrEmpty(folder)) return;
+            lock (namesSync)
+            {
+                namesImportFolder = folder;
+                namesReloadRequested = true;
+            }
         }
 
         public bool LimitEnabled
@@ -557,6 +597,7 @@ namespace AA2Trainer.WpfPrototype
             ctx = new GameContext();
             bool hasClass = ctx.Refresh(mem, 0);
             names.Load(NameMap.FindGameRoot() ?? "");
+            nameOverlayStatus = NameOverlay.StatusText();
             selectedGender = ReadSelectedGender();
             characterOptions = BuildCharacterOptions(selectedGender);
             RefreshGameOptions();
@@ -618,7 +659,10 @@ namespace AA2Trainer.WpfPrototype
             ProcessScheduleWrite();
             ProcessOptionWrite();
             PollPlannerObservation();
+            ProcessNameRequests();
             PinTime();
+
+            if (!liveRefreshEnabled) return;
 
             int requested = Interlocked.Exchange(ref pendingSeat, -1);
             if (requested >= 0)
@@ -692,6 +736,8 @@ namespace AA2Trainer.WpfPrototype
                 : "Pointers: " + health.ShortStatus + " - " +
                   health.ElapsedMs.ToString() + " ms";
             snapshot.NamesState = "Names: " + names.StatusText;
+            snapshot.NameTableStatus = (string.IsNullOrEmpty(nameOverlayStatus)
+                ? "" : nameOverlayStatus + "  |  ") + names.StatusText;
             snapshot.WriteGate = mem.CanWrite
                 ? "Write gate: open" : "Write gate: read-only";
             snapshot.UpdatedText = "Updated " + DateTime.Now.ToString("HH:mm:ss");
@@ -2743,6 +2789,40 @@ namespace AA2Trainer.WpfPrototype
             {
                 gameOptionsError = string.IsNullOrEmpty(error)
                     ? "Game options are unavailable." : error;
+            }
+        }
+
+        private void ProcessNameRequests()
+        {
+            bool reload;
+            string folder;
+            lock (namesSync)
+            {
+                reload = namesReloadRequested;
+                folder = namesImportFolder;
+                namesReloadRequested = false;
+                namesImportFolder = null;
+            }
+            if (!reload) return;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    NameOverlayResult result = NameOverlay.MergeFromFolder(
+                        folder, names.Snapshot());
+                    PublishLiveLog("Name overlay imported: " +
+                        result.Added + " added, " + result.Updated +
+                        " updated from " + result.Files + " file(s).");
+                }
+                names.Load(NameMap.FindGameRoot() ?? "");
+                nameOverlayStatus = NameOverlay.StatusText();
+                PublishLiveLog("Name tables: " + names.StatusText);
+                lastContextUtc = DateTime.MinValue;
+            }
+            catch (Exception ex)
+            {
+                PublishLiveLog("Name table update failed: " + ex.Message);
             }
         }
 

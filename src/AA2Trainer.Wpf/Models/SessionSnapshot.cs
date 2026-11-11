@@ -35,6 +35,7 @@ namespace AA2Trainer.WpfPrototype
         public string GameTime = "Game time: -";
         public string PointerHealth = "Pointers: not checked";
         public string NamesState = "Names: not loaded";
+        public string NameTableStatus = "";
         public string WriteGate = "Write gate: read-only";
         public string UpdatedText = "Updated -";
         public int SelectedSeat = -1;

@@ -76,6 +76,11 @@ namespace AA2Trainer.WpfPrototype
         private int selectedTabIndex;
         private string lastSaveName = "";
         private string currentSavePath = "";
+        private TrainerSettings trainerSettings;
+        private string backupStatus = "No save selected.";
+        private string nameTableStatus = "";
+        private static readonly int[] RefreshIntervalChoices =
+            new int[] { 100, 250, 500, 1000 };
         private PlannerSeatOption selectedPlannerTarget;
         private PlannerSeatOption selectedPlannerAbout;
         private CharacterOption selectedPlannerAction;
@@ -139,10 +144,14 @@ namespace AA2Trainer.WpfPrototype
             SeedLogs();
             BuildGameOptionSections();
 
+            trainerSettings = TrainerSettings.Load();
+
             Dispatcher dispatcher = Application.Current != null
                 ? Application.Current.Dispatcher
                 : Dispatcher.CurrentDispatcher;
             session = new GameSessionService(dispatcher);
+            session.LiveRefreshEnabled = trainerSettings.LiveRefreshEnabled;
+            session.RefreshIntervalMs = trainerSettings.RefreshIntervalMs;
             session.SnapshotReady += ApplySnapshot;
             session.CharacterWriteCompleted += OnCharacterWriteCompleted;
             session.TraitWriteCompleted += OnTraitWriteCompleted;
@@ -632,6 +641,7 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(CanApplyBody));
                 OnPropertyChanged(nameof(CanApplyOptions));
                 OnPropertyChanged(nameof(CanRevertOptions));
+                OnPropertyChanged(nameof(CanBackup));
             }
         }
 
@@ -686,6 +696,130 @@ namespace AA2Trainer.WpfPrototype
         {
             get { return currentSavePath; }
             private set { Set(ref currentSavePath, value); }
+        }
+
+        public int[] RefreshIntervals
+        {
+            get { return RefreshIntervalChoices; }
+        }
+
+        public bool LiveRefreshEnabled
+        {
+            get { return trainerSettings.LiveRefreshEnabled; }
+            set
+            {
+                if (trainerSettings.LiveRefreshEnabled == value) return;
+                trainerSettings.LiveRefreshEnabled = value;
+                if (session != null) session.LiveRefreshEnabled = value;
+                trainerSettings.Save();
+                OnPropertyChanged(nameof(LiveRefreshEnabled));
+                LogSession(value ? "Live refresh enabled." :
+                    "Live refresh paused.");
+            }
+        }
+
+        public int RefreshIntervalMs
+        {
+            get { return trainerSettings.RefreshIntervalMs; }
+            set
+            {
+                if (trainerSettings.RefreshIntervalMs == value) return;
+                trainerSettings.RefreshIntervalMs = value;
+                if (session != null) session.RefreshIntervalMs = value;
+                trainerSettings.Save();
+                OnPropertyChanged(nameof(RefreshIntervalMs));
+            }
+        }
+
+        public string BackupStatus
+        {
+            get { return backupStatus; }
+            private set { Set(ref backupStatus, value); }
+        }
+
+        public bool CanBackup
+        {
+            get
+            {
+                return isAttached && !string.IsNullOrEmpty(currentSavePath) &&
+                    File.Exists(currentSavePath);
+            }
+        }
+
+        public string NameTableStatus
+        {
+            get { return nameTableStatus; }
+            private set { Set(ref nameTableStatus, value); }
+        }
+
+        public void BackupCurrentSave()
+        {
+            if (!CanBackup)
+            {
+                BackupStatus = "No current class save was found.";
+                return;
+            }
+            try
+            {
+                string backup = SaveBackup.Create(CurrentSavePath);
+                BackupStatus = "Backup: " + Path.GetFileName(backup);
+                LogSession("Created save backup " + Path.GetFileName(backup));
+            }
+            catch (Exception ex)
+            {
+                BackupStatus = "Backup failed: " + ex.Message;
+                LogSession(BackupStatus, "Error");
+            }
+        }
+
+        public bool RestoreBackup(string backupPath)
+        {
+            if (string.IsNullOrEmpty(backupPath) ||
+                string.IsNullOrEmpty(CurrentSavePath))
+            {
+                BackupStatus = "Select a backup for the current save.";
+                return false;
+            }
+            try
+            {
+                List<SaveBackupEntry> entries = SaveBackup.List(
+                    CurrentSavePath, false);
+                SaveBackupEntry entry = entries.FirstOrDefault(
+                    candidate => SaveBackup.PathsEqual(
+                        candidate.BackupPath, backupPath));
+                if (entry == null)
+                {
+                    BackupStatus =
+                        "That backup does not belong to the current save.";
+                    return false;
+                }
+
+                SaveRestoreResult result = SaveBackup.Restore(entry);
+                BackupStatus = "Restored " + Path.GetFileName(entry.BackupPath) +
+                    (string.IsNullOrEmpty(result.SafetySaveBackup)
+                        ? "" : "; safety backup " +
+                            Path.GetFileName(result.SafetySaveBackup));
+                LogSession("Restored save backup " +
+                    Path.GetFileName(entry.BackupPath) +
+                    ". Restart or reload the class save in-game.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                BackupStatus = "Restore failed: " + ex.Message;
+                LogSession(BackupStatus, "Error");
+                return false;
+            }
+        }
+
+        public void ReloadNameTables()
+        {
+            if (session != null) session.RequestNamesReload();
+        }
+
+        public void ImportNameTables(string folder)
+        {
+            if (session != null) session.RequestNamesImport(folder);
         }
 
         public string RosterStatus
@@ -1040,10 +1174,20 @@ namespace AA2Trainer.WpfPrototype
                 {
                     string directory = SaveBackup.DefaultDirectory();
                     if (!string.IsNullOrEmpty(directory))
-                        path = Path.Combine(directory, saveName + ".sav");
+                    {
+                        string fileName = saveName.EndsWith(".sav",
+                            StringComparison.OrdinalIgnoreCase)
+                            ? saveName : saveName + ".sav";
+                        path = Path.Combine(directory, fileName);
+                    }
                 }
                 if (path != currentSavePath)
+                {
                     CurrentSavePath = path;
+                    OnPropertyChanged(nameof(CanBackup));
+                    if (!string.IsNullOrEmpty(path))
+                        BackupStatus = "Current save: " + Path.GetFileName(path);
+                }
 
                 bool reindex = !string.IsNullOrEmpty(lastSaveName);
                 lastSaveName = saveName;
@@ -1596,13 +1740,19 @@ namespace AA2Trainer.WpfPrototype
                 RosterStatus = message;
                 LogPlanner(message);
             }
+            if (ok && !plannerHookInstalled && trainerSettings.ObserveOnly)
+                session.Planner.SetObserveOnly(true);
             RefreshPlannerNow();
         }
 
         public void SetPlannerObserve(bool enabled)
         {
             if (session == null) return;
-            session.Planner.SetObserveOnly(enabled);
+            if (session.Planner.SetObserveOnly(enabled))
+            {
+                trainerSettings.ObserveOnly = enabled;
+                trainerSettings.Save();
+            }
             RefreshPlannerNow();
         }
 
@@ -2486,6 +2636,7 @@ namespace AA2Trainer.WpfPrototype
                 GameTime = snapshot.GameTime;
                 PointerHealth = snapshot.PointerHealth;
                 NamesState = snapshot.NamesState;
+                NameTableStatus = snapshot.NameTableStatus;
                 WriteGate = snapshot.WriteGate;
                 UpdatedText = snapshot.UpdatedText;
                 SelectedCharacter = snapshot.Character;
