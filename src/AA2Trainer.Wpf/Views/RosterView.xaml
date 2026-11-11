@@ -221,7 +221,7 @@
                             <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource Accent}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Roaming">
-                            <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource TextMuted}" />
+                            <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource Success}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Moving">
                             <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource Accent}" />
@@ -233,7 +233,7 @@
                             <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource Success}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Facing">
-                            <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource TextMuted}" />
+                            <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource Accent}" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Empty">
                             <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource TextDisabled}" />
