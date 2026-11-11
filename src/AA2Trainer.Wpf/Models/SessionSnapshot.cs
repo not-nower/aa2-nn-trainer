@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using System.Windows.Media.Imaging;
 
 namespace AA2Trainer.WpfPrototype
 {
     public sealed class SeatSnapshot
     {
         public int Seat;
+        public BitmapImage Thumbnail;
+        public BitmapImage FullPortrait;
         public string Name = "";
         public string FamilyName = "";
         public string GivenName = "";

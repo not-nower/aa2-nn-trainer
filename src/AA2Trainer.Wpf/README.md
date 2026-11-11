@@ -87,14 +87,15 @@ dotnet build -c Release
   is empty) in the roster card.
 - Empty seats are not selectable; arrow keys move by classroom position rather
   than by seat number.
-- **Card previews** read the game’s card save folders plus a `Cards` folder
-  beside the exe. Only the top level of each folder is scanned; there is no
-  source picker, file import, or recursive scan. Names are read exactly as
-  stored and matched to live seat names without translation. Card images are
-  decoded only for matched seats, so a large card library does not sit in
-  memory. Hovering a seat in the Class seats rail opens the full card face when
-  a card matched; the roster grid shows only the thumb. Detaching clears names
-  and card art.
+- **Portraits** are read from live game memory for every character-data block
+  (`+0x28/0x2C` thumbnail, `+0x30/0x34` full portrait), cached by pointer and
+  address/size. The roster grid uses the live thumbnail and the Class seats rail
+  hover popup uses the live full portrait. Full portraits fill in one per poll
+  after a class/save change. Card files remain the fallback: the game’s card
+  save folders plus a `Cards` folder beside the exe, top level only, matched by
+  exact stored name without translation. Card images are decoded only for
+  matched seats, so a large card library does not sit in memory. Detaching
+  clears names and portrait art.
 - Character/Options/Debug keep the rail expanded by default and restore the
   character header; Gameplay also shows the log drawer. Roster selection still
   drives the rail/header when you switch tabs.
@@ -112,10 +113,11 @@ dotnet build -c Release
   fits without a scrollbar at the minimum size.
 - Rail and log drawer collapse/expand; the log is visible on Gameplay only.
 
-Card status is shown in the status bar, for example `Cards: 4 shown`.
-Matching is by exact name; M2 will use the save/card provider for
-identity-based seat mapping. Character names are displayed exactly as the game
-stores them; no translation or romanization is applied.
+Portrait status is shown in the status bar, for example `Portraits: 11 live`
+or `Portraits: 7 live, 4 card`. Live memory is primary; card matching is by
+exact stored name and only fills seats where the live portrait is unavailable.
+Character names are displayed exactly as the game stores them; no translation
+or romanization is applied.
 
 ## Not implemented (next phases)
 

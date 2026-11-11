@@ -65,7 +65,7 @@ namespace AA2Trainer.WpfPrototype
         private string namesState = "Names: not loaded";
         private string updatedText = "Updated -";
         private string writeGate = "Write gate: read-only";
-        private string cardStatus = "Cards: not loaded";
+        private string cardStatus = "Portraits: not loaded";
         private string rosterStatus = "";
         private string rosterSignature = "";
         private string rosterFilter = "";
@@ -2134,8 +2134,11 @@ namespace AA2Trainer.WpfPrototype
                         seatSnapshot.IsLover,
                         seatSnapshot.OtherIsLover,
                         seatSnapshot.IsFrozen);
+                    seat.ApplyLivePortrait(seatSnapshot.Thumbnail,
+                        seatSnapshot.FullPortrait);
                 }
 
+                UpdatePortraitStatus();
                 ApplyRosterFilter();
                 RefreshPlannerSnapshot(snapshot);
                 RefreshGameplayTables(snapshot);
@@ -2450,7 +2453,7 @@ namespace AA2Trainer.WpfPrototype
             string[] roots = FindCardRoots();
             if (roots.Length == 0)
             {
-                CardStatus = "Cards: none";
+                CardStatus = "Portraits: none";
                 return;
             }
 
@@ -2469,11 +2472,11 @@ namespace AA2Trainer.WpfPrototype
 
             if (files.Count == 0)
             {
-                CardStatus = "Cards: none";
+                CardStatus = "Portraits: none";
                 return;
             }
 
-            CardStatus = "Cards: loading...";
+            CardStatus = "Portraits: loading card fallback...";
             List<CardEntry> entries;
             try
             {
@@ -2494,7 +2497,7 @@ namespace AA2Trainer.WpfPrototype
             }
             catch
             {
-                CardStatus = "Cards: index failed";
+                CardStatus = "Portraits: card index failed";
                 return;
             }
 
@@ -2508,7 +2511,7 @@ namespace AA2Trainer.WpfPrototype
                 failedCards.Clear();
                 if (cardIndex.Count == 0)
                 {
-                    CardStatus = "Cards: none";
+                    CardStatus = "Portraits: none";
                     return;
                 }
                 AssignCards();
@@ -2522,17 +2525,21 @@ namespace AA2Trainer.WpfPrototype
         /// </summary>
         private void AssignCards()
         {
-            if (disposed || cardIndex.Count == 0) return;
+            if (disposed) return;
+            if (cardIndex.Count == 0)
+            {
+                UpdatePortraitStatus();
+                return;
+            }
 
             HashSet<CardEntry> used = new HashSet<CardEntry>();
             List<CardEntry> pending = new List<CardEntry>();
-            int shown = 0;
 
             foreach (SeatItem seat in Seats)
             {
                 if (!seat.HasName)
                 {
-                    ClearCardArt(seat);
+                    seat.ClearCardArt();
                     continue;
                 }
 
@@ -2542,7 +2549,7 @@ namespace AA2Trainer.WpfPrototype
                             NamesMatch(seat, card));
                 if (match == null)
                 {
-                    ClearCardArt(seat);
+                    seat.ClearCardArt();
                     continue;
                 }
 
@@ -2552,18 +2559,17 @@ namespace AA2Trainer.WpfPrototype
                 if (loadedCards.TryGetValue(match.Path, out images))
                 {
                     AssignImages(seat, images);
-                    shown++;
                 }
                 else
                 {
-                    ClearCardArt(seat);
+                    seat.ClearCardArt();
                     pending.Add(match);
                 }
             }
 
             if (pending.Count > 0) LoadCardImages(pending);
 
-            CardStatus = "Cards: " + shown + " shown";
+            UpdatePortraitStatus();
         }
 
         private void LoadCardImages(List<CardEntry> entries)
@@ -2602,10 +2608,36 @@ namespace AA2Trainer.WpfPrototype
             });
         }
 
-        private static void ClearCardArt(SeatItem seat)
+        /// <summary>
+        /// Reports where each named seat's art came from: live memory first,
+        /// then a card file, then nothing.
+        /// </summary>
+        private void UpdatePortraitStatus()
         {
-            seat.RosterImage = null;
-            seat.CardFaceImage = null;
+            int named = 0;
+            int live = 0;
+            int card = 0;
+            int none = 0;
+
+            foreach (SeatItem seat in Seats)
+            {
+                if (seat == null || !seat.HasName) continue;
+                named++;
+                if (seat.HasLiveRosterImage) live++;
+                else if (seat.HasCardFallback) card++;
+                else none++;
+            }
+
+            if (named == 0)
+            {
+                CardStatus = "Portraits: none";
+                return;
+            }
+
+            string text = "Portraits: " + live + " live";
+            if (card > 0) text += ", " + card + " card";
+            if (none > 0) text += ", " + none + " none";
+            CardStatus = text;
         }
 
         private static string[] FindCardRoots()

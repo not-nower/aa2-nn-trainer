@@ -21,6 +21,7 @@ namespace AA2Trainer.WpfPrototype
 
         private readonly GameMemory mem = new GameMemory();
         private readonly LiveReader live;
+        private readonly PortraitService portraits;
         private readonly NameMap names = new NameMap();
         private readonly Dispatcher dispatcher;
         private readonly PlannerService planner;
@@ -138,6 +139,7 @@ namespace AA2Trainer.WpfPrototype
         {
             this.dispatcher = dispatcher;
             live = new LiveReader(mem);
+            portraits = new PortraitService(mem);
             planner = new PlannerService(mem, dispatcher);
             actionLimiter = new ActionLimiter(actionLimits, null);
             timer = new System.Threading.Timer(Poll, null, 0, PollMs);
@@ -453,6 +455,7 @@ namespace AA2Trainer.WpfPrototype
                 catch (ObjectDisposedException) { }
             }
             live.Clear();
+            portraits.Clear();
             planner.Dispose();
             actionLimiter.Dispose();
             mem.Dispose();
@@ -550,6 +553,7 @@ namespace AA2Trainer.WpfPrototype
             actionLimiter.Enabled = false;
             actionLimiter.SetTarget(null, null);
             live.Clear();
+            portraits.Clear();
             mem.Detach();
             ctx = new GameContext();
             health = null;
@@ -602,6 +606,7 @@ namespace AA2Trainer.WpfPrototype
                 if (!hasClass)
                 {
                     live.Clear();
+                    portraits.Clear();
                     selectedCharacterDetail = null;
                     selectedCharacterSnapshot = null;
                     selectedTraitValues = null;
@@ -629,6 +634,7 @@ namespace AA2Trainer.WpfPrototype
                 actionLimiter.WriteAllowed = mem.CanWrite;
             }
 
+            portraits.Refresh(ctx, ctx.Selected);
             LiveSnapshot liveSnapshot = live.Read();
             Publish(BuildSnapshot(liveSnapshot));
         }
@@ -729,6 +735,8 @@ namespace AA2Trainer.WpfPrototype
                 snapshot.Seats.Add(new SeatSnapshot
                 {
                     Seat = seat,
+                    Thumbnail = portraits.ThumbnailFor(info),
+                    FullPortrait = portraits.FullPortraitFor(info),
                     Name = info.Name ?? "",
                     FamilyName = info.FamilyName ?? "",
                     GivenName = info.GivenName ?? "",

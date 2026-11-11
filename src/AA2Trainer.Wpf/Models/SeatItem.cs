@@ -20,6 +20,8 @@ namespace AA2Trainer.WpfPrototype
         private string club;
         private BitmapImage rosterImage;
         private BitmapImage cardFaceImage;
+        private BitmapImage liveRosterImage;
+        private BitmapImage liveCardFaceImage;
         private bool liveNameApplied;
         private string liveName;
         private bool isFilteredOut;
@@ -208,25 +210,94 @@ namespace AA2Trainer.WpfPrototype
             set { Set(ref club, value); }
         }
 
+        /// <summary>
+        /// Live thumbnail preferred, card-file image as fallback.
+        /// </summary>
         public BitmapImage RosterImage
         {
-            get { return rosterImage; }
-            set { Set(ref rosterImage, value); }
-        }
-
-        public BitmapImage CardFaceImage
-        {
-            get { return cardFaceImage; }
+            get { return liveRosterImage ?? rosterImage; }
             set
             {
-                if (!Set(ref cardFaceImage, value)) return;
+                if (ReferenceEquals(rosterImage, value)) return;
+                rosterImage = value;
+                OnPropertyChanged(nameof(RosterImage));
+                OnPropertyChanged(nameof(HasCardFallback));
+            }
+        }
+
+        /// <summary>
+        /// Live full portrait preferred, then the live thumbnail, then the
+        /// card-file face.
+        /// </summary>
+        public BitmapImage CardFaceImage
+        {
+            get { return liveCardFaceImage ?? cardFaceImage; }
+            set
+            {
+                if (ReferenceEquals(cardFaceImage, value)) return;
+                cardFaceImage = value;
+                OnPropertyChanged(nameof(CardFaceImage));
                 OnPropertyChanged(nameof(HasCardFace));
+                OnPropertyChanged(nameof(HasCardFallback));
             }
         }
 
         public bool HasCardFace
         {
-            get { return cardFaceImage != null; }
+            get { return liveCardFaceImage != null || cardFaceImage != null; }
+        }
+
+        public bool HasLiveRosterImage
+        {
+            get { return liveRosterImage != null; }
+        }
+
+        public bool HasCardFallback
+        {
+            get { return rosterImage != null || cardFaceImage != null; }
+        }
+
+        /// <summary>
+        /// Applies the live portrait read from the character-data block. The
+        /// thumbnail keeps the roster card populated immediately; the full
+        /// portrait replaces it for the hover popup when it arrives.
+        /// </summary>
+        public void ApplyLivePortrait(BitmapImage thumbnail,
+            BitmapImage fullPortrait)
+        {
+            BitmapImage face = fullPortrait ?? thumbnail;
+            bool rosterChanged = !ReferenceEquals(liveRosterImage, thumbnail);
+            bool faceChanged = !ReferenceEquals(liveCardFaceImage, face);
+
+            liveRosterImage = thumbnail;
+            liveCardFaceImage = face;
+
+            if (rosterChanged)
+            {
+                OnPropertyChanged(nameof(RosterImage));
+                OnPropertyChanged(nameof(HasLiveRosterImage));
+                OnPropertyChanged(nameof(HasCardFallback));
+            }
+            if (faceChanged)
+            {
+                OnPropertyChanged(nameof(CardFaceImage));
+                OnPropertyChanged(nameof(HasCardFace));
+                OnPropertyChanged(nameof(HasCardFallback));
+            }
+        }
+
+        /// <summary>
+        /// Clears only the card-file fallback; a live portrait stays visible.
+        /// </summary>
+        public void ClearCardArt()
+        {
+            if (rosterImage == null && cardFaceImage == null) return;
+            rosterImage = null;
+            cardFaceImage = null;
+            OnPropertyChanged(nameof(RosterImage));
+            OnPropertyChanged(nameof(CardFaceImage));
+            OnPropertyChanged(nameof(HasCardFace));
+            OnPropertyChanged(nameof(HasCardFallback));
         }
 
         /// <summary>
