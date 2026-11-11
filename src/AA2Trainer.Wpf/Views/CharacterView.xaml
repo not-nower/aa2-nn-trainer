@@ -142,6 +142,8 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="4"
@@ -167,8 +169,17 @@
                              IsReadOnly="True"
                              Margin="0,0,16,6" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Profile"
-                               Style="{StaticResource CaptionText}" Margin="0,0,8,6" />
+                    <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,6"
+                                VerticalAlignment="Top">
+                        <TextBlock Text="Profile"
+                                   Style="{StaticResource CaptionText}" />
+                        <TextBlock Text="{Binding CharacterDraft.ProfileByteCount}"
+                                   FontSize="9"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,0"
+                                   ToolTip="Profile bytes used / allowed" />
+                    </StackPanel>
                     <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
                              Text="{Binding CharacterDraft.Profile, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
@@ -332,26 +343,135 @@
                                Style="{StaticResource SectionHeader}"
                                Margin="0,6,0,6" />
 
-                    <TextBlock Grid.Row="14" Grid.Column="0" Text="Record"
-                               Style="{StaticResource CaptionText}" Margin="0,0,8,4" />
-                    <TextBlock Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="3"
-                               Text="{Binding SelectedCharacter.Record}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,4" />
+                    <UniformGrid Grid.Row="14" Grid.ColumnSpan="4"
+                                 Columns="4" Margin="0,0,0,4">
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="Victory count"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="Victory count" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="Classes skipped"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="Classes skipped" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="Won over"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="Won over" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,6">
+                            <TextBlock Text="Partners"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="Partners" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="Rejections"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="Rejections" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="H encounters"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="H encounters" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="H partners"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                     ToolTip="H partners" />
+                        </StackPanel>
+                    </UniformGrid>
 
-                    <TextBlock Grid.Row="15" Grid.Column="0" Text="Experience"
-                               Style="{StaticResource CaptionText}" Margin="0,0,8,6" />
-                    <TextBlock Grid.Row="15" Grid.Column="1" Grid.ColumnSpan="3"
-                               Text="{Binding SelectedCharacter.Experience}"
+                    <TextBlock Grid.Row="15" Grid.ColumnSpan="4"
+                               Text="H History"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,6,0,6" />
+
+                    <UniformGrid Grid.Row="16" Grid.ColumnSpan="4"
+                                 Columns="2" Margin="0,0,0,4">
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="First partner"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.FirstTime, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Up to 31 Shift-JIS bytes" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,6">
+                            <TextBlock Text="First anal"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.FirstAnal, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Up to 31 Shift-JIS bytes" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,8,6">
+                            <TextBlock Text="Last partner"
+                                       Style="{StaticResource CaptionText}" />
+                            <TextBox Text="{Binding CharacterDraft.LastTime, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Up to 31 Shift-JIS bytes" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,6" VerticalAlignment="Center">
+                            <TextBlock Text="Experience"
+                                       Style="{StaticResource CaptionText}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <CheckBox Content="Vaginal"
+                                          IsChecked="{Binding CharacterDraft.SexExperience, Mode=TwoWay}"
+                                          Margin="0,0,14,0" />
+                                <CheckBox Content="Anal"
+                                          IsChecked="{Binding CharacterDraft.AnalExperience, Mode=TwoWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </UniformGrid>
+
+                    <DockPanel Grid.Row="17" Grid.ColumnSpan="4"
+                               Margin="0,6,0,4">
+                        <Button DockPanel.Dock="Right"
+                                Content="Refresh"
+                                Width="76"
+                                Click="RefreshModules_Click" />
+                        <TextBlock Text="Modules (AAU, read-only)"
+                                   Style="{StaticResource SectionHeader}"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+
+                    <DataGrid Grid.Row="18" Grid.ColumnSpan="4"
+                              ItemsSource="{Binding AauModules}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              Height="120"
+                              Margin="0,0,0,4"
+                              VirtualizingStackPanel.IsVirtualizing="True"
+                              VirtualizingStackPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Module"
+                                                Width="220"
+                                                Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="Description"
+                                                Width="*"
+                                                Binding="{Binding Description}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="19" Grid.ColumnSpan="4"
+                               Text="{Binding AauModuleStatus}"
+                               Style="{StaticResource CaptionText}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,6" />
 
-                    <Border Grid.Row="16" Grid.ColumnSpan="4"
+                    <Border Grid.Row="20" Grid.ColumnSpan="4"
                             Height="1"
                             Background="{DynamicResource Border}"
                             Margin="0,10,0,10" />
 
-                    <StackPanel Grid.Row="17" Grid.ColumnSpan="4"
+                    <StackPanel Grid.Row="21" Grid.ColumnSpan="4"
                                 Orientation="Horizontal">
                         <Button Content="Apply" Width="76"
                                 IsEnabled="{Binding CanApply}"

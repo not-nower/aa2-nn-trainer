@@ -103,6 +103,8 @@ namespace AA2Trainer.WpfPrototype
         private TrainerSettings trainerSettings;
         private string backupStatus = "No save selected.";
         private string nameTableStatus = "";
+        private string aauModuleStatus = "No AAU card data";
+        private string aauModuleSignature = "";
         private static readonly int[] RefreshIntervalChoices =
             new int[] { 100, 250, 500, 1000 };
         private PlannerSeatOption selectedPlannerTarget;
@@ -177,6 +179,7 @@ namespace AA2Trainer.WpfPrototype
             DebugFields = new ObservableCollection<DebugFieldItem>();
             debugFieldsView = CollectionViewSource.GetDefaultView(DebugFields);
             debugFieldsView.Filter = FilterDebugField;
+            AauModules = new ObservableCollection<AauModuleItem>();
 
             SeedSeats();
             selectedSeat = Seats[0];
@@ -240,6 +243,13 @@ namespace AA2Trainer.WpfPrototype
         public ObservableCollection<LogLine> LiveLines { get; private set; }
         public ObservableCollection<LogLine> PlannerLines { get; private set; }
         public ObservableCollection<DebugFieldItem> DebugFields { get; private set; }
+        public ObservableCollection<AauModuleItem> AauModules { get; private set; }
+
+        public string AauModuleStatus
+        {
+            get { return aauModuleStatus; }
+            private set { Set(ref aauModuleStatus, value); }
+        }
 
         public SeatItem SelectedSeat
         {
@@ -3675,6 +3685,7 @@ namespace AA2Trainer.WpfPrototype
                 SelectedCharacter = snapshot.Character;
                 if (snapshot.Options != null) CharacterOptions = snapshot.Options;
                 UpdateCharacterDraft(snapshot);
+                UpdateAauModules(snapshot);
                 UpdateTraitDraft(snapshot);
                 UpdateBodyDraft(snapshot);
                 UpdateFaceDraft(snapshot);
@@ -3761,6 +3772,49 @@ namespace AA2Trainer.WpfPrototype
             {
                 applyingSnapshot = false;
             }
+        }
+
+        private void UpdateAauModules(SessionSnapshot snapshot)
+        {
+            AauModuleStatus = snapshot == null
+                ? "No AAU card data"
+                : snapshot.AauModuleStatus ?? "";
+            List<AauModuleInfo> modules = snapshot == null
+                ? null : snapshot.AauModules;
+            string signature = BuildAauModulesSignature(modules);
+            if (signature == aauModuleSignature) return;
+
+            aauModuleSignature = signature;
+            AauModules.Clear();
+            if (modules == null) return;
+            foreach (AauModuleInfo module in modules)
+            {
+                if (module == null) continue;
+                AauModules.Add(new AauModuleItem
+                {
+                    Name = module.Name ?? "",
+                    Description = module.Description ?? ""
+                });
+            }
+        }
+
+        private static string BuildAauModulesSignature(
+            List<AauModuleInfo> modules)
+        {
+            if (modules == null || modules.Count == 0) return "";
+            StringBuilder text = new StringBuilder();
+            foreach (AauModuleInfo module in modules)
+            {
+                if (module == null) continue;
+                text.Append(module.Name).Append('\u001f')
+                    .Append(module.Description).Append('\u001e');
+            }
+            return text.ToString();
+        }
+
+        public void RefreshAauModules()
+        {
+            if (session != null) session.RequestAauModuleRefresh();
         }
 
         private void UpdateCharacterDraft(SessionSnapshot snapshot)

@@ -43,6 +43,13 @@ namespace AA2Trainer.WpfPrototype
         private bool[] selectedTraitValues;
         private int[,] selectedRiskValues;
         private int[] selectedBodyValues;
+        private List<AauModuleInfo> selectedModules =
+            new List<AauModuleInfo>();
+        private string selectedModuleStatus = "No AAU card data";
+        private uint selectedModulesPointer;
+        private DateTime selectedModulesRetryUtc = DateTime.MinValue;
+        private bool selectedModulesError;
+        private volatile bool modulesRefreshRequested;
         private CharacterOptions characterOptions;
         private OptionSnapshot gameOptions;
         private string gameOptionsError = "";
@@ -222,6 +229,11 @@ namespace AA2Trainer.WpfPrototype
         public void RequestNamesReload()
         {
             lock (namesSync) namesReloadRequested = true;
+        }
+
+        public void RequestAauModuleRefresh()
+        {
+            modulesRefreshRequested = true;
         }
 
         public void RequestNamesImport(string folder)
@@ -809,6 +821,7 @@ namespace AA2Trainer.WpfPrototype
             selectedTraitValues = null;
             selectedRiskValues = null;
             selectedBodyValues = null;
+            ClearSelectedModules();
             lastContextUtc = DateTime.MinValue;
             lastHealthUtc = DateTime.MinValue;
             lastDisconnectedUtc = DateTime.MinValue;
@@ -938,6 +951,8 @@ namespace AA2Trainer.WpfPrototype
             snapshot.PromiseRows = selectedPromiseRows;
             snapshot.RosterCharacters = selectedRosterCharacters;
             snapshot.DebugFields = BuildDebugFields(liveSnapshot);
+            snapshot.AauModules = selectedModules;
+            snapshot.AauModuleStatus = selectedModuleStatus;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -1360,6 +1375,7 @@ namespace AA2Trainer.WpfPrototype
                 selectedLoverRows = null;
                 selectedPromiseRows = null;
                 selectedRosterCharacters = null;
+                ClearSelectedModules();
                 return;
             }
 
@@ -1382,6 +1398,7 @@ namespace AA2Trainer.WpfPrototype
                 selectedLoverRows = null;
                 selectedPromiseRows = null;
                 selectedRosterCharacters = null;
+                ClearSelectedModules();
                 return;
             }
 
@@ -1436,6 +1453,70 @@ namespace AA2Trainer.WpfPrototype
                 mem, ctx, ctx.Selected);
             selectedPromiseRows = PromiseReader.Read(mem, ctx.Selected);
             selectedRosterCharacters = new List<CharacterInfo>(ctx.Characters);
+            RefreshSelectedModules();
+        }
+
+        private void ClearSelectedModules()
+        {
+            selectedModules = new List<AauModuleInfo>();
+            selectedModuleStatus = "No AAU card data";
+            selectedModulesPointer = 0;
+            selectedModulesRetryUtc = DateTime.MinValue;
+            selectedModulesError = false;
+        }
+
+        private void RefreshSelectedModules()
+        {
+            if (ctx.Selected == null)
+            {
+                ClearSelectedModules();
+                return;
+            }
+
+            uint pointer = ctx.Selected.Pointer;
+            DateTime now = DateTime.UtcNow;
+            bool retryDue = selectedModulesError &&
+                now >= selectedModulesRetryUtc;
+            if (!modulesRefreshRequested && !selectedModulesError &&
+                selectedModulesPointer == pointer)
+                return;
+            if (selectedModulesError && !modulesRefreshRequested && !retryDue)
+                return;
+
+            modulesRefreshRequested = false;
+            selectedModulesPointer = pointer;
+            AauModuleReadResult result = AauModuleReader.Read(mem, pointer);
+            selectedModules = result.Modules == null
+                ? new List<AauModuleInfo>()
+                : new List<AauModuleInfo>(result.Modules);
+
+            if (result.Status == AauModuleStatus.Ok)
+            {
+                selectedModuleStatus = selectedModules.Count +
+                    (selectedModules.Count == 1 ? " module" : " modules");
+                selectedModulesError = false;
+                selectedModulesRetryUtc = DateTime.MinValue;
+            }
+            else if (result.Status == AauModuleStatus.NoModules)
+            {
+                selectedModuleStatus = "No AAU modules";
+                selectedModulesError = false;
+                selectedModulesRetryUtc = DateTime.MinValue;
+            }
+            else if (result.Status == AauModuleStatus.Error)
+            {
+                selectedModuleStatus = "AAU modules unreadable: " +
+                    (string.IsNullOrEmpty(result.Error)
+                        ? "unknown error" : result.Error);
+                selectedModulesError = true;
+                selectedModulesRetryUtc = now.AddSeconds(3);
+            }
+            else
+            {
+                selectedModuleStatus = "No AAU card data";
+                selectedModulesError = false;
+                selectedModulesRetryUtc = DateTime.MinValue;
+            }
         }
 
         private int ReadSelectedGender()

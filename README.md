@@ -90,6 +90,7 @@ The default WPF build stores its preferences beside `AA2Trainer.exe` in
 ```ini
 LiveRefresh=1
 RefreshIntervalMs=250
+LiveIntervalAuto=1
 ObserveOnly=0
 Theme=System
 WindowLeft=120
@@ -103,7 +104,8 @@ LogCollapsed=0
 ```
 
 - `LiveRefresh` - pause/resume live polling (writes still process while paused)
-- `RefreshIntervalMs` - poll interval, 50-2000 ms
+- `RefreshIntervalMs` - manual poll interval, 50-2000 ms
+- `LiveIntervalAuto` - use 100 ms while active / 500 ms when idle (default)
 - `ObserveOnly` - remember the planner observe-only choice for the next hook install
 - `Theme` - `System`, `Light`, or `Dark`
 - window keys - last physical-pixel bounds and maximized state; bounds are

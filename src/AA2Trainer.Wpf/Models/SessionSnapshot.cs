@@ -65,6 +65,8 @@ namespace AA2Trainer.WpfPrototype
         public List<PromiseEntry> PromiseRows;
         public List<CharacterInfo> RosterCharacters;
         public List<DebugFieldItem> DebugFields;
+        public List<AauModuleInfo> AauModules;
+        public string AauModuleStatus = "No AAU card data";
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }

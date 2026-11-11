@@ -18,7 +18,8 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
 ## Implemented
 
 - **Live session:** attaches to AA2Play on a background timer, refreshes the
-  roster and relationships once per second, reads live action/activity at 4 Hz,
+  roster and relationships once per second, reads live action/activity with
+  Auto polling (100 ms active / 500 ms idle by default; manual 50-2000 ms),
   checks pointer health every 5 seconds, and publishes one coalesced snapshot
   to the UI dispatcher. Attach/Detach and Refresh work from the top bar.
 - **Roster filters:** text search over name, room, action, status, and seat,
@@ -26,10 +27,12 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
   classroom layout stays fixed. Group-by-room is deferred because it would
   break that grid.
 - **Live Character Data:** the selected character’s profile, attributes,
-  academics, and status are read from Core once per second. The Data tab is
-  editable; Apply sends a draft through the session write queue and Revert
+  academics, status counters, and H History are read from Core once per second.
+  The Data tab is editable, shows the profile byte count, and lists AAU modules
+  read-only. Apply sends a draft through the session write queue and Revert
   restores the live values.
-- **Character writes:** names, profile, attributes, and academics are editable.
+- **Character writes:** names, profile, attributes, academics, status counters,
+  H History, and experience flags are editable.
   Apply re-checks pointer health before writing, reports the changed fields,
   and refreshes the live snapshot after success. Club choices come from the
   current class data, matching WinForms.
@@ -47,13 +50,14 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
 - **Outfits:** School, Sport, Swimsuit, and Club sets with uniform, top,
   bottom, shoes/socks, and underwear groups, including color/opacity pairs.
 - **Schedule:** click the game-time chip in the top bar to edit weekday, week,
-  period, duration, and time, or to freeze/pin the current time. Academy, year,
-  class, and save name stay read-only.
+  period, duration, time, academy, year, and class, or to freeze/pin the current
+  time. The save name stays read-only.
 - **Import/Export:** offline class-save editor. Select a save, a character, and
   a card; choose sections; review the side-by-side comparison; apply with a
   timestamped backup or export the character as a standalone card.
 - **Live log:** the Gameplay drawer records attach/detach requests, write
-  results, player switches, relationship actions, and schedule/freeze events.
+  results, player switches, relationship actions, schedule/freeze events, and
+  continuous seat state changes. Clear and Save act on the active tab.
 - **Planner:** install the planner hook from the toolbar, build steps from live
   targets/rooms/actions, choose mode and trigger, toggle Repeat/Shuffle, and
   start/stop on the game thread. Plans can be copied, pasted, saved to, and
@@ -61,8 +65,9 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
   live.
 - **Limits:** a checkable action list with Enable and Apply-to-PC; checked
   actions are cancelled by the `ActionLimiter`.
-- **Relationship:** incoming feelings table with Set Love/Like/Dislike/Hate and
-  Freeze/Unfreeze.
+- **Relationship:** incoming feelings table with inline counts/points/levels,
+  a Freeze checkbox, and right-click Set Love/Like/Dislike/Hate, Freeze/Unfreeze,
+  and bulk actions.
 - **Behavior:** feeling history per classmate, oldest first.
 - **Lover:** incoming lover flags, days, and compatibility with Set Lover/Break
   Up.

@@ -31,6 +31,18 @@ namespace AA2Trainer.WpfPrototype
         private int clubLevel;
         private int clubValue;
         private int clubGrade;
+        private int victoryCount;
+        private int classSkip;
+        private int winningOver;
+        private int partner;
+        private int rejected;
+        private int sexIntercourse;
+        private int sexPartner;
+        private string firstTime = "";
+        private string firstAnal = "";
+        private string lastTime = "";
+        private bool sexExperience;
+        private bool analExperience;
 
         public uint Pointer { get; private set; }
         public int SeatIndex { get; private set; } = -1;
@@ -55,7 +67,20 @@ namespace AA2Trainer.WpfPrototype
         public string Profile
         {
             get { return profile; }
-            set { SetDirty(ref profile, value); }
+            set
+            {
+                if (!SetDirty(ref profile, value)) return;
+                OnPropertyChanged(nameof(ProfileByteCount));
+            }
+        }
+
+        public string ProfileByteCount
+        {
+            get
+            {
+                return CharacterEditor.GetProfileByteCount(Profile) + " / " +
+                    CharacterEditor.ProfileMaxBytes + " bytes";
+            }
         }
 
         public int Personality
@@ -166,6 +191,78 @@ namespace AA2Trainer.WpfPrototype
             set { SetDirty(ref clubGrade, value); }
         }
 
+        public int VictoryCount
+        {
+            get { return victoryCount; }
+            set { SetDirty(ref victoryCount, value); }
+        }
+
+        public int ClassSkip
+        {
+            get { return classSkip; }
+            set { SetDirty(ref classSkip, value); }
+        }
+
+        public int WinningOver
+        {
+            get { return winningOver; }
+            set { SetDirty(ref winningOver, value); }
+        }
+
+        public int Partner
+        {
+            get { return partner; }
+            set { SetDirty(ref partner, value); }
+        }
+
+        public int Rejected
+        {
+            get { return rejected; }
+            set { SetDirty(ref rejected, value); }
+        }
+
+        public int SexIntercourse
+        {
+            get { return sexIntercourse; }
+            set { SetDirty(ref sexIntercourse, value); }
+        }
+
+        public int SexPartner
+        {
+            get { return sexPartner; }
+            set { SetDirty(ref sexPartner, value); }
+        }
+
+        public string FirstTime
+        {
+            get { return firstTime; }
+            set { SetDirty(ref firstTime, value); }
+        }
+
+        public string FirstAnal
+        {
+            get { return firstAnal; }
+            set { SetDirty(ref firstAnal, value); }
+        }
+
+        public string LastTime
+        {
+            get { return lastTime; }
+            set { SetDirty(ref lastTime, value); }
+        }
+
+        public bool SexExperience
+        {
+            get { return sexExperience; }
+            set { SetDirty(ref sexExperience, value); }
+        }
+
+        public bool AnalExperience
+        {
+            get { return analExperience; }
+            set { SetDirty(ref analExperience, value); }
+        }
+
         public bool IsDirty
         {
             get
@@ -191,7 +288,19 @@ namespace AA2Trainer.WpfPrototype
                        StrengthGrade != original.StrengthGrade ||
                        ClubLevel != original.ClubLevel ||
                        ClubValue != original.ClubValue ||
-                       ClubGrade != original.ClubGrade;
+                       ClubGrade != original.ClubGrade ||
+                       VictoryCount != original.VictoryCount ||
+                       ClassSkip != original.ClassSkip ||
+                       WinningOver != original.WinningOver ||
+                       Partner != original.Partner ||
+                       Rejected != original.Rejected ||
+                       SexIntercourse != original.SexIntercourse ||
+                       SexPartner != original.SexPartner ||
+                       !Same(FirstTime, original.FirstTime) ||
+                       !Same(FirstAnal, original.FirstAnal) ||
+                       !Same(LastTime, original.LastTime) ||
+                       SexExperience != original.SexExperience ||
+                       AnalExperience != original.AnalExperience;
             }
         }
 
@@ -222,6 +331,18 @@ namespace AA2Trainer.WpfPrototype
             clubLevel = snapshot.ClubLevel;
             clubValue = snapshot.ClubValue;
             clubGrade = snapshot.ClubGrade;
+            victoryCount = snapshot.VictoryCount;
+            classSkip = snapshot.ClassSkip;
+            winningOver = snapshot.WinningOver;
+            partner = snapshot.Partner;
+            rejected = snapshot.Rejected;
+            sexIntercourse = snapshot.SexIntercourse;
+            sexPartner = snapshot.SexPartner;
+            firstTime = snapshot.FirstTime ?? "";
+            firstAnal = snapshot.FirstAnal ?? "";
+            lastTime = snapshot.LastTime ?? "";
+            sexExperience = snapshot.SexExperience;
+            analExperience = snapshot.AnalExperience;
 
             OnPropertyChanged(string.Empty);
             OnPropertyChanged(nameof(IsDirty));
@@ -232,20 +353,8 @@ namespace AA2Trainer.WpfPrototype
             CharacterSnapshot snapshot = new CharacterSnapshot();
             if (original != null)
             {
-                snapshot.FirstTime = original.FirstTime;
-                snapshot.FirstAnal = original.FirstAnal;
-                snapshot.LastTime = original.LastTime;
                 snapshot.IntelligenceTopRank = original.IntelligenceTopRank;
                 snapshot.StrengthTopRank = original.StrengthTopRank;
-                snapshot.VictoryCount = original.VictoryCount;
-                snapshot.ClassSkip = original.ClassSkip;
-                snapshot.WinningOver = original.WinningOver;
-                snapshot.Partner = original.Partner;
-                snapshot.Rejected = original.Rejected;
-                snapshot.SexIntercourse = original.SexIntercourse;
-                snapshot.SexPartner = original.SexPartner;
-                snapshot.SexExperience = original.SexExperience;
-                snapshot.AnalExperience = original.AnalExperience;
             }
 
             snapshot.FirstName = LastName ?? "";
@@ -269,6 +378,18 @@ namespace AA2Trainer.WpfPrototype
             snapshot.ClubLevel = ClubLevel;
             snapshot.ClubValue = ClubValue;
             snapshot.ClubGrade = ClubGrade;
+            snapshot.VictoryCount = VictoryCount;
+            snapshot.ClassSkip = ClassSkip;
+            snapshot.WinningOver = WinningOver;
+            snapshot.Partner = Partner;
+            snapshot.Rejected = Rejected;
+            snapshot.SexIntercourse = SexIntercourse;
+            snapshot.SexPartner = SexPartner;
+            snapshot.FirstTime = FirstTime ?? "";
+            snapshot.FirstAnal = FirstAnal ?? "";
+            snapshot.LastTime = LastTime ?? "";
+            snapshot.SexExperience = SexExperience;
+            snapshot.AnalExperience = AnalExperience;
             return snapshot;
         }
 

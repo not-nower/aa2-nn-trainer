@@ -38,6 +38,12 @@ namespace AA2Trainer.WpfPrototype.Views
             if (viewModel != null) viewModel.RevertCharacterEdits();
         }
 
+        private void RefreshModules_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null) viewModel.RefreshAauModules();
+        }
+
         private void ApplyTraits_Click(object sender, RoutedEventArgs e)
         {
             MainViewModel viewModel = DataContext as MainViewModel;
