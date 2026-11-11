@@ -272,7 +272,7 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Padding="10">
-                            <StackPanel Width="380">
+                            <StackPanel Width="460">
                                 <TextBlock Text="Schedule"
                                            Style="{StaticResource SectionHeader}"
                                            Margin="0,0,0,6" />
@@ -352,18 +352,48 @@
                                               ToolTip="Pin the selected time every 50 ms" />
                                 </Grid>
 
-                                <TextBlock Style="{StaticResource CaptionText}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,2,0,0">
-                                    <Run Text="Academy: " />
-                                    <Run Text="{Binding ScheduleDraft.Academy, Mode=OneWay}" />
-                                    <Run Text="  Year: " />
-                                    <Run Text="{Binding ScheduleDraft.Year, Mode=OneWay}" />
-                                    <Run Text="  Class: " />
-                                    <Run Text="{Binding ScheduleDraft.ClassNumber, Mode=OneWay}" />
-                                    <Run Text="  Save: " />
-                                    <Run Text="{Binding ScheduleDraft.SaveName, Mode=OneWay}" />
-                                </TextBlock>
+                                <Grid Margin="0,2,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Academy"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1"
+                                             Text="{Binding ScheduleDraft.Academy, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             ToolTip="Academy name (up to 63 Shift-JIS bytes)" />
+                                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2"
+                                                Orientation="Horizontal"
+                                                Margin="0,6,0,0">
+                                        <TextBlock Text="Year"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Width="46" Margin="4,0,10,0"
+                                                 Text="{Binding ScheduleDraft.Year, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Year (0-9)" />
+                                        <TextBlock Text="Class"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Width="46" Margin="4,0,10,0"
+                                                 Text="{Binding ScheduleDraft.ClassNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Class (0-9)" />
+                                        <TextBlock Text="Save"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding ScheduleDraft.SaveName}"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="4,0,0,0"
+                                                   MaxWidth="200"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding ScheduleDraft.SaveName}" />
+                                    </StackPanel>
+                                </Grid>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <Button Content="Apply" Width="76"

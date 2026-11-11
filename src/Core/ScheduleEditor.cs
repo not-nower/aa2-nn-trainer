@@ -63,6 +63,11 @@ namespace AA2Trainer
             return "Week " + week.ToString();
         }
 
+        public static int AcademyByteCount(string value)
+        {
+            return GameEncoding.GetBytes(value ?? "").Length;
+        }
+
         public static bool TryRead(GameMemory mem, GameContext ctx,
             out ScheduleSnapshot snapshot, out string error)
         {

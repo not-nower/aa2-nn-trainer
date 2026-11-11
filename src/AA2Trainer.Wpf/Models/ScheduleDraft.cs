@@ -3,8 +3,8 @@ using System;
 namespace AA2Trainer.WpfPrototype
 {
     /// <summary>
-    /// Editable copy of the class schedule. The read-only academy/year/class/
-    /// save fields are carried through so the Core write keeps them intact.
+    /// Editable copy of the class schedule. Academy, year, and class are
+    /// editable; the save name is carried through read-only.
     /// </summary>
     public sealed class ScheduleDraft : ObservableObject
     {
@@ -83,19 +83,36 @@ namespace AA2Trainer.WpfPrototype
         public string Academy
         {
             get { return academy; }
-            private set { Set(ref academy, value ?? ""); }
+            set
+            {
+                string next = value ?? "";
+                if (ScheduleEditor.AcademyByteCount(next) >
+                    ScheduleEditor.AcademyBytes - 1)
+                    throw new ArgumentException(
+                        "The academy name is too long for the game's " +
+                        (ScheduleEditor.AcademyBytes - 1) + "-byte field.");
+                if (Set(ref academy, next)) DirtyChanged();
+            }
         }
 
         public int Year
         {
             get { return year; }
-            private set { Set(ref year, value); }
+            set
+            {
+                int next = Math.Max(0, Math.Min(9, value));
+                if (Set(ref year, next)) DirtyChanged();
+            }
         }
 
         public int ClassNumber
         {
             get { return classNumber; }
-            private set { Set(ref classNumber, value); }
+            set
+            {
+                int next = Math.Max(0, Math.Min(9, value));
+                if (Set(ref classNumber, next)) DirtyChanged();
+            }
         }
 
         public string SaveName
@@ -118,7 +135,12 @@ namespace AA2Trainer.WpfPrototype
                     week != original.Week ||
                     period != original.Period ||
                     duration != original.PeriodDuration ||
-                    TimeMilliseconds != original.TimeMilliseconds;
+                    TimeMilliseconds != original.TimeMilliseconds ||
+                    !string.Equals((academy ?? "").Trim(),
+                        (original.Academy ?? "").Trim(),
+                        StringComparison.Ordinal) ||
+                    year != original.Year ||
+                    classNumber != original.ClassNumber;
             }
         }
 
@@ -166,7 +188,7 @@ namespace AA2Trainer.WpfPrototype
             snapshot.PeriodDuration = duration;
             snapshot.TimeMilliseconds = TimeMilliseconds;
             snapshot.GameDay = (week - 1) * 7 + weekday + 1;
-            snapshot.Academy = academy;
+            snapshot.Academy = (academy ?? "").Trim();
             snapshot.Year = year;
             snapshot.ClassNumber = classNumber;
             snapshot.SaveName = saveName;
