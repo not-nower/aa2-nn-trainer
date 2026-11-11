@@ -2728,6 +2728,14 @@ namespace AA2Trainer.WpfPrototype
             CharacterInfo target = FindCharacterBySeat(targetSeat);
             if (target == null) return;
 
+            PointerHealth check = PointerHealth.Run(mem, ctx);
+            if (!check.Clean)
+            {
+                PublishLiveLog("Freeze batch skipped: " +
+                    check.ShortStatus);
+                return;
+            }
+
             int applied = 0;
             foreach (int seat in seats)
             {
