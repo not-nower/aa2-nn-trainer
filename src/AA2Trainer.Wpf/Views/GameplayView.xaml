@@ -7,34 +7,19 @@
             <views:PlannerView />
         </TabItem>
         <TabItem Header="Limits">
-            <TextBlock Text="Prototype - Limits in M3."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <views:LimitsView />
         </TabItem>
         <TabItem Header="Relationship">
-            <TextBlock Text="Prototype - Relationship in M3."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <views:RelationshipView />
         </TabItem>
         <TabItem Header="Behavior">
-            <TextBlock Text="Prototype - Behavior History in M3."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <views:BehaviorView />
         </TabItem>
         <TabItem Header="Lover">
-            <TextBlock Text="Prototype - Lover in M3."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <views:LoverView />
         </TabItem>
         <TabItem Header="Promises">
-            <TextBlock Text="Prototype - Promises in M3."
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <views:PromisesView />
         </TabItem>
     </TabControl>
 </UserControl>

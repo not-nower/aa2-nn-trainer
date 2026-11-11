@@ -57,6 +57,19 @@ dotnet build -c Release
   timestamped backup or export the character as a standalone card.
 - **Live log:** the Gameplay drawer records attach/detach requests, write
   results, player switches, relationship actions, and schedule/freeze events.
+- **Planner:** install the planner hook from the toolbar, build steps from live
+  targets/rooms/actions, choose mode and trigger, toggle Repeat/Shuffle, and
+  start/stop on the game thread. Plans can be copied, pasted, saved to, and
+  loaded from `PlanStore.DefaultPath`; step state and the planner log update
+  live.
+- **Limits:** a checkable action list with Enable and Apply-to-PC; checked
+  actions are cancelled by the `ActionLimiter`.
+- **Relationship:** incoming feelings table with Set Love/Like/Dislike/Hate and
+  Freeze/Unfreeze.
+- **Behavior:** feeling history per classmate, oldest first.
+- **Lover:** incoming lover flags, days, and compatibility with Set Lover/Break
+  Up.
+- **Promises:** active promises involving the selected character (read-only).
 - Compact contextual shell: top bar, five main tabs, status bar. The seat rail,
   character header and log drawer appear only where they help.
 - **System / Light / Dark** themes with a runtime switch and dark window chrome.

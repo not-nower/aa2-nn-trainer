@@ -47,6 +47,11 @@ namespace AA2Trainer.WpfPrototype
         public ScheduleSnapshot Schedule;
         public bool TimeFrozen;
         public int TimeFrozenMilliseconds;
+        public List<RelationshipRecord> RelationshipRows;
+        public List<RelationshipHistoryRow> BehaviorRows;
+        public List<LoverEntry> LoverRows;
+        public List<PromiseEntry> PromiseRows;
+        public List<CharacterInfo> RosterCharacters;
 
         public readonly List<SeatSnapshot> Seats = new List<SeatSnapshot>();
     }

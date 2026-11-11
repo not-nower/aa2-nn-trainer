@@ -1,0 +1,48 @@
+<UserControl x:Class="AA2Trainer.WpfPrototype.Views.LoverView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Set Lover" Style="{StaticResource ToolbarButton}"
+                    Click="SetLover_Click" />
+            <Button Content="Break Up" Style="{StaticResource ToolbarButton}"
+                    Margin="6,0,0,0" Click="BreakUp_Click" />
+            <TextBlock Text="Lover flags are incoming only (each classmate's view of the selected character)"
+                       Style="{StaticResource CaptionText}"
+                       Margin="14,0,0,0"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding LoverRows}"
+                  SelectedIndex="{Binding SelectedLoverIndex, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  VirtualizingStackPanel.IsVirtualizing="True"
+                  VirtualizingStackPanel.VirtualizationMode="Recycling">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Seat / Name"
+                                    Width="*"
+                                    Binding="{Binding SourceText}" />
+                <DataGridCheckBoxColumn Header="Lover"
+                                        Width="54"
+                                        Binding="{Binding IsLover, Mode=OneWay}" />
+                <DataGridTextColumn Header="Days"
+                                    Width="64"
+                                    Binding="{Binding Days}" />
+                <DataGridTextColumn Header="Compatibility"
+                                    Width="100"
+                                    Binding="{Binding Compatibility}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

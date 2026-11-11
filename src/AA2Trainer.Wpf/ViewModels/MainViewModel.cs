@@ -71,11 +71,44 @@ namespace AA2Trainer.WpfPrototype
         private string rosterFilter = "";
         private int seatFilterIndex;
         private int selectedTabIndex;
+        private PlannerSeatOption selectedPlannerTarget;
+        private PlannerSeatOption selectedPlannerAbout;
+        private CharacterOption selectedPlannerAction;
+        private CharacterOption selectedPlannerRoom;
+        private CharacterOptions plannerOptionsSource;
+        private string plannerSeatSignature = "";
+        private string plannerStatus = "Plan: not running";
+        private string plannerHookState = "Hook: not installed";
+        private string plannerHookButtonText = "Install hook";
+        private bool plannerHookInstalled;
+        private bool plannerObserveOnly;
+        private bool plannerRunning;
+        private int plannerModeIndex = 2;
+        private int plannerTriggerIndex;
+        private bool plannerRepeat;
+        private bool plannerShuffle;
+        private int selectedPlannerStepIndex = -1;
+        private bool limitEnabled;
+        private bool limitApplyToPc;
+        private string limitStatus = "Blocked: 0";
+        private string gameplayTableSignature = "";
+        private int selectedRelationshipIndex = -1;
+        private int selectedLoverIndex = -1;
 
         public MainViewModel()
         {
             Seats = new ObservableCollection<SeatItem>();
             PlanSteps = new ObservableCollection<PlanStepItem>();
+            PlannerSteps = new ObservableCollection<PlannerStepItem>();
+            PlannerTargetOptions = new ObservableCollection<PlannerSeatOption>();
+            PlannerAboutOptions = new ObservableCollection<PlannerSeatOption>();
+            PlannerActions = new ObservableCollection<CharacterOption>();
+            PlannerRooms = new ObservableCollection<CharacterOption>();
+            LimitActions = new ObservableCollection<LimitActionItem>();
+            RelationshipRows = new ObservableCollection<RelationshipRowItem>();
+            BehaviorRows = new ObservableCollection<BehaviorRowItem>();
+            LoverRows = new ObservableCollection<LoverRowItem>();
+            PromiseRows = new ObservableCollection<PromiseRowItem>();
             LiveLines = new ObservableCollection<LogLine>();
             PlannerLines = new ObservableCollection<LogLine>();
             DebugFields = new ObservableCollection<DebugFieldItem>();
@@ -100,11 +133,23 @@ namespace AA2Trainer.WpfPrototype
             session.PlayerSwitchCompleted += OnPlayerSwitchCompleted;
             session.RosterActionCompleted += OnRosterActionCompleted;
             session.ScheduleWriteCompleted += OnScheduleWriteCompleted;
+            session.Planner.Log += OnPlannerLog;
+            session.Planner.StateChanged += RefreshPlannerNow;
             LoadCardsAsync();
         }
 
         public ObservableCollection<SeatItem> Seats { get; private set; }
         public ObservableCollection<PlanStepItem> PlanSteps { get; private set; }
+        public ObservableCollection<PlannerStepItem> PlannerSteps { get; private set; }
+        public ObservableCollection<PlannerSeatOption> PlannerTargetOptions { get; private set; }
+        public ObservableCollection<PlannerSeatOption> PlannerAboutOptions { get; private set; }
+        public ObservableCollection<CharacterOption> PlannerActions { get; private set; }
+        public ObservableCollection<CharacterOption> PlannerRooms { get; private set; }
+        public ObservableCollection<LimitActionItem> LimitActions { get; private set; }
+        public ObservableCollection<RelationshipRowItem> RelationshipRows { get; private set; }
+        public ObservableCollection<BehaviorRowItem> BehaviorRows { get; private set; }
+        public ObservableCollection<LoverRowItem> LoverRows { get; private set; }
+        public ObservableCollection<PromiseRowItem> PromiseRows { get; private set; }
         public ObservableCollection<LogLine> LiveLines { get; private set; }
         public ObservableCollection<LogLine> PlannerLines { get; private set; }
         public ObservableCollection<DebugFieldItem> DebugFields { get; private set; }
@@ -620,8 +665,469 @@ namespace AA2Trainer.WpfPrototype
             set { Set(ref selectedTabIndex, value); }
         }
 
-        public string HookState { get { return "Hook: not installed"; } }
-        public string PlanStatus { get { return "Plan: not running  |  no steps"; } }
+        public string HookState { get { return plannerHookState; } }
+        public string PlanStatus { get { return plannerStatus; } }
+
+        public string PlannerStatus
+        {
+            get { return plannerStatus; }
+            private set { Set(ref plannerStatus, value); }
+        }
+
+        public string PlannerHookState
+        {
+            get { return plannerHookState; }
+            private set { Set(ref plannerHookState, value); }
+        }
+
+        public string PlannerHookButtonText
+        {
+            get { return plannerHookButtonText; }
+            private set { Set(ref plannerHookButtonText, value); }
+        }
+
+        public bool PlannerHookInstalled
+        {
+            get { return plannerHookInstalled; }
+            private set
+            {
+                if (!Set(ref plannerHookInstalled, value)) return;
+                OnPropertyChanged(nameof(PlannerHookButtonText));
+                OnPropertyChanged(nameof(CanToggleObserve));
+                OnPropertyChanged(nameof(CanStartPlanner));
+            }
+        }
+
+        public bool PlannerObserveOnly
+        {
+            get { return plannerObserveOnly; }
+            private set { Set(ref plannerObserveOnly, value); }
+        }
+
+        public bool PlannerRunning
+        {
+            get { return plannerRunning; }
+            private set
+            {
+                if (!Set(ref plannerRunning, value)) return;
+                OnPropertyChanged(nameof(CanEditPlanner));
+                OnPropertyChanged(nameof(CanStartPlanner));
+                OnPropertyChanged(nameof(PlannerStopEnabled));
+            }
+        }
+
+        public int PlannerModeIndex
+        {
+            get { return plannerModeIndex; }
+            set { Set(ref plannerModeIndex, value); }
+        }
+
+        public int PlannerTriggerIndex
+        {
+            get { return plannerTriggerIndex; }
+            set { Set(ref plannerTriggerIndex, value); }
+        }
+
+        public bool PlannerRepeat
+        {
+            get { return plannerRepeat; }
+            set { Set(ref plannerRepeat, value); }
+        }
+
+        public bool PlannerShuffle
+        {
+            get { return plannerShuffle; }
+            set { Set(ref plannerShuffle, value); }
+        }
+
+        public PlannerSeatOption SelectedPlannerTarget
+        {
+            get { return selectedPlannerTarget; }
+            set { Set(ref selectedPlannerTarget, value); }
+        }
+
+        public PlannerSeatOption SelectedPlannerAbout
+        {
+            get { return selectedPlannerAbout; }
+            set { Set(ref selectedPlannerAbout, value); }
+        }
+
+        public CharacterOption SelectedPlannerAction
+        {
+            get { return selectedPlannerAction; }
+            set { Set(ref selectedPlannerAction, value); }
+        }
+
+        public CharacterOption SelectedPlannerRoom
+        {
+            get { return selectedPlannerRoom; }
+            set { Set(ref selectedPlannerRoom, value); }
+        }
+
+        public int SelectedPlannerStepIndex
+        {
+            get { return selectedPlannerStepIndex; }
+            set
+            {
+                if (!Set(ref selectedPlannerStepIndex, value)) return;
+                OnPropertyChanged(nameof(CanRemovePlannerStep));
+                OnPropertyChanged(nameof(CanMovePlannerStep));
+                OnPropertyChanged(nameof(CanCopyPlanner));
+            }
+        }
+
+        public bool CanEditPlanner
+        {
+            get { return !plannerRunning; }
+        }
+
+        public bool CanStartPlanner
+        {
+            get
+            {
+                return !plannerRunning && plannerHookInstalled &&
+                    !plannerObserveOnly && PlannerSteps.Count > 0;
+            }
+        }
+
+        public bool PlannerStopEnabled
+        {
+            get { return plannerRunning; }
+        }
+
+        public bool CanToggleObserve
+        {
+            get { return plannerHookInstalled; }
+        }
+
+        public bool CanRemovePlannerStep
+        {
+            get
+            {
+                return !plannerRunning && selectedPlannerStepIndex >= 0 &&
+                    selectedPlannerStepIndex < PlannerSteps.Count;
+            }
+        }
+
+        public bool CanMovePlannerStep
+        {
+            get { return CanRemovePlannerStep; }
+        }
+
+        public bool CanCopyPlanner
+        {
+            get { return PlannerSteps.Count > 0 && !plannerRunning; }
+        }
+
+        public bool CanPastePlanner
+        {
+            get { return !plannerRunning && plannerClipboardAvailable; }
+        }
+
+        private bool plannerClipboardAvailable;
+
+        public bool LimitEnabled
+        {
+            get { return limitEnabled; }
+            set
+            {
+                if (!Set(ref limitEnabled, value)) return;
+                if (session != null) session.LimitEnabled = value;
+            }
+        }
+
+        public bool LimitApplyToPc
+        {
+            get { return limitApplyToPc; }
+            set
+            {
+                if (!Set(ref limitApplyToPc, value)) return;
+                if (session != null) session.LimitApplyToPc = value;
+            }
+        }
+
+        public string LimitStatus
+        {
+            get { return limitStatus; }
+            private set { Set(ref limitStatus, value); }
+        }
+
+        public int SelectedRelationshipIndex
+        {
+            get { return selectedRelationshipIndex; }
+            set { Set(ref selectedRelationshipIndex, value); }
+        }
+
+        public int SelectedLoverIndex
+        {
+            get { return selectedLoverIndex; }
+            set { Set(ref selectedLoverIndex, value); }
+        }
+
+        private void OnLimitActionChanged(int actionId, bool limited)
+        {
+            if (session != null) session.SetActionLimit(actionId, limited);
+        }
+
+        public void ClearLimits()
+        {
+            if (session == null) return;
+            session.ClearActionLimits();
+            foreach (LimitActionItem item in LimitActions)
+                item.SetLimitedSilently(false);
+            LimitStatus = "Blocked: 0";
+        }
+
+        public void SetRelationshipFeeling(int feeling)
+        {
+            RelationshipRowItem row = SelectedRelationshipRow();
+            if (row == null || SelectedSeat == null) return;
+            SeatItem source = Seats.FirstOrDefault(
+                seat => seat.SeatIndex == row.SourceSeat);
+            if (source != null) SetRelationship(source, feeling);
+        }
+
+        public void SetLoverFromRow(bool lovers)
+        {
+            LoverRowItem row = SelectedLoverRow();
+            if (row == null || SelectedSeat == null) return;
+            SeatItem source = Seats.FirstOrDefault(
+                seat => seat.SeatIndex == row.SourceSeat);
+            if (source != null) SetLover(source, lovers);
+        }
+
+        public void ToggleRelationshipFreezeFromRow()
+        {
+            RelationshipRowItem row = SelectedRelationshipRow();
+            if (row == null) return;
+            SeatItem source = Seats.FirstOrDefault(
+                seat => seat.SeatIndex == row.SourceSeat);
+            if (source != null) ToggleRelationshipFreeze(source);
+        }
+
+        private RelationshipRowItem SelectedRelationshipRow()
+        {
+            if (selectedRelationshipIndex < 0 ||
+                selectedRelationshipIndex >= RelationshipRows.Count)
+                return null;
+            return RelationshipRows[selectedRelationshipIndex];
+        }
+
+        private LoverRowItem SelectedLoverRow()
+        {
+            if (selectedLoverIndex < 0 ||
+                selectedLoverIndex >= LoverRows.Count)
+                return null;
+            return LoverRows[selectedLoverIndex];
+        }
+
+        private void RefreshLimitActions(CharacterOptions options)
+        {
+            LimitActions.Clear();
+            if (options == null) return;
+            HashSet<int> limited = session == null
+                ? new HashSet<int>()
+                : new HashSet<int>(session.LimitedActions());
+            foreach (CharacterOption option in options.Actions)
+            {
+                LimitActionItem item = new LimitActionItem(
+                    option.Value, option.Text, OnLimitActionChanged);
+                item.SetLimitedSilently(limited.Contains(option.Value));
+                LimitActions.Add(item);
+            }
+        }
+
+        private void RefreshGameplayTables(SessionSnapshot snapshot)
+        {
+            if (session != null)
+            {
+                LimitStatus = "Blocked: " + session.LimitBlockedCount +
+                    (string.IsNullOrEmpty(session.LimitLastBlocked)
+                        ? "" : "  |  last: " + session.LimitLastBlocked);
+            }
+
+            if (!snapshot.IsAttached)
+            {
+                if (limitEnabled)
+                {
+                    limitEnabled = false;
+                    OnPropertyChanged(nameof(LimitEnabled));
+                }
+            }
+
+            string signature = BuildGameplaySignature(snapshot);
+            if (signature == gameplayTableSignature) return;
+            gameplayTableSignature = signature;
+
+            List<LoverEntry> lovers = snapshot.LoverRows ??
+                new List<LoverEntry>();
+
+            RelationshipRows.Clear();
+            if (snapshot.RelationshipRows != null)
+            {
+                foreach (RelationshipRecord record in snapshot.RelationshipRows)
+                {
+                    if (record == null || record.Source == null) continue;
+                    bool isLover = false;
+                    foreach (LoverEntry lover in lovers)
+                    {
+                        if (lover != null && lover.Source != null &&
+                            lover.Source.Seat == record.Source.Seat)
+                        {
+                            isLover = lover.IsLover;
+                            break;
+                        }
+                    }
+                    RelationshipRows.Add(new RelationshipRowItem
+                    {
+                        SourceSeat = record.Source.Seat,
+                        SourceName = record.Source.Name ?? "",
+                        LoveCount = record.Counts[0],
+                        LikeCount = record.Counts[1],
+                        DislikeCount = record.Counts[2],
+                        HateCount = record.Counts[3],
+                        LoveLevel = record.Levels[0],
+                        LikeLevel = record.Levels[1],
+                        DislikeLevel = record.Levels[2],
+                        HateLevel = record.Levels[3],
+                        Latest = record.Latest >= 0
+                            ? RelationshipStatus.Label(record.Latest) : "-",
+                        IsLover = isLover
+                    });
+                }
+            }
+
+            BehaviorRows.Clear();
+            if (snapshot.BehaviorRows != null)
+            {
+                foreach (RelationshipHistoryRow row in snapshot.BehaviorRows)
+                {
+                    if (row == null || row.Source == null) continue;
+                    string history = "";
+                    if (row.History != null)
+                    {
+                        for (int i = 0; i < row.History.Length; i++)
+                        {
+                            if (i > 0) history += " > ";
+                            history += RelationshipStatus.Label(row.History[i]);
+                        }
+                    }
+                    BehaviorRows.Add(new BehaviorRowItem
+                    {
+                        SourceSeat = row.Source.Seat,
+                        SourceName = row.Source.Name ?? "",
+                        History = history,
+                        Latest = row.Latest >= 0
+                            ? RelationshipStatus.Label(row.Latest) : "-"
+                    });
+                }
+            }
+
+            LoverRows.Clear();
+            foreach (LoverEntry entry in lovers)
+            {
+                if (entry == null || entry.Source == null) continue;
+                LoverRows.Add(new LoverRowItem
+                {
+                    SourceSeat = entry.Source.Seat,
+                    SourceName = entry.Source.Name ?? "",
+                    IsLover = entry.IsLover,
+                    Days = entry.Days,
+                    Compatibility = entry.Compatibility
+                });
+            }
+
+            PromiseRows.Clear();
+            if (snapshot.PromiseRows != null)
+            {
+                foreach (PromiseEntry entry in snapshot.PromiseRows)
+                {
+                    if (entry == null) continue;
+                    string otherName = "";
+                    if (snapshot.RosterCharacters != null &&
+                        entry.OtherSeat >= 0)
+                    {
+                        foreach (CharacterInfo info in snapshot.RosterCharacters)
+                        {
+                            if (info != null && info.Seat == entry.OtherSeat)
+                            {
+                                otherName = info.Name ?? "";
+                                break;
+                            }
+                        }
+                    }
+                    PromiseRows.Add(new PromiseRowItem
+                    {
+                        Direction = entry.Direction.ToString(),
+                        Kind = entry.Kind.ToString(),
+                        OtherSeat = entry.OtherSeat,
+                        OtherName = otherName,
+                        Location = entry.Location >= 0
+                            ? entry.Location.ToString() : "-",
+                        TestType = entry.TestType >= 0
+                            ? entry.TestType.ToString() : "-",
+                        Flag = entry.Flag ? "yes" : "no"
+                    });
+                }
+            }
+        }
+
+        private static string BuildGameplaySignature(SessionSnapshot snapshot)
+        {
+            StringBuilder text = new StringBuilder();
+            if (snapshot.RelationshipRows != null)
+            {
+                foreach (RelationshipRecord record in snapshot.RelationshipRows)
+                {
+                    if (record == null) continue;
+                    text.Append('r').Append(record.TargetSeat);
+                    for (int i = 0; i < 4; i++)
+                    {
+                        text.Append('.').Append(record.Counts[i])
+                            .Append(':').Append(record.Points[i])
+                            .Append(':').Append(record.Levels[i]);
+                    }
+                    text.Append(':').Append(record.Latest);
+                }
+            }
+            if (snapshot.BehaviorRows != null)
+            {
+                foreach (RelationshipHistoryRow row in snapshot.BehaviorRows)
+                {
+                    if (row == null || row.Source == null) continue;
+                    text.Append('b').Append(row.Source.Seat);
+                    if (row.History != null)
+                    {
+                        foreach (int feeling in row.History)
+                            text.Append(feeling);
+                    }
+                }
+            }
+            if (snapshot.LoverRows != null)
+            {
+                foreach (LoverEntry entry in snapshot.LoverRows)
+                {
+                    if (entry == null || entry.Source == null) continue;
+                    text.Append('l').Append(entry.Source.Seat)
+                        .Append(entry.IsLover ? '1' : '0')
+                        .Append(':').Append(entry.Days)
+                        .Append(':').Append(entry.Compatibility);
+                }
+            }
+            if (snapshot.PromiseRows != null)
+            {
+                foreach (PromiseEntry entry in snapshot.PromiseRows)
+                {
+                    if (entry == null) continue;
+                    text.Append('p').Append((int)entry.Direction)
+                        .Append((int)entry.Kind).Append(entry.OtherSeat)
+                        .Append(':').Append(entry.Location)
+                        .Append(':').Append(entry.TestType)
+                        .Append(entry.Flag ? '1' : '0');
+                }
+            }
+            return text.ToString();
+        }
 
         public void Refresh()
         {
@@ -641,6 +1147,342 @@ namespace AA2Trainer.WpfPrototype
                 LogSession("Attach requested.");
                 session.RequestAttach();
             }
+        }
+
+        private int PlannerSeat
+        {
+            get { return SelectedSeat == null ? -1 : SelectedSeat.SeatIndex; }
+        }
+
+        private string PlannerActorName
+        {
+            get { return SelectedSeat == null ? "" : SelectedSeat.Name; }
+        }
+
+        private PlanMode PlannerMode
+        {
+            get
+            {
+                switch (plannerModeIndex)
+                {
+                    case 1: return PlanMode.Forced;
+                    case 2: return PlanMode.ForcedPerform;
+                    case 3: return PlanMode.Ignore;
+                    default: return PlanMode.Normal;
+                }
+            }
+        }
+
+        private PlanTrigger PlannerTrigger
+        {
+            get
+            {
+                switch (plannerTriggerIndex)
+                {
+                    case 1: return PlanTrigger.Target;
+                    case 2: return PlanTrigger.Either;
+                    default: return PlanTrigger.Actor;
+                }
+            }
+        }
+
+        public void StartPlanner()
+        {
+            if (session == null || PlannerSeat < 0) return;
+            string message;
+            if (!session.Planner.Start(PlannerSeat, PlannerActorName, out message))
+            {
+                RosterStatus = message ?? "The plan could not start.";
+                LogPlanner(RosterStatus);
+            }
+            RefreshPlannerNow();
+        }
+
+        public void StopPlanner()
+        {
+            if (session == null || PlannerSeat < 0) return;
+            session.Planner.Stop(PlannerSeat, PlannerActorName);
+            RefreshPlannerNow();
+        }
+
+        public void TogglePlannerHook()
+        {
+            if (session == null) return;
+            string message;
+            bool ok = plannerHookInstalled
+                ? session.Planner.UninstallHook(out message)
+                : session.Planner.InstallHook(out message);
+            if (!ok && !string.IsNullOrEmpty(message))
+            {
+                RosterStatus = message;
+                LogPlanner(message);
+            }
+            RefreshPlannerNow();
+        }
+
+        public void SetPlannerObserve(bool enabled)
+        {
+            if (session == null) return;
+            session.Planner.SetObserveOnly(enabled);
+            RefreshPlannerNow();
+        }
+
+        public void UpdatePlannerSettings()
+        {
+            if (session == null || PlannerSeat < 0) return;
+            session.Planner.UpdateSettings(PlannerSeat, PlannerActorName,
+                PlannerMode, PlannerTrigger, plannerRepeat, plannerShuffle);
+        }
+
+        public void AddPlannerAction()
+        {
+            if (session == null || PlannerSeat < 0 || plannerRunning) return;
+            if (selectedPlannerAction == null ||
+                selectedPlannerTarget == null || selectedPlannerTarget.Seat < 0)
+            {
+                RosterStatus = "Choose an action and a target first.";
+                return;
+            }
+
+            bool ok = session.Planner.AddAction(PlannerSeat, PlannerActorName,
+                selectedPlannerTarget.Seat, selectedPlannerTarget.Text,
+                selectedPlannerAbout == null ? -1 : selectedPlannerAbout.Seat,
+                selectedPlannerAbout == null ? "" : selectedPlannerAbout.Text,
+                selectedPlannerAction.Value, selectedPlannerAction.Text);
+            if (!ok) RosterStatus = "The step could not be added.";
+            RefreshPlannerNow();
+        }
+
+        public void AddPlannerMove()
+        {
+            if (session == null || PlannerSeat < 0 || plannerRunning) return;
+            if (selectedPlannerRoom == null || selectedPlannerRoom.Value < 0)
+            {
+                RosterStatus = "Choose a room first.";
+                return;
+            }
+
+            bool ok = session.Planner.AddMove(PlannerSeat, PlannerActorName,
+                selectedPlannerRoom.Value, selectedPlannerRoom.Text);
+            if (!ok) RosterStatus = "The move step could not be added.";
+            RefreshPlannerNow();
+        }
+
+        public void RemovePlannerStep()
+        {
+            if (session == null || PlannerSeat < 0 || plannerRunning) return;
+            session.Planner.RemoveStep(PlannerSeat, PlannerActorName,
+                selectedPlannerStepIndex);
+            RefreshPlannerNow();
+        }
+
+        public void MovePlannerStep(int delta)
+        {
+            if (session == null || PlannerSeat < 0 || plannerRunning) return;
+            int index = selectedPlannerStepIndex;
+            if (session.Planner.MoveStep(PlannerSeat, PlannerActorName,
+                index, delta))
+            {
+                selectedPlannerStepIndex = Math.Max(0,
+                    Math.Min(PlannerSteps.Count - 1, index + delta));
+                OnPropertyChanged(nameof(SelectedPlannerStepIndex));
+            }
+            RefreshPlannerNow();
+        }
+
+        public void ClearPlanner()
+        {
+            if (session == null || PlannerSeat < 0 || plannerRunning) return;
+            session.Planner.ClearSteps(PlannerSeat, PlannerActorName);
+            RefreshPlannerNow();
+        }
+
+        public void CopyPlanner()
+        {
+            if (session == null || PlannerSeat < 0) return;
+            session.Planner.CopyPlan(PlannerSeat, PlannerActorName);
+            plannerClipboardAvailable = true;
+            OnPropertyChanged(nameof(CanPastePlanner));
+        }
+
+        public void PastePlanner()
+        {
+            if (session == null || PlannerSeat < 0 || plannerRunning) return;
+            session.Planner.PastePlan(PlannerSeat, PlannerActorName);
+            RefreshPlannerNow();
+        }
+
+        public void SavePlanner()
+        {
+            if (session == null) return;
+            string message;
+            if (!session.Planner.SavePlans(out message) &&
+                !string.IsNullOrEmpty(message))
+                RosterStatus = message;
+        }
+
+        public void LoadPlanner()
+        {
+            if (session == null) return;
+            string message;
+            if (!session.Planner.LoadPlans(out message) &&
+                !string.IsNullOrEmpty(message))
+                RosterStatus = message;
+            RefreshPlannerNow();
+        }
+
+        private void OnPlannerLog(string message)
+        {
+            LogPlanner(message);
+        }
+
+        private void LogPlanner(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return;
+            while (PlannerLines.Count >= 5000) PlannerLines.RemoveAt(0);
+            PlannerLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
+                message));
+        }
+
+        private void RefreshPlannerNow()
+        {
+            if (session == null || SelectedSeat == null || PlannerSeat < 0)
+                return;
+            PlannerSnapshot snapshot = session.Planner.BuildSnapshot(
+                PlannerSeat, PlannerActorName);
+            ApplyPlannerSnapshot(snapshot);
+        }
+
+        private void RefreshPlannerSnapshot(SessionSnapshot sessionSnapshot)
+        {
+            if (sessionSnapshot == null || sessionSnapshot.Options != null)
+                RefreshPlannerOptions(sessionSnapshot);
+            RefreshPlannerSeats();
+            if (session == null || SelectedSeat == null || PlannerSeat < 0)
+                return;
+            ApplyPlannerSnapshot(session.Planner.BuildSnapshot(
+                PlannerSeat, PlannerActorName));
+        }
+
+        private void RefreshPlannerOptions(SessionSnapshot snapshot)
+        {
+            CharacterOptions options = snapshot.Options;
+            if (options == null || ReferenceEquals(options, plannerOptionsSource))
+                return;
+            plannerOptionsSource = options;
+
+            PlannerActions.Clear();
+            foreach (CharacterOption option in options.Actions)
+                PlannerActions.Add(option);
+            PlannerRooms.Clear();
+            foreach (CharacterOption option in options.Rooms)
+                PlannerRooms.Add(option);
+
+            selectedPlannerAction = PlannerActions.FirstOrDefault();
+            selectedPlannerRoom = PlannerRooms.FirstOrDefault();
+            OnPropertyChanged(nameof(SelectedPlannerAction));
+            OnPropertyChanged(nameof(SelectedPlannerRoom));
+            RefreshLimitActions(options);
+        }
+
+        private void RefreshPlannerSeats()
+        {
+            if (SelectedSeat == null) return;
+            string signature = SelectedSeat.SeatIndex.ToString();
+            foreach (SeatItem seat in Seats)
+            {
+                if (seat == null) continue;
+                signature += "|" + seat.SeatIndex + ":" + seat.Name + ":" +
+                    seat.HasName;
+            }
+            if (signature == plannerSeatSignature) return;
+            plannerSeatSignature = signature;
+
+            int keepTarget = selectedPlannerTarget == null
+                ? -1 : selectedPlannerTarget.Seat;
+            int keepAbout = selectedPlannerAbout == null
+                ? -1 : selectedPlannerAbout.Seat;
+
+            PlannerTargetOptions.Clear();
+            PlannerAboutOptions.Clear();
+            PlannerTargetOptions.Add(new PlannerSeatOption(-1, "None"));
+            PlannerAboutOptions.Add(new PlannerSeatOption(-1, "None"));
+
+            foreach (SeatItem seat in Seats)
+            {
+                if (seat == null || seat.SeatIndex < 0 || !seat.HasName)
+                    continue;
+                if (seat.SeatIndex == SelectedSeat.SeatIndex) continue;
+                PlannerSeatOption option = new PlannerSeatOption(
+                    seat.SeatIndex, seat.Seat + "  " + seat.Name);
+                PlannerTargetOptions.Add(option);
+                PlannerAboutOptions.Add(new PlannerSeatOption(
+                    seat.SeatIndex, seat.Seat + "  " + seat.Name));
+            }
+
+            selectedPlannerTarget = PlannerTargetOptions.FirstOrDefault(
+                option => option.Seat == keepTarget) ??
+                PlannerTargetOptions[0];
+            selectedPlannerAbout = PlannerAboutOptions.FirstOrDefault(
+                option => option.Seat == keepAbout) ??
+                PlannerAboutOptions[0];
+            OnPropertyChanged(nameof(SelectedPlannerTarget));
+            OnPropertyChanged(nameof(SelectedPlannerAbout));
+        }
+
+        private void ApplyPlannerSnapshot(PlannerSnapshot snapshot)
+        {
+            if (snapshot == null) return;
+            PlannerRunning = snapshot.Running;
+            PlannerStatus = snapshot.Status;
+            PlannerHookState = snapshot.HookState;
+            PlannerHookInstalled = snapshot.HookInstalled;
+            PlannerHookButtonText = snapshot.HookInstalled
+                ? "Uninstall hook" : "Install hook";
+            PlannerObserveOnly = snapshot.ObserveOnly;
+            PlannerModeIndex = (int)snapshot.Mode;
+            PlannerTriggerIndex = (int)snapshot.Trigger;
+            PlannerRepeat = snapshot.Repeat;
+            PlannerShuffle = snapshot.Shuffle;
+
+            bool rebuild = PlannerSteps.Count != snapshot.Steps.Count;
+            if (!rebuild)
+            {
+                for (int i = 0; i < PlannerSteps.Count; i++)
+                {
+                    if (!ReferenceEquals(PlannerSteps[i].Step,
+                        snapshot.Steps[i].Step))
+                    {
+                        rebuild = true;
+                        break;
+                    }
+                }
+            }
+
+            if (rebuild)
+            {
+                PlannerSteps.Clear();
+                foreach (PlannerStepItem item in snapshot.Steps)
+                    PlannerSteps.Add(item);
+                selectedPlannerStepIndex = PlannerSteps.Count > 0 ? 0 : -1;
+                OnPropertyChanged(nameof(SelectedPlannerStepIndex));
+            }
+            else
+            {
+                for (int i = 0; i < PlannerSteps.Count; i++)
+                {
+                    PlannerSteps[i].Number = i + 1;
+                    PlannerSteps[i].Refresh();
+                }
+            }
+
+            OnPropertyChanged(nameof(CanStartPlanner));
+            OnPropertyChanged(nameof(CanEditPlanner));
+            OnPropertyChanged(nameof(CanRemovePlannerStep));
+            OnPropertyChanged(nameof(CanMovePlannerStep));
+            OnPropertyChanged(nameof(CanCopyPlanner));
+            OnPropertyChanged(nameof(CanPastePlanner));
+            OnPropertyChanged(nameof(PlannerStopEnabled));
         }
 
         public void PlayAs(SeatItem seat)
@@ -1241,6 +2083,8 @@ namespace AA2Trainer.WpfPrototype
             session.PlayerSwitchCompleted -= OnPlayerSwitchCompleted;
             session.RosterActionCompleted -= OnRosterActionCompleted;
             session.ScheduleWriteCompleted -= OnScheduleWriteCompleted;
+            session.Planner.Log -= OnPlannerLog;
+            session.Planner.StateChanged -= RefreshPlannerNow;
             session.Dispose();
         }
 
@@ -1293,6 +2137,8 @@ namespace AA2Trainer.WpfPrototype
                 }
 
                 ApplyRosterFilter();
+                RefreshPlannerSnapshot(snapshot);
+                RefreshGameplayTables(snapshot);
 
                 string signature = BuildRosterSignature();
                 if (!string.Equals(signature, rosterSignature,

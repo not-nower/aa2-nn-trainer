@@ -23,6 +23,9 @@ namespace AA2Trainer.WpfPrototype
         private readonly LiveReader live;
         private readonly NameMap names = new NameMap();
         private readonly Dispatcher dispatcher;
+        private readonly PlannerService planner;
+        private readonly ActionLimitList actionLimits = new ActionLimitList();
+        private readonly ActionLimiter actionLimiter;
 
         private GameContext ctx = new GameContext();
         private readonly System.Threading.Timer timer;
@@ -101,6 +104,11 @@ namespace AA2Trainer.WpfPrototype
         private string[] selectedFaceTexts;
         private int[] selectedHairValues;
         private int[] selectedOutfitValues;
+        private List<RelationshipRecord> selectedRelationshipRows;
+        private List<RelationshipHistoryRow> selectedBehaviorRows;
+        private List<LoverEntry> selectedLoverRows;
+        private List<PromiseEntry> selectedPromiseRows;
+        private List<CharacterInfo> selectedRosterCharacters;
         private readonly Dictionary<int, string> relationships =
             new Dictionary<int, string>();
         private readonly Dictionary<int, string> headerRelationships =
@@ -130,7 +138,57 @@ namespace AA2Trainer.WpfPrototype
         {
             this.dispatcher = dispatcher;
             live = new LiveReader(mem);
+            planner = new PlannerService(mem, dispatcher);
+            actionLimiter = new ActionLimiter(actionLimits, null);
             timer = new System.Threading.Timer(Poll, null, 0, PollMs);
+        }
+
+        public PlannerService Planner
+        {
+            get { return planner; }
+        }
+
+        public bool LimitEnabled
+        {
+            get { return actionLimiter.Enabled; }
+            set { actionLimiter.Enabled = value; }
+        }
+
+        public bool LimitApplyToPc
+        {
+            get { return actionLimiter.ApplyToPc; }
+            set { actionLimiter.ApplyToPc = value; }
+        }
+
+        public long LimitBlockedCount
+        {
+            get { return actionLimiter.BlockedCount; }
+        }
+
+        public string LimitLastBlocked
+        {
+            get { return actionLimiter.LastBlocked; }
+        }
+
+        public void SetActionLimit(int actionId, bool limited)
+        {
+            if (limited) actionLimits.Add(actionId);
+            else actionLimits.Remove(actionId);
+        }
+
+        public bool IsActionLimited(int actionId)
+        {
+            return actionLimits.Contains(actionId);
+        }
+
+        public int[] LimitedActions()
+        {
+            return actionLimits.Snapshot();
+        }
+
+        public void ClearActionLimits()
+        {
+            actionLimits.Clear();
         }
 
         public event Action<SessionSnapshot> SnapshotReady;
@@ -395,6 +453,8 @@ namespace AA2Trainer.WpfPrototype
                 catch (ObjectDisposedException) { }
             }
             live.Clear();
+            planner.Dispose();
+            actionLimiter.Dispose();
             mem.Dispose();
             SnapshotReady = null;
             CharacterWriteCompleted = null;
@@ -487,6 +547,8 @@ namespace AA2Trainer.WpfPrototype
             lock (relationshipFreezeSync) relationshipFreezes.Clear();
             CancelPendingScheduleWrite("Detached.");
             timeFreezeMilliseconds = null;
+            actionLimiter.Enabled = false;
+            actionLimiter.SetTarget(null, null);
             live.Clear();
             mem.Detach();
             ctx = new GameContext();
@@ -552,6 +614,7 @@ namespace AA2Trainer.WpfPrototype
                 RefreshRelations();
                 RefreshSelectedCharacter();
                 RefreshCharacterOptions();
+                actionLimiter.SetTarget(mem, ctx);
 
                 ScheduleSnapshot readSchedule;
                 string scheduleError;
@@ -563,6 +626,7 @@ namespace AA2Trainer.WpfPrototype
             {
                 lastHealthUtc = now;
                 health = PointerHealth.Run(mem, ctx);
+                actionLimiter.WriteAllowed = mem.CanWrite;
             }
 
             LiveSnapshot liveSnapshot = live.Read();
@@ -602,6 +666,11 @@ namespace AA2Trainer.WpfPrototype
             snapshot.TimeFrozen = timeFreezeMilliseconds.HasValue;
             snapshot.TimeFrozenMilliseconds =
                 timeFreezeMilliseconds.GetValueOrDefault();
+            snapshot.RelationshipRows = selectedRelationshipRows;
+            snapshot.BehaviorRows = selectedBehaviorRows;
+            snapshot.LoverRows = selectedLoverRows;
+            snapshot.PromiseRows = selectedPromiseRows;
+            snapshot.RosterCharacters = selectedRosterCharacters;
 
             Dictionary<int, LiveCharacterState> liveBySeat =
                 new Dictionary<int, LiveCharacterState>();
@@ -764,6 +833,11 @@ namespace AA2Trainer.WpfPrototype
                 selectedFaceTexts = null;
                 selectedHairValues = null;
                 selectedOutfitValues = null;
+                selectedRelationshipRows = null;
+                selectedBehaviorRows = null;
+                selectedLoverRows = null;
+                selectedPromiseRows = null;
+                selectedRosterCharacters = null;
                 return;
             }
 
@@ -781,6 +855,11 @@ namespace AA2Trainer.WpfPrototype
                 selectedFaceTexts = null;
                 selectedHairValues = null;
                 selectedOutfitValues = null;
+                selectedRelationshipRows = null;
+                selectedBehaviorRows = null;
+                selectedLoverRows = null;
+                selectedPromiseRows = null;
+                selectedRosterCharacters = null;
                 return;
             }
 
@@ -826,6 +905,15 @@ namespace AA2Trainer.WpfPrototype
             string outfitError;
             selectedOutfitValues = OutfitEditor.TryRead(mem, ctx.Selected,
                 out outfit, out outfitError) ? outfit.Values : null;
+
+            selectedRelationshipRows = RelationshipEditor.ReadIncoming(
+                mem, ctx, ctx.Selected);
+            selectedBehaviorRows = RelationshipEditor.ReadIncomingHistory(
+                mem, ctx, ctx.Selected);
+            selectedLoverRows = LoverEditor.ReadIncoming(
+                mem, ctx, ctx.Selected);
+            selectedPromiseRows = PromiseReader.Read(mem, ctx.Selected);
+            selectedRosterCharacters = new List<CharacterInfo>(ctx.Characters);
         }
 
         private int ReadSelectedGender()
@@ -861,7 +949,25 @@ namespace AA2Trainer.WpfPrototype
             options.FaceChoices = BuildFaceChoices(gender);
             options.HairChoices = BuildHairChoices();
             options.OutfitChoices = BuildOutfitChoices(gender);
+            options.Actions = BuildPlannerOptions("ACTION_KEY");
+            options.Rooms = BuildPlannerOptions("LOCATION");
             return options;
+        }
+
+        private List<CharacterOption> BuildPlannerOptions(string key)
+        {
+            List<CharacterOption> list = new List<CharacterOption>();
+            for (int id = 0; id < 1000; id++)
+            {
+                string name = names.Get(key, id);
+                if (string.IsNullOrEmpty(name)) continue;
+                list.Add(new CharacterOption
+                {
+                    Value = id,
+                    Text = id.ToString() + " - " + name
+                });
+            }
+            return list;
         }
 
         private Dictionary<string, List<CharacterOption>> BuildFaceChoices(int gender)

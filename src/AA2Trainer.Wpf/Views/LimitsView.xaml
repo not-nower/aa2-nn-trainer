@@ -1,0 +1,54 @@
+<UserControl x:Class="AA2Trainer.WpfPrototype.Views.LimitsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <CheckBox Content="Enable limit actions"
+                      IsChecked="{Binding LimitEnabled, Mode=TwoWay}"
+                      VerticalAlignment="Center" />
+            <CheckBox Content="Apply to PC"
+                      IsChecked="{Binding LimitApplyToPc, Mode=TwoWay}"
+                      Margin="14,0,0,0"
+                      VerticalAlignment="Center" />
+            <Button Content="Clear" Margin="14,0,0,0"
+                    Style="{StaticResource ToolbarButton}"
+                    Click="Clear_Click" />
+            <TextBlock Text="{Binding LimitStatus}"
+                       Style="{StaticResource CaptionText}"
+                       Margin="14,0,0,0"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding LimitActions}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  VirtualizingStackPanel.IsVirtualizing="True"
+                  VirtualizingStackPanel.VirtualizationMode="Recycling">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Block"
+                                        Width="52"
+                                        Binding="{Binding IsLimited, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <DataGridTextColumn Header="Action"
+                                    Width="*"
+                                    IsReadOnly="True"
+                                    Binding="{Binding Text}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2"
+                   Text="Warning: stopping an action can leave an NPC briefly stuck in place while the AI picks another action."
+                   Style="{StaticResource CaptionText}"
+                   TextWrapping="Wrap"
+                   Margin="0,6,0,0" />
+    </Grid>
+</UserControl>

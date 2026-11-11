@@ -33,5 +33,9 @@ namespace AA2Trainer.WpfPrototype
             new Dictionary<string, List<CharacterOption>>();
         public Dictionary<string, List<CharacterOption>> OutfitChoices { get; set; } =
             new Dictionary<string, List<CharacterOption>>();
+        public List<CharacterOption> Actions { get; set; } =
+            new List<CharacterOption>();
+        public List<CharacterOption> Rooms { get; set; } =
+            new List<CharacterOption>();
     }
 }

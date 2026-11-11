@@ -1,0 +1,69 @@
+<UserControl x:Class="AA2Trainer.WpfPrototype.Views.RelationshipView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Set Love" Style="{StaticResource ToolbarButton}"
+                    Click="Love_Click" />
+            <Button Content="Set Like" Style="{StaticResource ToolbarButton}"
+                    Margin="6,0,0,0" Click="Like_Click" />
+            <Button Content="Set Dislike" Style="{StaticResource ToolbarButton}"
+                    Margin="6,0,0,0" Click="Dislike_Click" />
+            <Button Content="Set Hate" Style="{StaticResource ToolbarButton}"
+                    Margin="6,0,0,0" Click="Hate_Click" />
+            <Button Content="Freeze / Unfreeze" Style="{StaticResource ToolbarButton}"
+                    Margin="12,0,0,0" Click="Freeze_Click" />
+            <TextBlock Text="Incoming feelings toward the selected character"
+                       Style="{StaticResource CaptionText}"
+                       Margin="14,0,0,0"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding RelationshipRows}"
+                  SelectedIndex="{Binding SelectedRelationshipIndex, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  VirtualizingStackPanel.IsVirtualizing="True"
+                  VirtualizingStackPanel.VirtualizationMode="Recycling">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Seat / Name"
+                                    Width="*"
+                                    Binding="{Binding SourceText}" />
+                <DataGridTextColumn Header="Love"
+                                    Width="82"
+                                    Binding="{Binding LoveText}" />
+                <DataGridTextColumn Header="Like"
+                                    Width="82"
+                                    Binding="{Binding LikeText}" />
+                <DataGridTextColumn Header="Dislike"
+                                    Width="82"
+                                    Binding="{Binding DislikeText}" />
+                <DataGridTextColumn Header="Hate"
+                                    Width="82"
+                                    Binding="{Binding HateText}" />
+                <DataGridTextColumn Header="Latest"
+                                    Width="140"
+                                    Binding="{Binding Latest}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridCheckBoxColumn Header="Lover"
+                                        Width="54"
+                                        Binding="{Binding IsLover, Mode=OneWay}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

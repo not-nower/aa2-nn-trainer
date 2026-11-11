@@ -8,47 +8,64 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="{Binding PlanStatus}"
+        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+            <ComboBox Width="118" Margin="0,0,6,0"
+                      SelectedIndex="{Binding PlannerModeIndex, Mode=TwoWay}"
+                      SelectionChanged="PlannerSetting_Changed"
+                      ToolTip="Plan mode">
+                <ComboBoxItem Content="Normal" />
+                <ComboBoxItem Content="Forced" />
+                <ComboBoxItem Content="Forced perform" />
+                <ComboBoxItem Content="Ignore" />
+            </ComboBox>
+            <ComboBox Width="82" Margin="0,0,10,0"
+                      SelectedIndex="{Binding PlannerTriggerIndex, Mode=TwoWay}"
+                      SelectionChanged="PlannerSetting_Changed"
+                      ToolTip="Who starts the interaction">
+                <ComboBoxItem Content="Actor" />
+                <ComboBoxItem Content="Target" />
+                <ComboBoxItem Content="Either" />
+            </ComboBox>
+            <CheckBox Content="Repeat" Margin="0,0,10,0"
+                      VerticalAlignment="Center"
+                      IsChecked="{Binding PlannerRepeat, Mode=TwoWay}"
+                      Click="PlannerSetting_Changed" />
+            <CheckBox Content="Shuffle" Margin="0,0,14,0"
+                      VerticalAlignment="Center"
+                      IsChecked="{Binding PlannerShuffle, Mode=TwoWay}"
+                      Click="PlannerSetting_Changed" />
+            <Button Content="{Binding PlannerHookButtonText}"
+                    Style="{StaticResource ToolbarButton}"
+                    Click="Hook_Click"
+                    Margin="0,0,6,0" />
+            <CheckBox Content="Observe only"
+                      VerticalAlignment="Center"
+                      IsChecked="{Binding PlannerObserveOnly, Mode=OneWay}"
+                      IsEnabled="{Binding CanToggleObserve}"
+                      Checked="Observe_Changed"
+                      Unchecked="Observe_Changed"
+                      Margin="0,0,10,0" />
+            <TextBlock Text="{Binding PlannerHookState}"
                        Style="{StaticResource CaptionText}"
                        VerticalAlignment="Center" />
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <CheckBox Content="Repeat" Margin="0,0,10,0"
-                          VerticalAlignment="Center" />
-                <CheckBox Content="Shuffle" Margin="0,0,10,0"
-                          VerticalAlignment="Center" />
-                <ComboBox Width="118" SelectedIndex="2" ToolTip="Plan mode"
-                          Margin="0,0,6,0">
-                    <ComboBoxItem Content="Normal" />
-                    <ComboBoxItem Content="Forced" />
-                    <ComboBoxItem Content="Forced perform" />
-                    <ComboBoxItem Content="Ignore" />
-                </ComboBox>
-                <ComboBox Width="78" SelectedIndex="0"
-                          ToolTip="Who starts the interaction">
-                    <ComboBoxItem Content="Actor" />
-                    <ComboBoxItem Content="Target" />
-                    <ComboBoxItem Content="Either" />
-                </ComboBox>
-                <Border Style="{StaticResource Pill}" Margin="10,0,0,0">
-                    <TextBlock Text="{Binding HookState}"
-                               FontSize="10"
-                               Foreground="{DynamicResource Success}" />
-                </Border>
-            </StackPanel>
-        </DockPanel>
+        </WrapPanel>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="258" />
+                <ColumnDefinition Width="260" />
             </Grid.ColumnDefinitions>
 
             <DataGrid Grid.Column="0"
-                      ItemsSource="{Binding PlanSteps}"
-                      SelectedIndex="2"
-                      IsReadOnly="False"
+                      ItemsSource="{Binding PlannerSteps}"
+                      SelectedIndex="{Binding SelectedPlannerStepIndex, Mode=TwoWay}"
+                      IsReadOnly="{Binding PlannerRunning}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
                       Margin="0,0,0,8">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="On"
@@ -62,7 +79,7 @@
                                         Width="*"
                                         IsReadOnly="True"
                                         Binding="{Binding Description}" />
-                    <DataGridTemplateColumn Header="State" Width="100">
+                    <DataGridTemplateColumn Header="State" Width="96">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock x:Name="StateText"
@@ -70,16 +87,20 @@
                                            VerticalAlignment="Center" />
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding State}" Value="done">
-                                        <Setter TargetName="StateText" Property="Foreground" Value="{DynamicResource Success}" />
+                                        <Setter TargetName="StateText" Property="Foreground"
+                                                Value="{DynamicResource Success}" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding State}" Value="skipped">
-                                        <Setter TargetName="StateText" Property="Foreground" Value="{DynamicResource TextMuted}" />
+                                        <Setter TargetName="StateText" Property="Foreground"
+                                                Value="{DynamicResource TextMuted}" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding State}" Value="running">
-                                        <Setter TargetName="StateText" Property="Foreground" Value="{DynamicResource Accent}" />
+                                        <Setter TargetName="StateText" Property="Foreground"
+                                                Value="{DynamicResource Accent}" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding State}" Value="failed">
-                                        <Setter TargetName="StateText" Property="Foreground" Value="{DynamicResource Danger}" />
+                                        <Setter TargetName="StateText" Property="Foreground"
+                                                Value="{DynamicResource Danger}" />
                                     </DataTrigger>
                                 </DataTemplate.Triggers>
                             </DataTemplate>
@@ -101,67 +122,95 @@
 
             <Border Grid.Column="2" Style="{StaticResource Card}">
                 <StackPanel Margin="8">
-                        <TextBlock Text="New step" Style="{StaticResource SectionHeader}" Margin="0,0,0,8" />
+                    <TextBlock Text="New step"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,0,0,8" />
 
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="6" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Target" Style="{StaticResource CaptionText}" Margin="0,0,0,2" />
-                                <ComboBox SelectedIndex="0" ToolTip="Target NPC">
-                                    <ComboBoxItem Content="00 Reiya" />
-                                    <ComboBoxItem Content="01 Yuu" />
-                                    <ComboBoxItem Content="02 Kazaho" />
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="About" Style="{StaticResource CaptionText}" Margin="0,0,0,2" />
-                                <ComboBox SelectedIndex="0">
-                                    <ComboBoxItem Content="None" />
-                                    <ComboBoxItem Content="01 - Yuu Ayase" />
-                                </ComboBox>
-                            </StackPanel>
-                        </Grid>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Target" Style="{StaticResource CaptionText}"
+                                       Margin="0,0,0,2" />
+                            <ComboBox ItemsSource="{Binding PlannerTargetOptions}"
+                                      SelectedItem="{Binding SelectedPlannerTarget, Mode=TwoWay}"
+                                      DisplayMemberPath="Text"
+                                      ToolTip="Target NPC" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="About" Style="{StaticResource CaptionText}"
+                                       Margin="0,0,0,2" />
+                            <ComboBox ItemsSource="{Binding PlannerAboutOptions}"
+                                      SelectedItem="{Binding SelectedPlannerAbout, Mode=TwoWay}"
+                                      DisplayMemberPath="Text"
+                                      ToolTip="About-target NPC" />
+                        </StackPanel>
+                    </Grid>
 
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="6" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Action" Style="{StaticResource CaptionText}" Margin="0,0,0,2" />
-                                <ComboBox SelectedIndex="0">
-                                    <ComboBoxItem Content="44 - Pet" />
-                                    <ComboBoxItem Content="45 - Hug" />
-                                    <ComboBoxItem Content="0 - Encourage" />
-                                    <ComboBoxItem Content="18 - Talk About Love" />
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Room" Style="{StaticResource CaptionText}" Margin="0,0,0,2" />
-                                <ComboBox SelectedIndex="0">
-                                    <ComboBoxItem Content="None" />
-                                    <ComboBoxItem Content="10 - Outside Toilets" />
-                                    <ComboBoxItem Content="12 - Classroom" />
-                                </ComboBox>
-                            </StackPanel>
-                        </Grid>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Action" Style="{StaticResource CaptionText}"
+                                       Margin="0,0,0,2" />
+                            <ComboBox ItemsSource="{Binding PlannerActions}"
+                                      SelectedItem="{Binding SelectedPlannerAction, Mode=TwoWay}"
+                                      DisplayMemberPath="Text" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Room" Style="{StaticResource CaptionText}"
+                                       Margin="0,0,0,2" />
+                            <ComboBox ItemsSource="{Binding PlannerRooms}"
+                                      SelectedItem="{Binding SelectedPlannerRoom, Mode=TwoWay}"
+                                      DisplayMemberPath="Text" />
+                        </StackPanel>
+                    </Grid>
 
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="6" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="Add action" />
-                            <Button Grid.Column="2" Content="Add move" />
-                        </Grid>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Add action"
+                                IsEnabled="{Binding CanEditPlanner}"
+                                Click="AddAction_Click" />
+                        <Button Grid.Column="2" Content="Add move"
+                                IsEnabled="{Binding CanEditPlanner}"
+                                Click="AddMove_Click" />
+                    </Grid>
 
-                        <Border Height="1" Background="{DynamicResource Border}" Margin="0,2,0,0" />
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Button Grid.Row="0" Grid.Column="0" Content="Remove"
+                                Margin="0,0,0,6"
+                                IsEnabled="{Binding CanRemovePlannerStep}"
+                                Click="RemoveStep_Click" />
+                        <Button Grid.Row="0" Grid.Column="2" Content="Clear"
+                                Margin="0,0,0,6"
+                                IsEnabled="{Binding CanEditPlanner}"
+                                Click="Clear_Click" />
+                        <Button Grid.Row="1" Grid.Column="0" Content="Up"
+                                IsEnabled="{Binding CanMovePlannerStep}"
+                                Click="MoveUp_Click" />
+                        <Button Grid.Row="1" Grid.Column="2" Content="Down"
+                                IsEnabled="{Binding CanMovePlannerStep}"
+                                Click="MoveDown_Click" />
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>
@@ -169,27 +218,34 @@
         <DockPanel Grid.Row="2" Margin="0,6,0,0">
             <StackPanel Orientation="Horizontal">
                 <Button Content="Start plan" Style="{StaticResource ToolbarButton}"
+                        IsEnabled="{Binding CanStartPlanner}"
                         Click="Start_Click" />
                 <Button Content="Stop plan" Style="{StaticResource ToolbarButton}"
-                        Margin="6,0,0,0" Click="Stop_Click" />
+                        Margin="6,0,0,0"
+                        IsEnabled="{Binding PlannerStopEnabled}"
+                        Click="Stop_Click" />
                 <Button Content="Copy plan" Style="{StaticResource ToolbarButton}"
-                        Margin="6,0,0,0" IsEnabled="False"
-                        ToolTip="Wired in M3" />
+                        Margin="12,0,0,0"
+                        IsEnabled="{Binding CanCopyPlanner}"
+                        Click="Copy_Click" />
                 <Button Content="Paste plan" Style="{StaticResource ToolbarButton}"
-                        Margin="6,0,0,0" IsEnabled="False"
-                        ToolTip="Wired in M3" />
+                        Margin="6,0,0,0"
+                        IsEnabled="{Binding CanPastePlanner}"
+                        Click="Paste_Click" />
                 <Button Content="Save plans" Style="{StaticResource ToolbarButton}"
-                        Margin="6,0,0,0" IsEnabled="False"
-                        ToolTip="Wired in M3" />
+                        Margin="12,0,0,0"
+                        IsEnabled="{Binding IsAttached}"
+                        Click="Save_Click" />
                 <Button Content="Load plans" Style="{StaticResource ToolbarButton}"
-                        Margin="6,0,0,0" IsEnabled="False"
-                        ToolTip="Wired in M3" />
+                        Margin="6,0,0,0"
+                        IsEnabled="{Binding IsAttached}"
+                        Click="Load_Click" />
             </StackPanel>
-            <TextBlock x:Name="PrototypeNote"
-                       Text="Prototype: plan runner is wired in M3."
+            <TextBlock Text="{Binding PlannerStatus}"
                        Style="{StaticResource CaptionText}"
                        HorizontalAlignment="Right"
-                       VerticalAlignment="Center" />
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" />
         </DockPanel>
     </Grid>
 </UserControl>
