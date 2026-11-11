@@ -485,8 +485,9 @@
                               CanUserDeleteRows="False"
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
+                              RowHeight="Auto"
+                              MinRowHeight="26"
                               MinHeight="60"
-                              MaxHeight="120"
                               Margin="0,0,0,4"
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
@@ -505,10 +506,24 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Module"
                                                 Width="220"
-                                                Binding="{Binding Name}" />
+                                                Binding="{Binding Name}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                        <Setter Property="Margin" Value="0,2" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTextColumn Header="Description"
                                                 Width="*"
-                                                Binding="{Binding Description}" />
+                                                Binding="{Binding Description}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                        <Setter Property="Margin" Value="0,2" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                     </Grid>
