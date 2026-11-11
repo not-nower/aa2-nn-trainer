@@ -152,9 +152,11 @@ in the same spirit as TAA2's Plan Multiple Action.
   It stores seats and parameters only (no pointers), so it survives class/scene
   reloads and moves with the folder. Load merges by seat, skips running plans,
   and does not auto-start anything.
-- **Live events** — the first log tab records per-seat state changes every
+- **Live events** – the first log tab records per-seat state changes every
   250 ms with the partner name. **Planner log** holds the runner trace.
-  Clear and Save Log act on the active tab.
+  Clear and Save Log act on the active tab. Both logs keep the newest 5,000
+  lines, drain in 100 ms batches, and auto-scroll only while the view is at
+  the bottom.
 - **Planner hook** — explicit **Install hook** / **Uninstall hook** in Gameplay ? Planner.
   Normal close restores the original game bytes; **Repair hook** recovers a
   patch left behind by a force-closed trainer. AAUnlimited is optional; plans

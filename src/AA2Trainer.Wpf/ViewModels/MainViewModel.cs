@@ -14,7 +14,21 @@ namespace AA2Trainer.WpfPrototype
 {
     public sealed class MainViewModel : ObservableObject
     {
+        private const int LogLineLimit = 5000;
+        private const int LogTrimSlack = 250;
+        private const int LogDrainPerTick = 256;
+        private const int LogPendingLimit = 10000;
+
         private readonly GameSessionService session;
+        private readonly LogBuffer liveLogBuffer =
+            new LogBuffer(LogPendingLimit);
+        private readonly LogBuffer plannerLogBuffer =
+            new LogBuffer(LogPendingLimit);
+        private readonly List<LogLine> liveLogBatch =
+            new List<LogLine>(LogDrainPerTick);
+        private readonly List<LogLine> plannerLogBatch =
+            new List<LogLine>(LogDrainPerTick);
+        private DispatcherTimer logFlushTimer;
         private readonly List<CardEntry> cardIndex = new List<CardEntry>();
         private readonly Dictionary<string, CardImages> loadedCards =
             new Dictionary<string, CardImages>(StringComparer.OrdinalIgnoreCase);
@@ -189,6 +203,15 @@ namespace AA2Trainer.WpfPrototype
             session.LiveLog += OnLiveLog;
             session.Planner.Log += OnPlannerLog;
             session.Planner.StateChanged += RefreshPlannerNow;
+
+            logFlushTimer = new DispatcherTimer(DispatcherPriority.Background,
+                dispatcher)
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+            logFlushTimer.Tick += delegate { FlushLogs(); };
+            logFlushTimer.Start();
+
             LoadCardsAsync();
         }
 
@@ -2601,9 +2624,49 @@ namespace AA2Trainer.WpfPrototype
         private void LogPlanner(string message)
         {
             if (string.IsNullOrEmpty(message)) return;
-            while (PlannerLines.Count >= 5000) PlannerLines.RemoveAt(0);
-            PlannerLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
-                message));
+            plannerLogBuffer.Add(new LogLine(
+                DateTime.Now.ToString("HH:mm:ss.fff"), message));
+        }
+
+        private void FlushLogs()
+        {
+            if (disposed) return;
+
+            FlushLog(liveLogBuffer, LiveLines, liveLogBatch);
+            FlushLog(plannerLogBuffer, PlannerLines, plannerLogBatch);
+        }
+
+        private static void FlushLog(LogBuffer buffer,
+            ObservableCollection<LogLine> target, List<LogLine> batch)
+        {
+            batch.Clear();
+            if (buffer.Drain(batch, LogDrainPerTick) == 0) return;
+
+            int overflow = target.Count + batch.Count - LogLineLimit;
+            if (overflow > 0)
+            {
+                // Trim some slack so a busy log does not remove items on every
+                // flush while still keeping the collection at or below 5,000.
+                int remove = Math.Min(target.Count,
+                    Math.Max(overflow, LogTrimSlack));
+                for (int i = 0; i < remove; i++) target.RemoveAt(0);
+            }
+
+            for (int i = 0; i < batch.Count; i++) target.Add(batch[i]);
+        }
+
+        public void ClearLog(bool planner)
+        {
+            if (planner)
+            {
+                plannerLogBuffer.Clear();
+                PlannerLines.Clear();
+            }
+            else
+            {
+                liveLogBuffer.Clear();
+                LiveLines.Clear();
+            }
         }
 
         private void RefreshPlannerNow()
@@ -3350,6 +3413,11 @@ namespace AA2Trainer.WpfPrototype
         public void Dispose()
         {
             disposed = true;
+            if (logFlushTimer != null)
+            {
+                logFlushTimer.Stop();
+                logFlushTimer = null;
+            }
             if (session == null) return;
             session.SnapshotReady -= ApplySnapshot;
             session.CharacterWriteCompleted -= OnCharacterWriteCompleted;
@@ -4111,9 +4179,8 @@ namespace AA2Trainer.WpfPrototype
         public void LogSession(string text, string level = "Info")
         {
             if (string.IsNullOrEmpty(text)) return;
-            while (LiveLines.Count >= 5000) LiveLines.RemoveAt(0);
-            LiveLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
-                text, level));
+            liveLogBuffer.Add(new LogLine(
+                DateTime.Now.ToString("HH:mm:ss.fff"), text, level));
         }
 
     }

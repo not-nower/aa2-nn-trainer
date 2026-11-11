@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace AA2Trainer.WpfPrototype
 {
@@ -29,6 +31,12 @@ namespace AA2Trainer.WpfPrototype
         private int savedTop;
         private int savedWidth;
         private int savedHeight;
+        private ScrollViewer liveLogScroll;
+        private ScrollViewer plannerLogScroll;
+        private bool liveLogAutoScroll = true;
+        private bool plannerLogAutoScroll = true;
+        private bool liveLogScrollQueued;
+        private bool plannerLogScrollQueued;
 
         public MainWindow()
         {
@@ -296,11 +304,11 @@ namespace AA2Trainer.WpfPrototype
 
         private void ClearLog_Click(object sender, RoutedEventArgs e)
         {
-            ListBox list = LiveLogTab.IsChecked == true
-                ? LiveLogList : PlannerLogList;
-            System.Collections.IList items =
-                list.ItemsSource as System.Collections.IList;
-            if (items != null) items.Clear();
+            bool live = LiveLogTab.IsChecked == true;
+            MainViewModel vm = DataContext as MainViewModel;
+            if (vm != null) vm.ClearLog(!live);
+            if (live) liveLogAutoScroll = true;
+            else plannerLogAutoScroll = true;
         }
 
         private void CollapseLog_Click(object sender, RoutedEventArgs e)
@@ -316,22 +324,85 @@ namespace AA2Trainer.WpfPrototype
             if (vm == null) return;
             vm.LiveLines.CollectionChanged += LiveLines_CollectionChanged;
             vm.PlannerLines.CollectionChanged += PlannerLines_CollectionChanged;
+            AttachLogScrolling();
+        }
+
+        private void AttachLogScrolling()
+        {
+            liveLogScroll = FindScrollViewer(LiveLogList);
+            if (liveLogScroll != null)
+                liveLogScroll.ScrollChanged += LiveLogScroll_ScrollChanged;
+            plannerLogScroll = FindScrollViewer(PlannerLogList);
+            if (plannerLogScroll != null)
+                plannerLogScroll.ScrollChanged += PlannerLogScroll_ScrollChanged;
+        }
+
+        private static ScrollViewer FindScrollViewer(DependencyObject root)
+        {
+            if (root == null) return null;
+            ScrollViewer viewer = root as ScrollViewer;
+            if (viewer != null) return viewer;
+
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                ScrollViewer found = FindScrollViewer(
+                    VisualTreeHelper.GetChild(root, i));
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private void LiveLogScroll_ScrollChanged(object sender,
+            ScrollChangedEventArgs e)
+        {
+            // Extent changes come from new lines; only user scrolls should
+            // change the auto-scroll preference.
+            if (e.ExtentHeightChange == 0)
+                liveLogAutoScroll = IsAtBottom(liveLogScroll);
+        }
+
+        private void PlannerLogScroll_ScrollChanged(object sender,
+            ScrollChangedEventArgs e)
+        {
+            if (e.ExtentHeightChange == 0)
+                plannerLogAutoScroll = IsAtBottom(plannerLogScroll);
+        }
+
+        private static bool IsAtBottom(ScrollViewer viewer)
+        {
+            return viewer != null &&
+                viewer.VerticalOffset >= viewer.ScrollableHeight - 1.0;
         }
 
         private void LiveLines_CollectionChanged(object sender,
             NotifyCollectionChangedEventArgs e)
         {
-            if (LiveLogList != null && LiveLogList.Items.Count > 0)
-                LiveLogList.ScrollIntoView(
-                    LiveLogList.Items[LiveLogList.Items.Count - 1]);
+            if (!liveLogAutoScroll || liveLogScrollQueued) return;
+            liveLogScrollQueued = true;
+            Dispatcher.BeginInvoke(new Action(delegate
+            {
+                liveLogScrollQueued = false;
+                if (liveLogAutoScroll) ScrollLogToEnd(LiveLogList);
+            }), DispatcherPriority.Background);
         }
 
         private void PlannerLines_CollectionChanged(object sender,
             NotifyCollectionChangedEventArgs e)
         {
-            if (PlannerLogList != null && PlannerLogList.Items.Count > 0)
-                PlannerLogList.ScrollIntoView(
-                    PlannerLogList.Items[PlannerLogList.Items.Count - 1]);
+            if (!plannerLogAutoScroll || plannerLogScrollQueued) return;
+            plannerLogScrollQueued = true;
+            Dispatcher.BeginInvoke(new Action(delegate
+            {
+                plannerLogScrollQueued = false;
+                if (plannerLogAutoScroll) ScrollLogToEnd(PlannerLogList);
+            }), DispatcherPriority.Background);
+        }
+
+        private static void ScrollLogToEnd(ListBox list)
+        {
+            if (list == null || list.Items.Count == 0) return;
+            list.ScrollIntoView(list.Items[list.Items.Count - 1]);
         }
 
         private void PlayAs_Click(object sender, RoutedEventArgs e)

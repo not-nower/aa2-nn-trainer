@@ -149,6 +149,7 @@ or romanization is applied.
   `App.xaml` so `ScrollViewer` scrollbars shrink too, not just the custom
   `ScrollBar` style.
 - Logs use a virtualized `ListBox` with a border-separated time column, never a
-  `RichTextBox`/FlowDocument.
+  `RichTextBox`/FlowDocument. Both logs keep the newest 5,000 lines, drain in
+  100 ms batches, and auto-scroll only while the view is at the bottom.
 - The right planner panel no longer scrolls at the minimum size; plan-level
   controls live on the plan bar.
