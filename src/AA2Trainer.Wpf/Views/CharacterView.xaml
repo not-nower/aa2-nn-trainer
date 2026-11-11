@@ -119,489 +119,481 @@
                 </Grid.RowDefinitions>
                 <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
                     <Grid Margin="12,12,12,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="92" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="92" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="4"
-                               Text="Identity"
-                               Style="{StaticResource SectionHeader}"
-                               Margin="0,0,0,6" />
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.8*" />
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="3.2*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="First name"
-                               Style="{StaticResource CaptionText}" Margin="0,0,8,6" />
-                    <TextBox Grid.Row="1" Grid.Column="1"
-                             Text="{Binding CharacterDraft.FirstName, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,0,16,6" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Last name"
-                               Style="{StaticResource CaptionText}" Margin="0,0,8,6" />
-                    <TextBox Grid.Row="1" Grid.Column="3"
-                             Text="{Binding CharacterDraft.LastName, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,0,0,6" />
-
-                    <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,6"
-                                VerticalAlignment="Top">
-                        <TextBlock Text="Profile"
-                                   Style="{StaticResource CaptionText}" />
-                        <TextBlock Text="{Binding CharacterDraft.ProfileByteCount}"
-                                   FontSize="9"
-                                   Foreground="{DynamicResource TextMuted}"
-                                   TextWrapping="Wrap"
-                                   Margin="0,2,0,0"
-                                   ToolTip="Profile bytes used / allowed" />
-                    </StackPanel>
-                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
-                             Text="{Binding CharacterDraft.Profile, UpdateSourceTrigger=PropertyChanged}"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             VerticalContentAlignment="Top"
-                             Height="64"
-                             Margin="0,0,0,10" />
-
-                    <Grid Grid.Row="4" Grid.ColumnSpan="4" Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.8*" />
-                            <ColumnDefinition Width="24" />
-                            <ColumnDefinition Width="3.2*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Attributes"
-                                       Style="{StaticResource SectionHeader}"
-                                       Margin="0,0,0,4" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Text="Personality"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <ComboBox Grid.Row="0" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.Personality}"
-                                          SelectedValue="{Binding CharacterDraft.Personality, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="1" Text="Club"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <ComboBox Grid.Row="1" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.Club}"
-                                          SelectedValue="{Binding CharacterDraft.Club, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="2" Text="Social"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <ComboBox Grid.Row="2" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.Social}"
-                                          SelectedValue="{Binding CharacterDraft.Social, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="3" Text="Fighting style"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <ComboBox Grid.Row="3" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.FightingStyle}"
-                                          SelectedValue="{Binding CharacterDraft.FightingStyle, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="4" Text="Virtue"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <ComboBox Grid.Row="4" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.Virtue}"
-                                          SelectedValue="{Binding CharacterDraft.Virtue, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="5" Text="Orientation"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <ComboBox Grid.Row="5" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.Orientation}"
-                                          SelectedValue="{Binding CharacterDraft.Orientation, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="6" Text="Voice pitch"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,0" />
-                                <ComboBox Grid.Row="6" Grid.Column="1"
-                                          ItemsSource="{Binding CharacterOptions.VoicePitch}"
-                                          SelectedValue="{Binding CharacterDraft.VoicePitch, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text" />
-                            </Grid>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Academics"
-                                       Style="{StaticResource SectionHeader}"
-                                       Margin="0,0,0,4" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="86" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="54" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="54" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="62" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0" Text="Intelligence"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <TextBlock Grid.Row="0" Grid.Column="1" Text="Lv"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,2,0" />
-                                <ComboBox Grid.Row="0" Grid.Column="2"
-                                          ItemsSource="{Binding CharacterOptions.Levels}"
-                                          SelectedValue="{Binding CharacterDraft.IntelligenceLevel, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="0" Grid.Column="3" Text="Rank"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <TextBox Grid.Row="0" Grid.Column="4"
-                                         Text="{Binding CharacterDraft.IntelligenceRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                         Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="0" Grid.Column="5" Text="Value"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <TextBox Grid.Row="0" Grid.Column="6"
-                                         Text="{Binding CharacterDraft.IntelligenceValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                         Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="0" Grid.Column="7" Text="Grade"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <ComboBox Grid.Row="0" Grid.Column="8"
-                                          ItemsSource="{Binding CharacterOptions.Grades}"
-                                          SelectedValue="{Binding CharacterDraft.IntelligenceGrade, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-
-                                <TextBlock Grid.Row="1" Text="Strength"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,4" />
-                                <TextBlock Grid.Row="1" Grid.Column="1" Text="Lv"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,2,0" />
-                                <ComboBox Grid.Row="1" Grid.Column="2"
-                                          ItemsSource="{Binding CharacterOptions.Levels}"
-                                          SelectedValue="{Binding CharacterDraft.StrengthLevel, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="1" Grid.Column="3" Text="Rank"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <TextBox Grid.Row="1" Grid.Column="4"
-                                         Text="{Binding CharacterDraft.StrengthRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                         Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="1" Grid.Column="5" Text="Value"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <TextBox Grid.Row="1" Grid.Column="6"
-                                         Text="{Binding CharacterDraft.StrengthValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                         Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="1" Grid.Column="7" Text="Grade"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <ComboBox Grid.Row="1" Grid.Column="8"
-                                          ItemsSource="{Binding CharacterOptions.Grades}"
-                                          SelectedValue="{Binding CharacterDraft.StrengthGrade, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Margin="0,0,0,4" />
-
-                                <TextBlock Grid.Row="2" Text="Club stats"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,0" />
-                                <TextBlock Grid.Row="2" Grid.Column="1" Text="Lv"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,2,0" />
-                                <ComboBox Grid.Row="2" Grid.Column="2"
-                                          ItemsSource="{Binding CharacterOptions.ClubLevels}"
-                                          SelectedValue="{Binding CharacterDraft.ClubLevel, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text" />
-                                <TextBlock Grid.Row="2" Grid.Column="3" Text="Value"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <TextBox Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="3"
-                                         Text="{Binding CharacterDraft.ClubValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                <TextBlock Grid.Row="2" Grid.Column="7" Text="Grade"
-                                           Style="{StaticResource CaptionText}"
-                                           VerticalAlignment="Center"
-                                           Margin="4,0,2,0" />
-                                <ComboBox Grid.Row="2" Grid.Column="8"
-                                          ItemsSource="{Binding CharacterOptions.Grades}"
-                                          SelectedValue="{Binding CharacterDraft.ClubGrade, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text" />
-                            </Grid>
-
-                            <TextBlock Text="Status"
-                                       Style="{StaticResource SectionHeader}"
-                                       Margin="0,6,0,4" />
-                            <UniformGrid Columns="2" Margin="0,0,0,2">
-                                <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="Victory count"
-                                               Width="104"
+                            <StackPanel Grid.Row="0" Grid.Column="0"
+                                        Margin="0,0,0,8">
+                                <TextBlock Text="Identity"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,4" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="First name"
+                                               Style="{StaticResource CaptionText}"
                                                VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="Victory count" />
-                                </DockPanel>
-                                <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="Classes skipped"
-                                               Width="104"
+                                               Margin="0,0,6,4" />
+                                    <TextBox Grid.Row="0" Grid.Column="1"
+                                             Text="{Binding CharacterDraft.FirstName, UpdateSourceTrigger=PropertyChanged}"
+                                             Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="1" Text="Last name"
+                                               Style="{StaticResource CaptionText}"
                                                VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="Classes skipped" />
-                                </DockPanel>
-                                <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="Won over"
-                                               Width="104"
+                                               Margin="0,0,6,4" />
+                                    <TextBox Grid.Row="1" Grid.Column="1"
+                                             Text="{Binding CharacterDraft.LastName, UpdateSourceTrigger=PropertyChanged}"
+                                             Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="2" Text="Profile"
+                                               Style="{StaticResource CaptionText}"
                                                VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="Won over" />
-                                </DockPanel>
-                                <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="Partners"
-                                               Width="104"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="Partners" />
-                                </DockPanel>
-                                <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="Rejections"
-                                               Width="104"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="Rejections" />
-                                </DockPanel>
-                                <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="H encounters"
-                                               Width="104"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="H encounters" />
-                                </DockPanel>
-                                <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                                    <TextBlock DockPanel.Dock="Left" Text="H partners"
-                                               Width="104"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               Style="{StaticResource CaptionText}" />
-                                    <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             ToolTip="H partners" />
-                                </DockPanel>
-                            </UniformGrid>
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBlock Grid.Row="15" Grid.ColumnSpan="4"
-                               Text="H History"
-                               Style="{StaticResource SectionHeader}"
-                               Margin="0,6,0,6" />
-
-                    <UniformGrid Grid.Row="16" Grid.ColumnSpan="4"
-                                 Columns="4" Margin="0,0,0,2">
-                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="First partner"
-                                       Width="92"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.FirstTime, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Up to 31 Shift-JIS bytes" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="First anal"
-                                       Width="92"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.FirstAnal, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Up to 31 Shift-JIS bytes" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Last partner"
-                                       Width="92"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Style="{StaticResource CaptionText}" />
-                            <TextBox Text="{Binding CharacterDraft.LastTime, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Up to 31 Shift-JIS bytes" />
-                        </DockPanel>
-                        <DockPanel LastChildFill="True">
-                            <TextBlock DockPanel.Dock="Left" Text="Exp."
-                                       Width="36"
-                                       VerticalAlignment="Center"
-                                       Style="{StaticResource CaptionText}" />
-                            <StackPanel Orientation="Horizontal"
-                                        VerticalAlignment="Center">
-                                <CheckBox Content="Vaginal"
-                                          IsChecked="{Binding CharacterDraft.SexExperience, Mode=TwoWay}"
-                                          Margin="0,0,10,0" />
-                                <CheckBox Content="Anal"
-                                          IsChecked="{Binding CharacterDraft.AnalExperience, Mode=TwoWay}" />
+                                               Margin="0,0,6,4" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1"
+                                               Text="{Binding CharacterDraft.ProfileByteCount}"
+                                               FontSize="9"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,0,0,4"
+                                               ToolTip="Profile bytes used / allowed" />
+                                    <TextBox Grid.Row="3" Grid.ColumnSpan="2"
+                                             Text="{Binding CharacterDraft.Profile, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             VerticalContentAlignment="Top"
+                                             Height="64" />
+                                </Grid>
                             </StackPanel>
-                        </DockPanel>
-                    </UniformGrid>
 
-                    <DockPanel Grid.Row="17" Grid.ColumnSpan="4"
-                               Margin="0,6,0,4">
-                        <Button DockPanel.Dock="Right"
-                                Content="Refresh"
-                                Width="76"
-                                Click="RefreshModules_Click" />
-                        <TextBlock DockPanel.Dock="Right"
-                                   Text="{Binding AauModuleStatus}"
-                                   Style="{StaticResource CaptionText}"
-                                   MaxWidth="260"
-                                   Margin="0,0,10,0"
-                                   VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding AauModuleStatus}" />
-                        <TextBlock Text="Modules (AAU, read-only)"
-                                   Style="{StaticResource SectionHeader}"
-                                   VerticalAlignment="Center" />
-                    </DockPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2"
+                                        Margin="0,0,0,8">
+                                <TextBlock Text="Academics"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,4" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="86" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="54" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="54" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="62" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
 
-                    <DataGrid Grid.Row="18" Grid.ColumnSpan="4"
-                              ItemsSource="{Binding AauModules}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal"
-                              RowHeight="NaN"
-                              MinRowHeight="26"
-                              MinHeight="60"
-                              Margin="0,0,0,4"
-                              VirtualizingStackPanel.IsVirtualizing="True"
-                              VirtualizingStackPanel.VirtualizationMode="Recycling">
-                        <DataGrid.Style>
-                            <Style TargetType="DataGrid"
-                                   BasedOn="{StaticResource {x:Type DataGrid}}">
-                                <Setter Property="Visibility" Value="Visible" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding AauModules.Count}"
-                                                 Value="0">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.Style>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Module"
-                                                Width="220"
-                                                Binding="{Binding Name}">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="TextWrapping" Value="Wrap" />
-                                        <Setter Property="Margin" Value="0,2" />
+                                    <TextBlock Grid.Row="0" Text="Intelligence"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Lv"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,2,0" />
+                                    <ComboBox Grid.Row="0" Grid.Column="2"
+                                              ItemsSource="{Binding CharacterOptions.Levels}"
+                                              SelectedValue="{Binding CharacterDraft.IntelligenceLevel, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="Rank"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <TextBox Grid.Row="0" Grid.Column="4"
+                                             Text="{Binding CharacterDraft.IntelligenceRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="0" Grid.Column="5" Text="Value"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <TextBox Grid.Row="0" Grid.Column="6"
+                                             Text="{Binding CharacterDraft.IntelligenceValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="0" Grid.Column="7" Text="Grade"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <ComboBox Grid.Row="0" Grid.Column="8"
+                                              ItemsSource="{Binding CharacterOptions.Grades}"
+                                              SelectedValue="{Binding CharacterDraft.IntelligenceGrade, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="1" Text="Strength"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Lv"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,2,0" />
+                                    <ComboBox Grid.Row="1" Grid.Column="2"
+                                              ItemsSource="{Binding CharacterOptions.Levels}"
+                                              SelectedValue="{Binding CharacterDraft.StrengthLevel, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="Rank"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <TextBox Grid.Row="1" Grid.Column="4"
+                                             Text="{Binding CharacterDraft.StrengthRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="1" Grid.Column="5" Text="Value"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <TextBox Grid.Row="1" Grid.Column="6"
+                                             Text="{Binding CharacterDraft.StrengthValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="1" Grid.Column="7" Text="Grade"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <ComboBox Grid.Row="1" Grid.Column="8"
+                                              ItemsSource="{Binding CharacterOptions.Grades}"
+                                              SelectedValue="{Binding CharacterDraft.StrengthGrade, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="2" Text="Club stats"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Lv"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,2,0" />
+                                    <ComboBox Grid.Row="2" Grid.Column="2"
+                                              ItemsSource="{Binding CharacterOptions.ClubLevels}"
+                                              SelectedValue="{Binding CharacterDraft.ClubLevel, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text" />
+                                    <TextBlock Grid.Row="2" Grid.Column="3" Text="Value"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <TextBox Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="3"
+                                             Text="{Binding CharacterDraft.ClubValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="7" Text="Grade"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,2,0" />
+                                    <ComboBox Grid.Row="2" Grid.Column="8"
+                                              ItemsSource="{Binding CharacterOptions.Grades}"
+                                              SelectedValue="{Binding CharacterDraft.ClubGrade, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text" />
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0">
+                                <TextBlock Text="Attributes"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,4" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="Personality"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <ComboBox Grid.Row="0" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.Personality}"
+                                              SelectedValue="{Binding CharacterDraft.Personality, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="1" Text="Club"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <ComboBox Grid.Row="1" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.Club}"
+                                              SelectedValue="{Binding CharacterDraft.Club, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="2" Text="Social"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <ComboBox Grid.Row="2" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.Social}"
+                                              SelectedValue="{Binding CharacterDraft.Social, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="3" Text="Fighting style"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <ComboBox Grid.Row="3" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.FightingStyle}"
+                                              SelectedValue="{Binding CharacterDraft.FightingStyle, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="4" Text="Virtue"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <ComboBox Grid.Row="4" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.Virtue}"
+                                              SelectedValue="{Binding CharacterDraft.Virtue, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="5" Text="Orientation"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,4" />
+                                    <ComboBox Grid.Row="5" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.Orientation}"
+                                              SelectedValue="{Binding CharacterDraft.Orientation, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text"
+                                              Margin="0,0,0,4" />
+                                    <TextBlock Grid.Row="6" Text="Voice pitch"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0" />
+                                    <ComboBox Grid.Row="6" Grid.Column="1"
+                                              ItemsSource="{Binding CharacterOptions.VoicePitch}"
+                                              SelectedValue="{Binding CharacterDraft.VoicePitch, Mode=TwoWay}"
+                                              SelectedValuePath="Value"
+                                              DisplayMemberPath="Text" />
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="2">
+                                <TextBlock Text="Status"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,4" />
+                                <UniformGrid Columns="2" Margin="0,0,0,2">
+                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Victory count"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Victory count" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Classes skipped"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Classes skipped" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Won over"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Won over" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Partners"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Partners" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Rejections"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="Rejections" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="H encounters"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="H encounters" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="H partners"
+                                                   Width="104"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="H partners" />
+                                    </DockPanel>
+                                </UniformGrid>
+
+                                <TextBlock Text="H History"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,6,0,4" />
+                                <UniformGrid Columns="2" Margin="0,0,0,2">
+                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="First partner"
+                                                   Width="88"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.FirstTime, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Up to 31 Shift-JIS bytes" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="First anal"
+                                                   Width="88"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.FirstAnal, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Up to 31 Shift-JIS bytes" />
+                                    </DockPanel>
+                                    <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Last partner"
+                                                   Width="88"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <TextBox Text="{Binding CharacterDraft.LastTime, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Up to 31 Shift-JIS bytes" />
+                                    </DockPanel>
+                                    <DockPanel LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left" Text="Experience"
+                                                   Width="88"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Style="{StaticResource CaptionText}" />
+                                        <StackPanel Orientation="Horizontal"
+                                                    VerticalAlignment="Center">
+                                            <CheckBox Content="Vaginal"
+                                                      IsChecked="{Binding CharacterDraft.SexExperience, Mode=TwoWay}"
+                                                      Margin="0,0,10,0" />
+                                            <CheckBox Content="Anal"
+                                                      IsChecked="{Binding CharacterDraft.AnalExperience, Mode=TwoWay}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Grid.Row="1" Margin="0,8,0,0">
+                            <DockPanel Margin="0,0,0,4">
+                                <Button DockPanel.Dock="Right"
+                                        Content="Refresh"
+                                        Width="76"
+                                        Click="RefreshModules_Click" />
+                                <TextBlock DockPanel.Dock="Right"
+                                           Text="{Binding AauModuleStatus}"
+                                           Style="{StaticResource CaptionText}"
+                                           MaxWidth="260"
+                                           Margin="0,0,10,0"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding AauModuleStatus}" />
+                                <TextBlock Text="Modules (AAU, read-only)"
+                                           Style="{StaticResource SectionHeader}"
+                                           VerticalAlignment="Center" />
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding AauModules}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      RowHeight="NaN"
+                                      MinRowHeight="26"
+                                      MinHeight="60"
+                                      Margin="0,0,0,4"
+                                      VirtualizingStackPanel.IsVirtualizing="True"
+                                      VirtualizingStackPanel.VirtualizationMode="Recycling">
+                                <DataGrid.Style>
+                                    <Style TargetType="DataGrid"
+                                           BasedOn="{StaticResource {x:Type DataGrid}}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AauModules.Count}"
+                                                         Value="0">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
                                     </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-                            <DataGridTextColumn Header="Description"
-                                                Width="*"
-                                                Binding="{Binding Description}">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="TextWrapping" Value="Wrap" />
-                                        <Setter Property="Margin" Value="0,2" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                                </DataGrid.Style>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Module"
+                                                        Width="220"
+                                                        Binding="{Binding Name}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap" />
+                                                <Setter Property="Margin" Value="0,2" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Description"
+                                                        Width="*"
+                                                        Binding="{Binding Description}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap" />
+                                                <Setter Property="Margin" Value="0,2" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
                     </Grid>
                 </ScrollViewer>
 
