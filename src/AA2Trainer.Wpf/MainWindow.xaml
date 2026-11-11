@@ -673,7 +673,7 @@
                                         Margin="6,0,0,0"
                                         Click="SaveLog_Click" />
                                 <Button x:Name="CollapseLogButton"
-                                        Content="&#xE70E;"
+                                        Content="&#xE70D;"
                                         Style="{StaticResource IconButton}"
                                         ToolTip="Collapse log"
                                         Click="CollapseLog_Click" />

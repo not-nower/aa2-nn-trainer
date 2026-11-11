@@ -261,7 +261,7 @@ namespace AA2Trainer.WpfPrototype
                 : new GridLength(0);
             LogContent.Visibility = gameplay && !logCollapsed
                 ? Visibility.Visible : Visibility.Collapsed;
-            CollapseLogButton.Content = logCollapsed ? "\uE70D" : "\uE70E";
+            CollapseLogButton.Content = logCollapsed ? "\uE70E" : "\uE70D";
             CollapseLogButton.ToolTip = logCollapsed
                 ? "Expand log" : "Collapse log";
 
