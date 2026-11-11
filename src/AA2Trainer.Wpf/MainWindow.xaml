@@ -31,6 +31,24 @@
                            VerticalAlignment="Stretch"
                            Margin="0,1,0,1"
                            RadiusX="1" RadiusY="1" />
+                <Rectangle x:Name="SeatLimitDot" Grid.Column="0"
+                           Width="3" Height="6"
+                           Fill="{DynamicResource Danger}"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Bottom"
+                           Margin="0,0,0,1"
+                           RadiusX="1" RadiusY="1">
+                    <Rectangle.Style>
+                        <Style TargetType="Rectangle">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasActionLimits}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Rectangle.Style>
+                </Rectangle>
 
                 <Border Grid.Column="1"
                         Width="28" Height="28"

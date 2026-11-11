@@ -271,6 +271,12 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        private bool HasSeatLimits(int seat)
+        {
+            ActionLimitList list = LimitsFor(seat);
+            return list != null && list.Count > 0;
+        }
+
         private bool AnyActionLimits()
         {
             lock (seatLimitsSync)
@@ -919,7 +925,8 @@ namespace AA2Trainer.WpfPrototype
                     OtherIsLover = otherIsLovers.ContainsKey(seat) &&
                         otherIsLovers[seat],
                     IsFrozen = frozenRelationships.ContainsKey(seat) &&
-                        frozenRelationships[seat]
+                        frozenRelationships[seat],
+                    HasActionLimits = HasSeatLimits(seat)
                 });
             }
 

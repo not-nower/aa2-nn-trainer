@@ -4,19 +4,22 @@
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+        <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
             <TextBlock Text="{Binding LimitTargetText}"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"
                        Margin="0,0,10,0" />
             <TextBlock Text="{Binding LimitCharacterStatus}"
                        Style="{StaticResource CaptionText}"
-                       VerticalAlignment="Center"
-                       Margin="0,0,14,0" />
+                       VerticalAlignment="Center" />
+        </WrapPanel>
+
+        <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
             <CheckBox Content="Enable limit actions"
                       IsChecked="{Binding LimitEnabled, Mode=TwoWay}"
                       VerticalAlignment="Center" />
@@ -27,39 +30,51 @@
             <Button Content="Clear this character" Margin="14,0,0,0"
                     Style="{StaticResource ToolbarButton}"
                     Click="Clear_Click" />
+            <Button Content="Copy" Margin="6,0,0,0" Width="64"
+                    Style="{StaticResource ToolbarButton}"
+                    IsEnabled="{Binding CanCopyLimits}"
+                    Click="Copy_Click" />
+            <Button Content="Paste" Margin="6,0,0,0" Width="64"
+                    Style="{StaticResource ToolbarButton}"
+                    IsEnabled="{Binding CanPasteLimits}"
+                    Click="Paste_Click" />
+            <TextBlock Text="Search" Style="{StaticResource CaptionText}"
+                       VerticalAlignment="Center"
+                       Margin="14,0,6,0" />
+            <TextBox Width="200"
+                     Text="{Binding LimitFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Text="{Binding LimitStatus}"
+                       Style="{StaticResource CaptionText}"
+                       Margin="14,0,0,0"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="{Binding LimitCopyStatus}"
                        Style="{StaticResource CaptionText}"
                        Margin="14,0,0,0"
                        VerticalAlignment="Center" />
         </WrapPanel>
 
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding LimitActions}"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  VirtualizingStackPanel.IsVirtualizing="True"
-                  VirtualizingStackPanel.VirtualizationMode="Recycling">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Block" Width="52">
-                    <DataGridTemplateColumn.CellTemplate>
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="4">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding LimitActionsView}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsLimited, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center" />
+                                      Content="{Binding Text}"
+                                      ToolTip="{Binding Text}"
+                                      Margin="4,3"
+                                      VerticalContentAlignment="Center" />
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Action"
-                                    Width="*"
-                                    IsReadOnly="True"
-                                    Binding="{Binding Text}" />
-            </DataGrid.Columns>
-        </DataGrid>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
 
-        <TextBlock Grid.Row="2"
+        <TextBlock Grid.Row="3"
                    Text="Warning: stopping an action can leave that character briefly stuck in place while the AI picks another action."
                    Style="{StaticResource CaptionText}"
                    TextWrapping="Wrap"

@@ -103,6 +103,11 @@ namespace AA2Trainer.WpfPrototype
         private string limitStatus = "Blocked: 0";
         private string limitTargetText = "Limits: no character";
         private string limitCharacterStatus = "";
+        private string limitCopyStatus = "";
+        private string limitFilter = "";
+        private ICollectionView limitActionsView;
+        private int[] limitClipboard;
+        private bool canPasteLimits;
         private OptionSnapshot liveGameOptions;
         private string gameOptionsStatus = "Game options: waiting for the game.";
         private bool gameOptionsBusy;
@@ -132,6 +137,8 @@ namespace AA2Trainer.WpfPrototype
             PlannerActions = new ObservableCollection<CharacterOption>();
             PlannerRooms = new ObservableCollection<CharacterOption>();
             LimitActions = new ObservableCollection<LimitActionItem>();
+            limitActionsView = CollectionViewSource.GetDefaultView(LimitActions);
+            limitActionsView.Filter = FilterLimitAction;
             RelationshipRows = new ObservableCollection<RelationshipRowItem>();
             BehaviorRows = new ObservableCollection<BehaviorRowItem>();
             LoverRows = new ObservableCollection<LoverRowItem>();
@@ -1045,9 +1052,80 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref limitCharacterStatus, value); }
         }
 
+        public string LimitCopyStatus
+        {
+            get { return limitCopyStatus; }
+            private set { Set(ref limitCopyStatus, value); }
+        }
+
+        public ICollectionView LimitActionsView
+        {
+            get { return limitActionsView; }
+        }
+
+        public string LimitFilter
+        {
+            get { return limitFilter; }
+            set
+            {
+                if (!Set(ref limitFilter, value ?? "")) return;
+                if (limitActionsView != null) limitActionsView.Refresh();
+            }
+        }
+
+        public bool CanCopyLimits
+        {
+            get { return LimitSeat >= 0; }
+        }
+
+        public bool CanPasteLimits
+        {
+            get { return canPasteLimits && LimitSeat >= 0; }
+        }
+
         private int LimitSeat
         {
             get { return SelectedSeat == null ? -1 : SelectedSeat.SeatIndex; }
+        }
+
+        private bool FilterLimitAction(object item)
+        {
+            LimitActionItem action = item as LimitActionItem;
+            if (action == null) return false;
+            if (string.IsNullOrEmpty(limitFilter)) return true;
+            return action.Text != null &&
+                action.Text.IndexOf(limitFilter,
+                    StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        public void CopyLimits()
+        {
+            int seat = LimitSeat;
+            if (session == null || seat < 0) return;
+            limitClipboard = session.LimitedActions(seat);
+            canPasteLimits = true;
+            OnPropertyChanged(nameof(CanPasteLimits));
+            LimitCopyStatus = "Copied " + limitClipboard.Length +
+                " limit(s) from " + SelectedSeat.Name + ".";
+        }
+
+        public void PasteLimits()
+        {
+            int seat = LimitSeat;
+            if (session == null || seat < 0) return;
+            if (limitClipboard == null)
+            {
+                LimitCopyStatus = "Copy a character's limits first.";
+                return;
+            }
+
+            session.ClearActionLimits(seat);
+            foreach (int actionId in limitClipboard)
+                session.SetActionLimit(seat, actionId, true);
+            RefreshLimitActionsForCurrentSeat();
+            UpdateLimitSeatFlag(seat);
+            LimitCopyStatus = "Pasted " + limitClipboard.Length +
+                " limit(s) to " + SelectedSeat.Name + ".";
         }
 
         public string GameOptionsStatus
@@ -1809,6 +1887,7 @@ namespace AA2Trainer.WpfPrototype
         private void OnLimitActionChanged(int seat, int actionId, bool limited)
         {
             if (session != null) session.SetActionLimit(seat, actionId, limited);
+            UpdateLimitSeatFlag(seat);
             UpdateLimitCharacterStatus();
         }
 
@@ -1819,7 +1898,18 @@ namespace AA2Trainer.WpfPrototype
             session.ClearActionLimits(seat);
             foreach (LimitActionItem item in LimitActions)
                 item.SetLimitedSilently(false);
+            UpdateLimitSeatFlag(seat);
             UpdateLimitCharacterStatus();
+            LimitCopyStatus = "Cleared limits for " + SelectedSeat.Name + ".";
+        }
+
+        private void UpdateLimitSeatFlag(int seat)
+        {
+            SeatItem item = Seats.FirstOrDefault(
+                candidate => candidate.SeatIndex == seat);
+            if (item == null) return;
+            item.HasActionLimits = session != null &&
+                session.LimitedActions(seat).Length > 0;
         }
 
         private void RefreshLimitActionsForCurrentSeat()
@@ -1846,6 +1936,8 @@ namespace AA2Trainer.WpfPrototype
             LimitCharacterStatus = count == 1
                 ? "1 blocked action for this character"
                 : count + " blocked actions for this character";
+            OnPropertyChanged(nameof(CanCopyLimits));
+            OnPropertyChanged(nameof(CanPasteLimits));
         }
 
         public void SetRelationshipFeeling(int feeling)
@@ -1928,6 +2020,7 @@ namespace AA2Trainer.WpfPrototype
                 item.SetLimitedSilently(limited.Contains(actionId));
                 LimitActions.Add(item);
             }
+            if (limitActionsView != null) limitActionsView.Refresh();
             UpdateLimitCharacterStatus();
         }
 
@@ -3208,6 +3301,7 @@ namespace AA2Trainer.WpfPrototype
                         seatSnapshot.Mood);
                     seat.ApplyLivePortrait(seatSnapshot.Thumbnail,
                         seatSnapshot.FullPortrait);
+                    seat.HasActionLimits = seatSnapshot.HasActionLimits;
                 }
 
                 UpdatePortraitStatus();

@@ -34,6 +34,13 @@ namespace AA2Trainer.WpfPrototype
         public bool OtherIsLover { get; set; }
         public bool IsFrozen { get; set; }
 
+        private bool hasActionLimits;
+        public bool HasActionLimits
+        {
+            get { return hasActionLimits; }
+            set { Set(ref hasActionLimits, value); }
+        }
+
         /// <summary>
         /// True once a live session snapshot has supplied this seat's name.
         /// Card metadata must never replace a live name.

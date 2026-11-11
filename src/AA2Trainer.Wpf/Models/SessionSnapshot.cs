@@ -26,6 +26,7 @@ namespace AA2Trainer.WpfPrototype
         public bool IsLover;
         public bool OtherIsLover;
         public bool IsFrozen;
+        public bool HasActionLimits;
     }
 
     public sealed class SessionSnapshot
