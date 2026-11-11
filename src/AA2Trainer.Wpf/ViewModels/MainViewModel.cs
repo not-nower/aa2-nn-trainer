@@ -1939,6 +1939,27 @@ namespace AA2Trainer.WpfPrototype
             NotifyGameplayButtons();
         }
 
+        private void OnRelationshipFrozenChanged(RelationshipRowItem row,
+            bool frozen)
+        {
+            if (row == null || SelectedSeat == null || session == null)
+            {
+                if (row != null) row.SetFrozenSilently(!frozen);
+                return;
+            }
+            if (!session.RequestRelationshipFreeze(row.SourceSeat,
+                SelectedSeat.SeatIndex, frozen))
+            {
+                row.SetFrozenSilently(!frozen);
+                RosterStatus = "Freeze change was not accepted.";
+            }
+            else
+            {
+                RosterStatus = frozen
+                    ? "Freezing relationship..." : "Unfreezing relationship...";
+            }
+        }
+
         private void OnBehaviorDraftChanged()
         {
             if (gameplayWriteBusy) return;
@@ -2121,9 +2142,44 @@ namespace AA2Trainer.WpfPrototype
         {
             RelationshipRowItem row = SelectedRelationshipRow();
             if (row == null) return;
-            SeatItem source = Seats.FirstOrDefault(
-                seat => seat.SeatIndex == row.SourceSeat);
-            if (source != null) ToggleRelationshipFreeze(source);
+            SetRelationshipFreezeFromRow(!row.IsFrozen);
+        }
+
+        public void SetRelationshipFreezeFromRow(bool frozen)
+        {
+            RelationshipRowItem row = SelectedRelationshipRow();
+            if (row == null) return;
+            row.SetFrozenSilently(frozen);
+            OnRelationshipFrozenChanged(row, frozen);
+        }
+
+        public void SetAllRelationshipFeeling(int feeling)
+        {
+            if (RelationshipRows.Count == 0) return;
+            foreach (RelationshipRowItem row in RelationshipRows)
+            {
+                if (row != null && row.Record != null && row.Source != null)
+                    row.SetFeeling(feeling);
+            }
+            ApplyRelationshipEdits();
+        }
+
+        public void SetAllRelationshipFreeze(bool frozen)
+        {
+            if (session == null || SelectedSeat == null) return;
+            List<int> seats = new List<int>();
+            foreach (RelationshipRowItem row in RelationshipRows)
+            {
+                if (row != null && row.SourceSeat >= 0)
+                    seats.Add(row.SourceSeat);
+            }
+            if (seats.Count == 0) return;
+            if (!session.RequestRelationshipFreezeAll(SelectedSeat.SeatIndex,
+                seats, frozen))
+                RosterStatus = "Freeze change was not accepted.";
+            else
+                RosterStatus = frozen
+                    ? "Freezing relationships..." : "Unfreezing relationships...";
         }
 
         private RelationshipRowItem SelectedRelationshipRow()
@@ -2226,7 +2282,15 @@ namespace AA2Trainer.WpfPrototype
                     RelationshipRowItem relationshipRow =
                         new RelationshipRowItem { IsLover = isLover };
                     relationshipRow.Load(record);
+                    SeatSnapshot sourceSeatSnapshot = snapshot.Seats == null
+                        ? null : snapshot.Seats.FirstOrDefault(
+                            seat => seat != null &&
+                                seat.Seat == record.Source.Seat);
+                    relationshipRow.SetFrozenSilently(
+                        sourceSeatSnapshot != null &&
+                        sourceSeatSnapshot.IsFrozen);
                     relationshipRow.Changed += OnRelationshipRowChanged;
+                    relationshipRow.FrozenChanged += OnRelationshipFrozenChanged;
                     RelationshipRows.Add(relationshipRow);
                 }
             }

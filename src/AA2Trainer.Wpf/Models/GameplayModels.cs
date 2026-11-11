@@ -159,6 +159,8 @@ namespace AA2Trainer.WpfPrototype
         private int liveLatest = -1;
         private bool hasHistory;
         private bool loading;
+        private bool isFrozen;
+        private bool suppressFrozen;
 
         public RelationshipRowItem()
         {
@@ -184,6 +186,44 @@ namespace AA2Trainer.WpfPrototype
         public bool HasHistory { get { return hasHistory; } }
 
         public event Action Changed;
+        public event Action<RelationshipRowItem, bool> FrozenChanged;
+
+        public bool IsFrozen
+        {
+            get { return isFrozen; }
+            set
+            {
+                if (!Set(ref isFrozen, value)) return;
+                if (!suppressFrozen && FrozenChanged != null)
+                    FrozenChanged(this, value);
+            }
+        }
+
+        public void SetFrozenSilently(bool value)
+        {
+            if (isFrozen == value) return;
+            suppressFrozen = true;
+            try
+            {
+                IsFrozen = value;
+            }
+            finally
+            {
+                suppressFrozen = false;
+            }
+        }
+
+        public void SetFeeling(int feeling)
+        {
+            RelationshipFeelingValue[] cells =
+                new RelationshipFeelingValue[] { Love, Like, Dislike, Hate };
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Count = i == feeling ? 30 : 0;
+                cells[i].Points = 0;
+                cells[i].LevelIndex = i == feeling ? 0 : 2;
+            }
+        }
 
         public int LatestIndex
         {

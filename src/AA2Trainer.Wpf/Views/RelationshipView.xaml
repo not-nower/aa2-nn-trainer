@@ -56,8 +56,30 @@
                   HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal"
                   PreviewMouseLeftButtonDown="RelationshipGrid_PreviewMouseLeftButtonDown"
+                  PreviewMouseRightButtonDown="RelationshipGrid_PreviewMouseRightButtonDown"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Set Love" Click="ContextLove_Click" />
+                    <MenuItem Header="Set Like" Click="ContextLike_Click" />
+                    <MenuItem Header="Set Dislike" Click="ContextDislike_Click" />
+                    <MenuItem Header="Set Hate" Click="ContextHate_Click" />
+                    <Separator />
+                    <MenuItem Header="Freeze" Click="ContextFreeze_Click" />
+                    <MenuItem Header="Unfreeze" Click="ContextUnfreeze_Click" />
+                    <Separator />
+                    <MenuItem Header="All">
+                        <MenuItem Header="Set Love" Click="AllLove_Click" />
+                        <MenuItem Header="Set Like" Click="AllLike_Click" />
+                        <MenuItem Header="Set Dislike" Click="AllDislike_Click" />
+                        <MenuItem Header="Set Hate" Click="AllHate_Click" />
+                        <Separator />
+                        <MenuItem Header="Freeze all" Click="FreezeAll_Click" />
+                        <MenuItem Header="Unfreeze all" Click="UnfreezeAll_Click" />
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Seat / Name"
                                     Width="*"
@@ -71,6 +93,17 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+
+                <DataGridTemplateColumn Header="Freeze" Width="58">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsFrozen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      ToolTip="Freeze this relationship" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
                 <DataGridTemplateColumn Header="Love C/P/L" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
@@ -175,25 +208,6 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-
-                <DataGridTemplateColumn Header="Latest" Width="72">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ComboBox Height="22"
-                                      MinHeight="22"
-                                      Margin="1,0"
-                                      ItemsSource="{Binding LatestChoices}"
-                                      SelectedIndex="{Binding LatestIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                      IsEnabled="{Binding HasHistory}"
-                                      ToolTip="Newest feeling change" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <DataGridCheckBoxColumn Header="Lover"
-                                        Width="42"
-                                        IsReadOnly="True"
-                                        Binding="{Binding IsLover, Mode=OneWay}" />
             </DataGrid.Columns>
         </DataGrid>
         <TextBlock Text="{Binding RelationshipEmptyText}"

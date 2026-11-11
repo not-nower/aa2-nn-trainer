@@ -98,6 +98,11 @@ namespace AA2Trainer.WpfPrototype
         private int rosterActionTargetSeat = -1;
         private int rosterActionFeeling;
         private bool rosterActionFlag;
+        private readonly object freezeBatchSync = new object();
+        private bool freezeBatchPending;
+        private int freezeBatchTargetSeat = -1;
+        private bool freezeBatchFrozen;
+        private List<int> freezeBatchSeats;
         private readonly object gameplayWriteSync = new object();
         private bool gameplayWritePending;
         private GameplayWriteRequest gameplayWriteRequest;
@@ -488,6 +493,32 @@ namespace AA2Trainer.WpfPrototype
             return QueueRosterAction(2, sourceSeat, targetSeat, 0, frozen);
         }
 
+        public bool RequestRelationshipFreezeAll(int targetSeat,
+            IList<int> sourceSeats, bool frozen)
+        {
+            if (disposed || !mem.IsAttached ||
+                targetSeat < 0 || targetSeat > 24 || sourceSeats == null)
+                return false;
+
+            List<int> seats = new List<int>();
+            foreach (int seat in sourceSeats)
+            {
+                if (seat >= 0 && seat <= 24 && seat != targetSeat)
+                    seats.Add(seat);
+            }
+            if (seats.Count == 0) return false;
+
+            lock (freezeBatchSync)
+            {
+                if (freezeBatchPending) return false;
+                freezeBatchSeats = seats;
+                freezeBatchTargetSeat = targetSeat;
+                freezeBatchFrozen = frozen;
+                freezeBatchPending = true;
+                return true;
+            }
+        }
+
         private bool QueueRosterAction(int kind, int sourceSeat, int targetSeat,
             int feeling, bool flag)
         {
@@ -680,6 +711,12 @@ namespace AA2Trainer.WpfPrototype
             CancelPendingPlayerSwitch("Detached.");
             CancelPendingRosterAction("Detached.");
             lock (relationshipFreezeSync) relationshipFreezes.Clear();
+            lock (freezeBatchSync)
+            {
+                freezeBatchPending = false;
+                freezeBatchSeats = null;
+                freezeBatchTargetSeat = -1;
+            }
             CancelPendingScheduleWrite("Detached.");
             CancelPendingOptionWrite("Detached.");
             CancelPendingGameplayWrite("Detached.");
@@ -715,6 +752,7 @@ namespace AA2Trainer.WpfPrototype
             ProcessOutfitWrite();
             ProcessPlayerSwitch();
             ProcessRosterAction();
+            ProcessRelationshipFreezeBatch();
             RestoreRelationshipFreezes();
             ProcessScheduleWrite();
             ProcessOptionWrite();
@@ -2595,6 +2633,44 @@ namespace AA2Trainer.WpfPrototype
                 relationshipFreezes[key] = new FrozenRelationship(record);
             }
             return true;
+        }
+
+        private void ProcessRelationshipFreezeBatch()
+        {
+            List<int> seats;
+            int targetSeat;
+            bool frozen;
+            lock (freezeBatchSync)
+            {
+                if (!freezeBatchPending) return;
+                freezeBatchPending = false;
+                seats = freezeBatchSeats;
+                freezeBatchSeats = null;
+                targetSeat = freezeBatchTargetSeat;
+                freezeBatchTargetSeat = -1;
+                frozen = freezeBatchFrozen;
+            }
+
+            CharacterInfo target = FindCharacterBySeat(targetSeat);
+            if (target == null) return;
+
+            int applied = 0;
+            foreach (int seat in seats)
+            {
+                CharacterInfo source = FindCharacterBySeat(seat);
+                if (source == null) continue;
+                string error;
+                if (ApplyFreeze(source, target, frozen, out error))
+                    applied++;
+            }
+
+            if (applied > 0)
+            {
+                lastContextUtc = DateTime.MinValue;
+                PublishLiveLog((frozen ? "Froze " : "Unfroze ") +
+                    applied + " relationship" +
+                    (applied == 1 ? "." : "s."));
+            }
         }
 
         private void RestoreRelationshipFreezes()
