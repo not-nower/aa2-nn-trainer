@@ -55,6 +55,7 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(Initial));
                 OnPropertyChanged(nameof(HasName));
+                OnPropertyChanged(nameof(IsRoomUnknown));
             }
         }
 
@@ -68,6 +69,18 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        /// <summary>
+        /// True for a real character whose room/location is not readable. The
+        /// status indicators use a neutral gray instead of an activity colour.
+        /// </summary>
+        public bool IsRoomUnknown
+        {
+            get
+            {
+                return HasName && (string.IsNullOrEmpty(room) || room == "?");
+            }
+        }
+
         public string FirstName
         {
             get { return firstName; }
@@ -77,6 +90,7 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(Initial));
                 OnPropertyChanged(nameof(HasName));
+                OnPropertyChanged(nameof(IsRoomUnknown));
             }
         }
 
@@ -89,6 +103,7 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(Initial));
                 OnPropertyChanged(nameof(HasName));
+                OnPropertyChanged(nameof(IsRoomUnknown));
             }
         }
 
@@ -140,6 +155,7 @@ namespace AA2Trainer.WpfPrototype
                 if (!Set(ref room, value)) return;
                 OnPropertyChanged(nameof(RoomAction));
                 OnPropertyChanged(nameof(DetailTooltip));
+                OnPropertyChanged(nameof(IsRoomUnknown));
             }
         }
 
@@ -432,6 +448,7 @@ namespace AA2Trainer.WpfPrototype
             OnPropertyChanged(nameof(Name));
             OnPropertyChanged(nameof(Initial));
             OnPropertyChanged(nameof(HasName));
+            OnPropertyChanged(nameof(IsRoomUnknown));
         }
     }
 }

@@ -175,6 +175,9 @@
                 <DataTrigger Binding="{Binding Status}" Value="Empty">
                     <Setter TargetName="SeatDot" Property="Fill" Value="{DynamicResource TextDisabled}" />
                 </DataTrigger>
+                <DataTrigger Binding="{Binding IsRoomUnknown}" Value="True">
+                    <Setter TargetName="SeatDot" Property="Fill" Value="{DynamicResource TextMuted}" />
+                </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
 

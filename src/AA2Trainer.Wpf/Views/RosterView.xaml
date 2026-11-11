@@ -238,6 +238,9 @@
                         <DataTrigger Binding="{Binding Status}" Value="Empty">
                             <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource TextDisabled}" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding IsRoomUnknown}" Value="True">
+                            <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource TextMuted}" />
+                        </DataTrigger>
                     </DataTemplate.Triggers>
                 </DataTemplate>
             </ListBox.ItemTemplate>
