@@ -20,6 +20,7 @@ namespace AA2Trainer.WpfPrototype.Views
         private string lastSaveDirectory = "";
         private string lastCardDirectory = "";
         private bool updating;
+        private MainViewModel subscribedViewModel;
 
         public ImportExportView()
         {
@@ -32,17 +33,65 @@ namespace AA2Trainer.WpfPrototype.Views
             BuildSectionChecks();
             UpdateComparison();
             Loaded += ImportExportView_Loaded;
+            Unloaded += ImportExportView_Unloaded;
         }
 
         private void ImportExportView_Loaded(object sender, RoutedEventArgs e)
         {
-            if (save != null) return;
             MainViewModel viewModel = DataContext as MainViewModel;
+            if (viewModel != null && subscribedViewModel != viewModel)
+            {
+                if (subscribedViewModel != null)
+                    subscribedViewModel.SaveRestored -= OnSaveRestored;
+                subscribedViewModel = viewModel;
+                subscribedViewModel.SaveRestored += OnSaveRestored;
+            }
+
+            if (save != null) return;
             if (viewModel == null || string.IsNullOrEmpty(viewModel.CurrentSavePath))
                 return;
             if (!File.Exists(viewModel.CurrentSavePath)) return;
             LoadSave(viewModel.CurrentSavePath);
             lastSaveDirectory = Path.GetDirectoryName(viewModel.CurrentSavePath);
+        }
+
+        private void ImportExportView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (subscribedViewModel == null) return;
+            subscribedViewModel.SaveRestored -= OnSaveRestored;
+            subscribedViewModel = null;
+        }
+
+        private void OnSaveRestored(string path)
+        {
+            ReloadIfOpen(path);
+        }
+
+        public bool ReloadIfOpen(string path)
+        {
+            if (save == null || string.IsNullOrEmpty(path) ||
+                !PathsEqual(save.Path, path))
+                return false;
+
+            int seat = selectedEntry == null ? -1 : selectedEntry.Seat;
+            LoadSave(path);
+            if (seat >= 0) SelectSeat(seat);
+            SetStatus("Save restored from backup. Reload the class in AA2Play.",
+                false);
+            return true;
+        }
+
+        private static bool PathsEqual(string a, string b)
+        {
+            try
+            {
+                return string.Equals(Path.GetFullPath(a), Path.GetFullPath(b),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         private void BuildSectionChecks()

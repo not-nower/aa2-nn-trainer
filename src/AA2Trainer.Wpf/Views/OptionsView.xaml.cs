@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using AA2Trainer;
 using Microsoft.Win32;
 
 namespace AA2Trainer.WpfPrototype.Views
@@ -42,24 +43,26 @@ namespace AA2Trainer.WpfPrototype.Views
         private void Restore_Click(object sender, RoutedEventArgs e)
         {
             MainViewModel viewModel = ViewModel;
-            if (viewModel == null || string.IsNullOrEmpty(viewModel.CurrentSavePath))
+            if (viewModel == null) return;
+
+            RestoreBackupWindow window = new RestoreBackupWindow(
+                viewModel.CurrentSavePath);
+            window.Owner = Window.GetWindow(this);
+            if (window.ShowDialog() != true || window.SelectedEntry == null)
                 return;
 
+            SaveBackupEntry entry = window.SelectedEntry;
             MessageBoxResult confirm = MessageBox.Show(
-                "Restore a backup over the current class save?\n\n" +
-                "Close AA2Play or return to the title screen before restoring. " +
-                "The current save is backed up first.",
-                "Restore save backup", MessageBoxButton.OKCancel,
+                "Restore this backup?\n\n" +
+                "Backup: " + entry.BackupName + "\n" +
+                "Save: " + entry.SaveName + "\n" +
+                "AAU data: " + (entry.HasAauBackup ? "yes" : "no") +
+                "\n\nClose AA2Play or return to the title screen before " +
+                "restoring. The current save is backed up first.",
+                "Restore save backup", MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
-            if (confirm != MessageBoxResult.OK) return;
-
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Title = "Select a class-save backup";
-            dialog.Filter = "Save backups (*.bak)|*.bak|All files (*.*)|*.*";
-            dialog.InitialDirectory = Path.GetDirectoryName(
-                viewModel.CurrentSavePath);
-            if (dialog.ShowDialog() != true) return;
-            viewModel.RestoreBackup(dialog.FileName);
+            if (confirm != MessageBoxResult.Yes) return;
+            viewModel.RestoreBackup(entry);
         }
 
         private void UpdateNames_Click(object sender, RoutedEventArgs e)

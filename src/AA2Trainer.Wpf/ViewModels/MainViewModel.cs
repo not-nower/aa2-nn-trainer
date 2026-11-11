@@ -192,6 +192,7 @@ namespace AA2Trainer.WpfPrototype
             session = new GameSessionService(dispatcher);
             session.LiveRefreshEnabled = trainerSettings.LiveRefreshEnabled;
             session.RefreshIntervalMs = trainerSettings.RefreshIntervalMs;
+            session.LiveIntervalAuto = trainerSettings.LiveIntervalAuto;
             session.SnapshotReady += ApplySnapshot;
             session.CharacterWriteCompleted += OnCharacterWriteCompleted;
             session.TraitWriteCompleted += OnTraitWriteCompleted;
@@ -784,6 +785,25 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        public bool LiveIntervalAuto
+        {
+            get { return trainerSettings.LiveIntervalAuto; }
+            set
+            {
+                if (trainerSettings.LiveIntervalAuto == value) return;
+                trainerSettings.LiveIntervalAuto = value;
+                if (session != null) session.LiveIntervalAuto = value;
+                trainerSettings.Save();
+                OnPropertyChanged(nameof(LiveIntervalAuto));
+                OnPropertyChanged(nameof(CanEditRefreshInterval));
+            }
+        }
+
+        public bool CanEditRefreshInterval
+        {
+            get { return !trainerSettings.LiveIntervalAuto; }
+        }
+
         public string BackupStatus
         {
             get { return backupStatus; }
@@ -798,6 +818,8 @@ namespace AA2Trainer.WpfPrototype
                     File.Exists(currentSavePath);
             }
         }
+
+        public event Action<string> SaveRestored;
 
         public string NameTableStatus
         {
@@ -815,13 +837,50 @@ namespace AA2Trainer.WpfPrototype
             try
             {
                 string backup = SaveBackup.Create(CurrentSavePath);
-                BackupStatus = "Backup: " + Path.GetFileName(backup);
-                LogSession("Created save backup " + Path.GetFileName(backup));
+                bool hasAau = File.Exists(SaveBackup.AauPath(CurrentSavePath));
+                BackupStatus = "Backup: " + Path.GetFileName(backup) +
+                    (hasAau ? " (AAU data included)" : "");
+                LogSession("Created save backup " + Path.GetFileName(backup) +
+                    (hasAau ? " including AAU data." : "."));
             }
             catch (Exception ex)
             {
                 BackupStatus = "Backup failed: " + ex.Message;
                 LogSession(BackupStatus, "Error");
+            }
+        }
+
+        public bool RestoreBackup(SaveBackupEntry entry)
+        {
+            if (entry == null)
+            {
+                BackupStatus = "Select a backup first.";
+                return false;
+            }
+            try
+            {
+                SaveRestoreResult result = SaveBackup.Restore(entry);
+                CurrentSavePath = entry.SavePath;
+                OnPropertyChanged(nameof(CanBackup));
+                BackupStatus = "Restored " +
+                    Path.GetFileName(entry.BackupPath) +
+                    (entry.HasAauBackup ? " (AAU data included)" : "") +
+                    (string.IsNullOrEmpty(result.SafetySaveBackup)
+                        ? "" : "; safety backup " +
+                            Path.GetFileName(result.SafetySaveBackup));
+                LogSession("Restored save backup " +
+                    Path.GetFileName(entry.BackupPath) +
+                    ". Restart or reload the class save in-game.");
+
+                Action<string> handler = SaveRestored;
+                if (handler != null) handler(entry.SavePath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                BackupStatus = "Restore failed: " + ex.Message;
+                LogSession(BackupStatus, "Error");
+                return false;
             }
         }
 
@@ -833,36 +892,19 @@ namespace AA2Trainer.WpfPrototype
                 BackupStatus = "Select a backup for the current save.";
                 return false;
             }
-            try
-            {
-                List<SaveBackupEntry> entries = SaveBackup.List(
-                    CurrentSavePath, false);
-                SaveBackupEntry entry = entries.FirstOrDefault(
-                    candidate => SaveBackup.PathsEqual(
-                        candidate.BackupPath, backupPath));
-                if (entry == null)
-                {
-                    BackupStatus =
-                        "That backup does not belong to the current save.";
-                    return false;
-                }
 
-                SaveRestoreResult result = SaveBackup.Restore(entry);
-                BackupStatus = "Restored " + Path.GetFileName(entry.BackupPath) +
-                    (string.IsNullOrEmpty(result.SafetySaveBackup)
-                        ? "" : "; safety backup " +
-                            Path.GetFileName(result.SafetySaveBackup));
-                LogSession("Restored save backup " +
-                    Path.GetFileName(entry.BackupPath) +
-                    ". Restart or reload the class save in-game.");
-                return true;
-            }
-            catch (Exception ex)
+            List<SaveBackupEntry> entries = SaveBackup.List(
+                CurrentSavePath, false);
+            SaveBackupEntry entry = entries.FirstOrDefault(
+                candidate => SaveBackup.PathsEqual(
+                    candidate.BackupPath, backupPath));
+            if (entry == null)
             {
-                BackupStatus = "Restore failed: " + ex.Message;
-                LogSession(BackupStatus, "Error");
+                BackupStatus =
+                    "That backup does not belong to the current save.";
                 return false;
             }
+            return RestoreBackup(entry);
         }
 
         public void ReloadNameTables()

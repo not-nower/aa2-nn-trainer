@@ -39,6 +39,21 @@ namespace AA2Trainer.WpfPrototype
             get { return engine != null && engine.HookInstalled; }
         }
 
+        public bool AnyPlanRunning
+        {
+            get
+            {
+                lock (sync)
+                {
+                    foreach (PlanQueue plan in plans.Values)
+                    {
+                        if (plan != null && plan.Started) return true;
+                    }
+                    return false;
+                }
+            }
+        }
+
         public string HookState
         {
             get

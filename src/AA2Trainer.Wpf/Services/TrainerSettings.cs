@@ -12,6 +12,7 @@ namespace AA2Trainer.WpfPrototype
     {
         public bool LiveRefreshEnabled = true;
         public int RefreshIntervalMs = 250;
+        public bool LiveIntervalAuto = true;
         public bool ObserveOnly;
         public ThemeMode Theme = ThemeMode.System;
 
@@ -68,6 +69,9 @@ namespace AA2Trainer.WpfPrototype
                                 settings.RefreshIntervalMs = ms;
                             break;
                         }
+                        case "LiveIntervalAuto":
+                            settings.LiveIntervalAuto = value != "0";
+                            break;
                         case "ObserveOnly":
                             settings.ObserveOnly = value != "0";
                             break;
@@ -127,6 +131,7 @@ namespace AA2Trainer.WpfPrototype
                     "LiveRefresh=" + (LiveRefreshEnabled ? "1" : "0"),
                     "RefreshIntervalMs=" + RefreshIntervalMs.ToString(
                         CultureInfo.InvariantCulture),
+                    "LiveIntervalAuto=" + (LiveIntervalAuto ? "1" : "0"),
                     "ObserveOnly=" + (ObserveOnly ? "1" : "0"),
                     "Theme=" + Theme,
                     "WindowLeft=" + FormatDistance(WindowLeft),

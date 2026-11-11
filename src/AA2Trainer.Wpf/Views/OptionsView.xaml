@@ -113,20 +113,24 @@
                                 <CheckBox Content="Live refresh"
                                           IsChecked="{Binding LiveRefreshEnabled, Mode=TwoWay}"
                                           Margin="0,0,0,6" />
+                                <CheckBox Content="Auto interval (100/500 ms)"
+                                          IsChecked="{Binding LiveIntervalAuto, Mode=TwoWay}"
+                                          Margin="0,0,0,6" />
                                 <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="130" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Refresh interval (ms)"
+                                    <TextBlock Text="Manual interval (ms)"
                                                Style="{StaticResource CaptionText}"
                                                VerticalAlignment="Center" />
                                     <ComboBox Grid.Column="1"
                                               ItemsSource="{Binding RefreshIntervals}"
-                                              SelectedItem="{Binding RefreshIntervalMs, Mode=TwoWay}" />
+                                              SelectedItem="{Binding RefreshIntervalMs, Mode=TwoWay}"
+                                              IsEnabled="{Binding CanEditRefreshInterval}" />
                                     <TextBlock Grid.Column="2"
-                                               Text="50-2000 ms. Pausing keeps writes and freezes processing."
+                                               Text="Auto uses 100 ms while active and 500 ms when idle. Pausing keeps writes and freezes processing."
                                                Style="{StaticResource CaptionText}"
                                                VerticalAlignment="Center"
                                                Margin="10,0,0,0"

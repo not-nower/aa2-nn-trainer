@@ -14,6 +14,9 @@ namespace AA2Trainer.WpfPrototype
     public sealed class GameSessionService : IDisposable
     {
         private const int PollMs = 250;
+        private const int LiveActiveIntervalMs = 100;
+        private const int LiveIdleIntervalMs = 500;
+        private const int LiveLingerMs = 1000;
         private const int ContextRefreshMs = 1000;
         private const int HealthRefreshMs = 5000;
         private const int AttachRetryMs = 1000;
@@ -146,6 +149,8 @@ namespace AA2Trainer.WpfPrototype
         private int pendingSeat = -1;
         private volatile bool liveRefreshEnabled = true;
         private int refreshIntervalMs = PollMs;
+        private bool liveIntervalAuto = true;
+        private DateTime lastLiveActivityUtc = DateTime.MinValue;
         private readonly object namesSync = new object();
         private bool namesReloadRequested;
         private string namesImportFolder;
@@ -176,7 +181,8 @@ namespace AA2Trainer.WpfPrototype
             }
             actionLimiter = new ActionLimiter(IsActionLimited,
                 AnyActionLimits, null);
-            timer = new System.Threading.Timer(Poll, null, 0, PollMs);
+            timer = new System.Threading.Timer(Poll, null, 0,
+                Timeout.Infinite);
         }
 
         public PlannerService Planner
@@ -190,6 +196,17 @@ namespace AA2Trainer.WpfPrototype
             set { liveRefreshEnabled = value; }
         }
 
+        public bool LiveIntervalAuto
+        {
+            get { return liveIntervalAuto; }
+            set
+            {
+                if (liveIntervalAuto == value) return;
+                liveIntervalAuto = value;
+                ScheduleNextPoll();
+            }
+        }
+
         public int RefreshIntervalMs
         {
             get { return refreshIntervalMs; }
@@ -198,8 +215,7 @@ namespace AA2Trainer.WpfPrototype
                 int ms = Math.Max(50, Math.Min(2000, value));
                 if (ms == refreshIntervalMs) return;
                 refreshIntervalMs = ms;
-                try { timer.Change(0, ms); }
-                catch (ObjectDisposedException) { }
+                ScheduleNextPoll();
             }
         }
 
@@ -327,7 +343,13 @@ namespace AA2Trainer.WpfPrototype
 
         public void RequestRefresh()
         {
-            RequestAttach();
+            if (!mem.IsAttached)
+            {
+                RequestAttach();
+                return;
+            }
+            try { timer.Change(0, Timeout.Infinite); }
+            catch (ObjectDisposedException) { }
         }
 
         public void RequestSeat(int seat)
@@ -673,7 +695,58 @@ namespace AA2Trainer.WpfPrototype
             finally
             {
                 Interlocked.Exchange(ref busy, 0);
+                ScheduleNextPoll();
             }
+        }
+
+        private void ScheduleNextPoll()
+        {
+            if (disposed) return;
+            try
+            {
+                timer.Change(NextPollInterval(), Timeout.Infinite);
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
+
+        private int NextPollInterval()
+        {
+            if (!mem.IsAttached) return AttachRetryMs;
+            if (!liveIntervalAuto)
+                return Math.Max(50, Math.Min(2000, refreshIntervalMs));
+            if (planner != null && planner.AnyPlanRunning)
+            {
+                lastLiveActivityUtc = DateTime.UtcNow;
+                return LiveActiveIntervalMs;
+            }
+            if ((DateTime.UtcNow - lastLiveActivityUtc).TotalMilliseconds <
+                LiveLingerMs)
+                return LiveActiveIntervalMs;
+            return LiveIdleIntervalMs;
+        }
+
+        private void UpdateLiveActivity(LiveSnapshot snapshot)
+        {
+            if (!liveIntervalAuto || snapshot == null ||
+                snapshot.Characters == null)
+                return;
+
+            bool active = planner != null && planner.AnyPlanRunning;
+            if (!active)
+            {
+                foreach (LiveCharacterState character in snapshot.Characters)
+                {
+                    if (character == null) continue;
+                    if (character.IsBusy || character.MovementType > 1)
+                    {
+                        active = true;
+                        break;
+                    }
+                }
+            }
+            if (active) lastLiveActivityUtc = DateTime.UtcNow;
         }
 
         private void TryAttach()
@@ -817,6 +890,7 @@ namespace AA2Trainer.WpfPrototype
 
             portraits.Refresh(ctx, ctx.Selected);
             LiveSnapshot liveSnapshot = live.Read();
+            UpdateLiveActivity(liveSnapshot);
             Publish(BuildSnapshot(liveSnapshot));
         }
 
