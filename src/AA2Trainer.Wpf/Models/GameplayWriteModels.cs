@@ -5,9 +5,21 @@ namespace AA2Trainer.WpfPrototype
     public enum GameplayWriteKind
     {
         RelationshipValues,
+        RelationshipBatch,
         HistoryEvents,
         HistoryAll,
         LoverBatch
+    }
+
+    public sealed class RelationshipEdit
+    {
+        public uint SourcePointer;
+        public int TargetSeat;
+        public int[] Counts;
+        public int[] Points;
+        public int[] Levels;
+        public int Latest;
+        public bool WriteLatest;
     }
 
     public sealed class LoverEdit
@@ -33,6 +45,7 @@ namespace AA2Trainer.WpfPrototype
         public int[] EventIndices;
         public int[] EventFeelings;
         public int Feeling;
+        public List<RelationshipEdit> RelationshipEdits;
         public List<LoverEdit> LoverEdits;
     }
 

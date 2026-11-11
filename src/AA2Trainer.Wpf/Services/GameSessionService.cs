@@ -2827,6 +2827,28 @@ namespace AA2Trainer.WpfPrototype
                         if (!result.Success) result.Error = error;
                         break;
 
+                    case GameplayWriteKind.RelationshipBatch:
+                    {
+                        List<RelationshipEdit> edits = request.RelationshipEdits ??
+                            new List<RelationshipEdit>();
+                        foreach (RelationshipEdit edit in edits)
+                        {
+                            if (edit == null) continue;
+                            if (!RelationshipEditor.TryWrite(mem,
+                                edit.SourcePointer, edit.TargetSeat,
+                                edit.Counts, edit.Points, edit.Levels,
+                                edit.Latest, edit.WriteLatest, out error))
+                            {
+                                result.Error = error;
+                                break;
+                            }
+                            RefreshFrozenRelationship(edit.SourcePointer,
+                                edit.TargetSeat);
+                        }
+                        result.Success = string.IsNullOrEmpty(result.Error);
+                        break;
+                    }
+
                     case GameplayWriteKind.HistoryEvents:
                     {
                         int[] indices = request.EventIndices ?? new int[0];

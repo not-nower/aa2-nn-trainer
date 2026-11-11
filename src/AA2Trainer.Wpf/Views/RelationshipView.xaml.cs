@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace AA2Trainer.WpfPrototype.Views
 {
@@ -38,6 +40,19 @@ namespace AA2Trainer.WpfPrototype.Views
         {
             MainViewModel viewModel = DataContext as MainViewModel;
             if (viewModel != null) viewModel.ToggleRelationshipFreezeFromRow();
+        }
+
+        private void RelationshipGrid_PreviewMouseLeftButtonDown(
+            object sender, MouseButtonEventArgs e)
+        {
+            DependencyObject source = e.OriginalSource as DependencyObject;
+            while (source != null && !(source is DataGridRow))
+                source = VisualTreeHelper.GetParent(source);
+
+            DataGridRow row = source as DataGridRow;
+            if (row == null) return;
+            row.IsSelected = true;
+            RelationshipGrid.SelectedItem = row.Item;
         }
 
         private void ApplyRelationship_Click(object sender, RoutedEventArgs e)

@@ -110,7 +110,6 @@ namespace AA2Trainer.WpfPrototype
         private int selectedRelationshipIndex = -1;
         private int selectedBehaviorIndex = -1;
         private int selectedLoverIndex = -1;
-        private RelationshipDraft relationshipDraft;
         private BehaviorDraft behaviorDraft;
         private bool gameplayWriteBusy;
         private string relationshipEditStatus = "No changes.";
@@ -1388,17 +1387,9 @@ namespace AA2Trainer.WpfPrototype
             get { return selectedRelationshipIndex; }
             set
             {
-                int previous = selectedRelationshipIndex;
                 if (!Set(ref selectedRelationshipIndex, value)) return;
-                if (relationshipDraft != null && relationshipDraft.IsDirty)
-                {
-                    selectedRelationshipIndex = previous;
-                    OnPropertyChanged(nameof(SelectedRelationshipIndex));
-                    RelationshipEditStatus =
-                        "Apply or revert changes before selecting another classmate.";
-                    return;
-                }
-                LoadRelationshipDraft();
+                RelationshipEditStatus = "No changes.";
+                NotifyGameplayButtons();
             }
         }
 
@@ -1425,17 +1416,6 @@ namespace AA2Trainer.WpfPrototype
         {
             get { return selectedLoverIndex; }
             set { Set(ref selectedLoverIndex, value); }
-        }
-
-        public RelationshipDraft RelationshipDraft
-        {
-            get { return relationshipDraft; }
-            private set
-            {
-                if (!Set(ref relationshipDraft, value)) return;
-                OnPropertyChanged(nameof(CanApplyRelationship));
-                OnPropertyChanged(nameof(CanRevertRelationship));
-            }
         }
 
         public BehaviorDraft BehaviorDraft
@@ -1477,7 +1457,7 @@ namespace AA2Trainer.WpfPrototype
             get
             {
                 return isAttached && !gameplayWriteBusy &&
-                    relationshipDraft != null && relationshipDraft.IsDirty;
+                    AnyRelationshipDirty();
             }
         }
 
@@ -1485,8 +1465,7 @@ namespace AA2Trainer.WpfPrototype
         {
             get
             {
-                return !gameplayWriteBusy && relationshipDraft != null &&
-                    relationshipDraft.IsDirty;
+                return !gameplayWriteBusy && AnyRelationshipDirty();
             }
         }
 
@@ -1515,11 +1494,23 @@ namespace AA2Trainer.WpfPrototype
 
         public void ApplyRelationshipEdits()
         {
-            if (session == null || relationshipDraft == null ||
-                !relationshipDraft.IsDirty || gameplayWriteBusy)
+            if (session == null || gameplayWriteBusy) return;
+            List<RelationshipEdit> edits = new List<RelationshipEdit>();
+            foreach (RelationshipRowItem row in RelationshipRows)
+            {
+                if (row != null && row.IsDirty) edits.Add(row.BuildEdit());
+            }
+            if (edits.Count == 0)
+            {
+                RelationshipEditStatus = "No changes.";
                 return;
+            }
 
-            GameplayWriteRequest request = relationshipDraft.BuildRequest();
+            GameplayWriteRequest request = new GameplayWriteRequest
+            {
+                Kind = GameplayWriteKind.RelationshipBatch,
+                RelationshipEdits = edits
+            };
             if (!session.RequestGameplayWrite(request))
             {
                 RelationshipEditStatus = "Write request was not accepted.";
@@ -1532,10 +1523,20 @@ namespace AA2Trainer.WpfPrototype
 
         public void RevertRelationshipEdits()
         {
-            if (relationshipDraft == null || gameplayWriteBusy) return;
-            relationshipDraft.Revert();
+            if (gameplayWriteBusy) return;
+            foreach (RelationshipRowItem row in RelationshipRows)
+                row.Revert();
             RelationshipEditStatus = "Reverted to live values.";
             NotifyGameplayButtons();
+        }
+
+        private bool AnyRelationshipDirty()
+        {
+            foreach (RelationshipRowItem row in RelationshipRows)
+            {
+                if (row != null && row.IsDirty) return true;
+            }
+            return false;
         }
 
         public void ApplyBehaviorEdits()
@@ -1628,24 +1629,6 @@ namespace AA2Trainer.WpfPrototype
             NotifyGameplayButtons();
         }
 
-        private void LoadRelationshipDraft()
-        {
-            RelationshipRowItem row = SelectedRelationshipRow();
-            if (row == null || row.Record == null)
-            {
-                RelationshipDraft = null;
-                RelationshipEditStatus = "Select a classmate.";
-                NotifyGameplayButtons();
-                return;
-            }
-            RelationshipDraft draft = new RelationshipDraft();
-            draft.Changed += OnRelationshipDraftChanged;
-            draft.Load(row.Record);
-            RelationshipDraft = draft;
-            RelationshipEditStatus = "No changes.";
-            NotifyGameplayButtons();
-        }
-
         private void LoadBehaviorDraft()
         {
             BehaviorRowItem row = SelectedBehaviorRow();
@@ -1681,7 +1664,6 @@ namespace AA2Trainer.WpfPrototype
 
         private void ResetGameplayEditors()
         {
-            RelationshipDraft = null;
             BehaviorDraft = null;
             selectedRelationshipIndex = -1;
             selectedBehaviorIndex = -1;
@@ -1693,10 +1675,11 @@ namespace AA2Trainer.WpfPrototype
             NotifyGameplayButtons();
         }
 
-        private void OnRelationshipDraftChanged()
+        private void OnRelationshipRowChanged()
         {
             if (gameplayWriteBusy) return;
-            if (relationshipDraft != null && relationshipDraft.IsDirty)
+            RelationshipRowItem row = SelectedRelationshipRow();
+            if (row != null && row.IsDirty)
                 RelationshipEditStatus = "Unsaved changes.";
             NotifyGameplayButtons();
         }
@@ -1750,7 +1733,8 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (success)
                 {
-                    if (relationshipDraft != null) relationshipDraft.MarkClean();
+                    foreach (RelationshipRowItem row in RelationshipRows)
+                        row.MarkClean();
                     RelationshipEditStatus = "Saved relationship values.";
                 }
                 else
@@ -1763,6 +1747,21 @@ namespace AA2Trainer.WpfPrototype
 
             LogSession(message, success ? "Info" : "Error");
             NotifyGameplayButtons();
+        }
+
+        private static int FindSeatIndex<T>(IList<T> rows,
+            Func<T, int> seatSelector, int wantedSeat)
+        {
+            if (rows == null || rows.Count == 0) return -1;
+            if (wantedSeat >= 0)
+            {
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    if (rows[i] != null && seatSelector(rows[i]) == wantedSeat)
+                        return i;
+                }
+            }
+            return 0;
         }
 
         private void NotifyGameplayButtons()
@@ -1873,6 +1872,16 @@ namespace AA2Trainer.WpfPrototype
             List<LoverEntry> lovers = snapshot.LoverRows ??
                 new List<LoverEntry>();
 
+            int keepRelationshipSeat = selectedRelationshipIndex >= 0 &&
+                selectedRelationshipIndex < RelationshipRows.Count
+                ? RelationshipRows[selectedRelationshipIndex].SourceSeat : -1;
+            int keepBehaviorSeat = selectedBehaviorIndex >= 0 &&
+                selectedBehaviorIndex < BehaviorRows.Count
+                ? BehaviorRows[selectedBehaviorIndex].SourceSeat : -1;
+            int keepLoverSeat = selectedLoverIndex >= 0 &&
+                selectedLoverIndex < LoverRows.Count
+                ? LoverRows[selectedLoverIndex].SourceSeat : -1;
+
             RelationshipRows.Clear();
             if (snapshot.RelationshipRows != null)
             {
@@ -1889,24 +1898,11 @@ namespace AA2Trainer.WpfPrototype
                             break;
                         }
                     }
-                    RelationshipRows.Add(new RelationshipRowItem
-                    {
-                        Source = record.Source,
-                        Record = record,
-                        SourceSeat = record.Source.Seat,
-                        SourceName = record.Source.Name ?? "",
-                        LoveCount = record.Counts[0],
-                        LikeCount = record.Counts[1],
-                        DislikeCount = record.Counts[2],
-                        HateCount = record.Counts[3],
-                        LoveLevel = record.Levels[0],
-                        LikeLevel = record.Levels[1],
-                        DislikeLevel = record.Levels[2],
-                        HateLevel = record.Levels[3],
-                        Latest = record.Latest >= 0
-                            ? GameplayLabels.Feeling(record.Latest) : "-",
-                        IsLover = isLover
-                    });
+                    RelationshipRowItem relationshipRow =
+                        new RelationshipRowItem { IsLover = isLover };
+                    relationshipRow.Load(record);
+                    relationshipRow.Changed += OnRelationshipRowChanged;
+                    RelationshipRows.Add(relationshipRow);
                 }
             }
 
@@ -1988,49 +1984,20 @@ namespace AA2Trainer.WpfPrototype
                 }
             }
 
-            int targetSeat = SelectedSeat == null ? -1 : SelectedSeat.SeatIndex;
-            if (relationshipDraft == null ||
-                relationshipDraft.TargetSeat != targetSeat)
-            {
-                if (relationshipDraft == null || !relationshipDraft.IsDirty)
-                {
-                    if (RelationshipRows.Count > 0)
-                    {
-                        if (selectedRelationshipIndex < 0 ||
-                            selectedRelationshipIndex >= RelationshipRows.Count)
-                            selectedRelationshipIndex = 0;
-                        OnPropertyChanged(nameof(SelectedRelationshipIndex));
-                        LoadRelationshipDraft();
-                    }
-                    else
-                    {
-                        selectedRelationshipIndex = -1;
-                        RelationshipDraft = null;
-                        RelationshipEditStatus = "Select a classmate.";
-                    }
-                }
-            }
+            selectedRelationshipIndex = FindSeatIndex(RelationshipRows,
+                row => row.SourceSeat, keepRelationshipSeat);
+            OnPropertyChanged(nameof(SelectedRelationshipIndex));
+            RelationshipEditStatus = selectedRelationshipIndex < 0
+                ? "Select a classmate." : "No changes.";
 
-            if (behaviorDraft == null || behaviorDraft.TargetSeat != targetSeat)
-            {
-                if (behaviorDraft == null || !behaviorDraft.IsDirty)
-                {
-                    if (BehaviorRows.Count > 0)
-                    {
-                        if (selectedBehaviorIndex < 0 ||
-                            selectedBehaviorIndex >= BehaviorRows.Count)
-                            selectedBehaviorIndex = 0;
-                        OnPropertyChanged(nameof(SelectedBehaviorIndex));
-                        LoadBehaviorDraft();
-                    }
-                    else
-                    {
-                        selectedBehaviorIndex = -1;
-                        BehaviorDraft = null;
-                        BehaviorEditStatus = "Select a classmate.";
-                    }
-                }
-            }
+            selectedBehaviorIndex = FindSeatIndex(BehaviorRows,
+                row => row.SourceSeat, keepBehaviorSeat);
+            OnPropertyChanged(nameof(SelectedBehaviorIndex));
+            LoadBehaviorDraft();
+
+            selectedLoverIndex = FindSeatIndex(LoverRows,
+                row => row.SourceSeat, keepLoverSeat);
+            OnPropertyChanged(nameof(SelectedLoverIndex));
             NotifyGameplayButtons();
         }
 

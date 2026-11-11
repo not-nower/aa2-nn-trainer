@@ -11,7 +11,7 @@ namespace AA2Trainer.WpfPrototype
             new string[] { "Love", "Like", "Dislike", "Hate" };
 
         public static readonly string[] TierChoices =
-            new string[] { "Lots", "Some", "Very little" };
+            new string[] { "Lots", "Some", "Low" };
 
         public static string Feeling(int value)
         {
@@ -59,53 +59,20 @@ namespace AA2Trainer.WpfPrototype
         }
     }
 
-    public sealed class RelationshipRowItem
+    public sealed class RelationshipFeelingValue : ObservableObject
     {
-        public CharacterInfo Source;
-        public RelationshipRecord Record;
-        public int SourceSeat = -1;
-        public string SourceName = "";
-        public int LoveCount;
-        public int LikeCount;
-        public int DislikeCount;
-        public int HateCount;
-        public int LoveLevel;
-        public int LikeLevel;
-        public int DislikeLevel;
-        public int HateLevel;
-        public string Latest { get; set; } = "-";
-        public bool IsLover;
-
-        public string LoveText { get { return CountLevel(LoveCount, LoveLevel); } }
-        public string LikeText { get { return CountLevel(LikeCount, LikeLevel); } }
-        public string DislikeText { get { return CountLevel(DislikeCount, DislikeLevel); } }
-        public string HateText { get { return CountLevel(HateCount, HateLevel); } }
-
-        public string SourceText
-        {
-            get
-            {
-                string seat = SourceSeat >= 0
-                    ? SourceSeat.ToString("D2") + "  " : "";
-                return seat + SourceName;
-            }
-        }
-
-        private static string CountLevel(int count, int level)
-        {
-            return count + " / " + (level >= 0 ? "L" + level : "-");
-        }
-    }
-
-    public sealed class RelationshipFeelingEditItem : ObservableObject
-    {
+        private readonly Action changed;
         private int count;
         private int points;
         private int levelIndex;
+        private int liveCount;
+        private int livePoints;
+        private int liveLevel;
 
-        public RelationshipFeelingEditItem(string name)
+        public RelationshipFeelingValue(string name, Action changed)
         {
             Name = name ?? "";
+            this.changed = changed;
         }
 
         public string Name { get; private set; }
@@ -117,7 +84,9 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 int next = Math.Max(0, Math.Min(30, value));
-                Set(ref count, next);
+                if (!Set(ref count, next)) return;
+                OnPropertyChanged(nameof(IsDirty));
+                if (changed != null) changed();
             }
         }
 
@@ -127,7 +96,9 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 int next = Math.Max(0, Math.Min(29, value));
-                Set(ref points, next);
+                if (!Set(ref points, next)) return;
+                OnPropertyChanged(nameof(IsDirty));
+                if (changed != null) changed();
             }
         }
 
@@ -137,47 +108,82 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 int next = Math.Max(0, Math.Min(2, value));
-                Set(ref levelIndex, next);
+                if (!Set(ref levelIndex, next)) return;
+                OnPropertyChanged(nameof(IsDirty));
+                if (changed != null) changed();
             }
+        }
+
+        public bool IsDirty
+        {
+            get
+            {
+                return count != liveCount || points != livePoints ||
+                    levelIndex != liveLevel;
+            }
+        }
+
+        public void SetLive(int countValue, int pointsValue, int levelValue)
+        {
+            liveCount = countValue;
+            livePoints = pointsValue;
+            liveLevel = levelValue;
+            count = countValue;
+            points = pointsValue;
+            levelIndex = levelValue;
+            OnPropertyChanged(nameof(Count));
+            OnPropertyChanged(nameof(Points));
+            OnPropertyChanged(nameof(LevelIndex));
+            OnPropertyChanged(nameof(IsDirty));
+        }
+
+        public void MarkClean()
+        {
+            liveCount = count;
+            livePoints = points;
+            liveLevel = levelIndex;
+            OnPropertyChanged(nameof(IsDirty));
+        }
+
+        public void Revert()
+        {
+            Count = liveCount;
+            Points = livePoints;
+            LevelIndex = liveLevel;
         }
     }
 
-    public sealed class RelationshipDraft : ObservableObject
+    public sealed class RelationshipRowItem : ObservableObject
     {
-        private readonly int[] liveCounts = new int[4];
-        private readonly int[] livePoints = new int[4];
-        private readonly int[] liveLevels = new int[4];
-        private int liveLatest = -1;
         private int latestIndex;
+        private int liveLatest = -1;
         private bool hasHistory;
         private bool loading;
 
-        public RelationshipDraft()
+        public RelationshipRowItem()
         {
-            Feelings = new RelationshipFeelingEditItem[4];
-            for (int i = 0; i < 4; i++)
-            {
-                Feelings[i] = new RelationshipFeelingEditItem(
-                    GameplayLabels.Feeling(i));
-                Feelings[i].PropertyChanged += Item_PropertyChanged;
-            }
+            Love = new RelationshipFeelingValue("Love", OnFeelingChanged);
+            Like = new RelationshipFeelingValue("Like", OnFeelingChanged);
+            Dislike = new RelationshipFeelingValue("Dislike", OnFeelingChanged);
+            Hate = new RelationshipFeelingValue("Hate", OnFeelingChanged);
         }
 
-        public event Action Changed;
+        public CharacterInfo Source;
+        public RelationshipRecord Record;
+        public int SourceSeat = -1;
+        public int TargetSeat = -1;
+        public string SourceName = "";
+        public bool IsLover;
 
-        private void Item_PropertyChanged(object sender,
-            System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (loading) return;
-            OnPropertyChanged(nameof(IsDirty));
-            if (Changed != null) Changed();
-        }
+        public RelationshipFeelingValue Love { get; private set; }
+        public RelationshipFeelingValue Like { get; private set; }
+        public RelationshipFeelingValue Dislike { get; private set; }
+        public RelationshipFeelingValue Hate { get; private set; }
 
-        public CharacterInfo Source { get; private set; }
-        public int TargetSeat { get; private set; } = -1;
-        public RelationshipFeelingEditItem[] Feelings { get; private set; }
         public string[] LatestChoices { get { return GameplayLabels.FeelingNames; } }
         public bool HasHistory { get { return hasHistory; } }
+
+        public event Action Changed;
 
         public int LatestIndex
         {
@@ -195,14 +201,18 @@ namespace AA2Trainer.WpfPrototype
         {
             get
             {
-                for (int i = 0; i < 4; i++)
-                {
-                    if (Feelings[i].Count != liveCounts[i] ||
-                        Feelings[i].Points != livePoints[i] ||
-                        Feelings[i].LevelIndex != liveLevels[i])
-                        return true;
-                }
-                return hasHistory && latestIndex != liveLatest;
+                return Love.IsDirty || Like.IsDirty || Dislike.IsDirty ||
+                    Hate.IsDirty || (hasHistory && latestIndex != liveLatest);
+            }
+        }
+
+        public string SourceText
+        {
+            get
+            {
+                string seat = SourceSeat >= 0
+                    ? SourceSeat.ToString("D2") + "  " : "";
+                return seat + SourceName;
             }
         }
 
@@ -211,22 +221,22 @@ namespace AA2Trainer.WpfPrototype
             loading = true;
             try
             {
+                Record = record;
                 Source = record == null ? null : record.Source;
+                SourceSeat = record == null || record.Source == null
+                    ? -1 : record.Source.Seat;
                 TargetSeat = record == null ? -1 : record.TargetSeat;
+                SourceName = record == null || record.Source == null
+                    ? "" : record.Source.Name ?? "";
                 if (record == null) return;
 
                 hasHistory = record.HistoryCount > 0;
                 liveLatest = record.Latest;
                 latestIndex = record.Latest >= 0 ? record.Latest : 0;
-                for (int i = 0; i < 4; i++)
-                {
-                    liveCounts[i] = record.Counts[i];
-                    livePoints[i] = record.Points[i];
-                    liveLevels[i] = record.Levels[i];
-                    Feelings[i].Count = record.Counts[i];
-                    Feelings[i].Points = record.Points[i];
-                    Feelings[i].LevelIndex = record.Levels[i];
-                }
+                Love.SetLive(record.Counts[0], record.Points[0], record.Levels[0]);
+                Like.SetLive(record.Counts[1], record.Points[1], record.Levels[1]);
+                Dislike.SetLive(record.Counts[2], record.Points[2], record.Levels[2]);
+                Hate.SetLive(record.Counts[3], record.Points[3], record.Levels[3]);
                 OnPropertyChanged(nameof(HasHistory));
                 OnPropertyChanged(nameof(LatestIndex));
                 OnPropertyChanged(nameof(IsDirty));
@@ -237,26 +247,25 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
-        public GameplayWriteRequest BuildRequest()
+        public RelationshipEdit BuildEdit()
         {
-            int[] counts = new int[4];
-            int[] points = new int[4];
-            int[] levels = new int[4];
-            for (int i = 0; i < 4; i++)
+            return new RelationshipEdit
             {
-                counts[i] = Feelings[i].Count;
-                points[i] = Feelings[i].Points;
-                levels[i] = Feelings[i].LevelIndex;
-            }
-
-            return new GameplayWriteRequest
-            {
-                Kind = GameplayWriteKind.RelationshipValues,
                 SourcePointer = Source == null ? 0 : Source.Pointer,
                 TargetSeat = TargetSeat,
-                Counts = counts,
-                Points = points,
-                Levels = levels,
+                Counts = new int[]
+                {
+                    Love.Count, Like.Count, Dislike.Count, Hate.Count
+                },
+                Points = new int[]
+                {
+                    Love.Points, Like.Points, Dislike.Points, Hate.Points
+                },
+                Levels = new int[]
+                {
+                    Love.LevelIndex, Like.LevelIndex, Dislike.LevelIndex,
+                    Hate.LevelIndex
+                },
                 Latest = latestIndex,
                 WriteLatest = hasHistory && latestIndex != liveLatest
             };
@@ -264,27 +273,30 @@ namespace AA2Trainer.WpfPrototype
 
         public void MarkClean()
         {
-            for (int i = 0; i < 4; i++)
-            {
-                liveCounts[i] = Feelings[i].Count;
-                livePoints[i] = Feelings[i].Points;
-                liveLevels[i] = Feelings[i].LevelIndex;
-            }
+            Love.MarkClean();
+            Like.MarkClean();
+            Dislike.MarkClean();
+            Hate.MarkClean();
             liveLatest = latestIndex;
             OnPropertyChanged(nameof(IsDirty));
         }
 
         public void Revert()
         {
-            for (int i = 0; i < 4; i++)
-            {
-                Feelings[i].Count = liveCounts[i];
-                Feelings[i].Points = livePoints[i];
-                Feelings[i].LevelIndex = liveLevels[i];
-            }
+            Love.Revert();
+            Like.Revert();
+            Dislike.Revert();
+            Hate.Revert();
             latestIndex = liveLatest >= 0 ? liveLatest : 0;
             OnPropertyChanged(nameof(LatestIndex));
             OnPropertyChanged(nameof(IsDirty));
+        }
+
+        private void OnFeelingChanged()
+        {
+            if (loading) return;
+            OnPropertyChanged(nameof(IsDirty));
+            if (Changed != null) Changed();
         }
     }
 
