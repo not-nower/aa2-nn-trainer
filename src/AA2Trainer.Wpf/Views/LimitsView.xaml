@@ -29,14 +29,17 @@
                       VerticalAlignment="Center" />
             <Button Content="Clear this character" Margin="14,0,0,0"
                     Style="{StaticResource ToolbarButton}"
+                    ToolTip="Clear this character's blocked actions"
                     Click="Clear_Click" />
             <Button Content="Copy" Margin="6,0,0,0" Width="64"
                     Style="{StaticResource ToolbarButton}"
                     IsEnabled="{Binding CanCopyLimits}"
+                    ToolTip="Copy this character's blocked actions"
                     Click="Copy_Click" />
             <Button Content="Paste" Margin="6,0,0,0" Width="64"
                     Style="{StaticResource ToolbarButton}"
                     IsEnabled="{Binding CanPasteLimits}"
+                    ToolTip="Replace this character's blocked actions with the copied list"
                     Click="Paste_Click" />
             <TextBlock Text="Search" Style="{StaticResource CaptionText}"
                        VerticalAlignment="Center"

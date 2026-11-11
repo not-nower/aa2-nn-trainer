@@ -37,7 +37,8 @@
                            HorizontalAlignment="Left"
                            VerticalAlignment="Bottom"
                            Margin="0,0,0,1"
-                           RadiusX="1" RadiusY="1">
+                           RadiusX="1" RadiusY="1"
+                           ToolTip="Action limits active">
                     <Rectangle.Style>
                         <Style TargetType="Rectangle">
                             <Setter Property="Visibility" Value="Collapsed" />
@@ -255,7 +256,9 @@
                             </Style>
                         </Ellipse.Style>
                     </Ellipse>
-                    <TextBlock Text="{Binding AttachState}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding AttachState}"
+                               ToolTip="{Binding AttachState}"
+                               VerticalAlignment="Center" />
                     <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
                     <Button x:Name="ScheduleButton"
                             Content="{Binding GameTime}"
@@ -383,7 +386,9 @@
                         </Border>
                     </Popup>
                     <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding PointerHealth}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding PointerHealth}"
+                               ToolTip="{Binding PointerHealth}"
+                               Style="{StaticResource CaptionText}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal"
@@ -681,21 +686,33 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Margin="12,0,0,0">
-                    <TextBlock Text="{Binding WriteGate}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding WriteGate}"
+                               ToolTip="{Binding WriteGate}"
+                               Style="{StaticResource CaptionText}" />
                     <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding PointerHealth}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding PointerHealth}"
+                               ToolTip="{Binding PointerHealth}"
+                               Style="{StaticResource CaptionText}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                             ClipToBounds="True">
                     <TextBlock Text="Portable | AA2Trainer.ini" Style="{StaticResource CaptionText}" />
                     <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding NamesState}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding NamesState}"
+                               ToolTip="{Binding NamesState}"
+                               Style="{StaticResource CaptionText}" />
                     <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding UpdatedText}"
+                               ToolTip="{Binding UpdatedText}"
+                               Style="{StaticResource CaptionText}" />
                     <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding CardStatus}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding CardStatus}"
+                               ToolTip="{Binding CardStatus}"
+                               Style="{StaticResource CaptionText}" />
                     <Border Width="1" Height="12" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding RosterStatus}" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding RosterStatus}"
+                               ToolTip="{Binding RosterStatus}"
+                               Style="{StaticResource CaptionText}" />
                 </StackPanel>
             </DockPanel>
         </Border>

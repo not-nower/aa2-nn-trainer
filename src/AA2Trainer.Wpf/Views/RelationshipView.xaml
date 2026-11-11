@@ -36,6 +36,7 @@
             <Button Content="Freeze / Unfreeze" Style="{StaticResource ToolbarButton}"
                     Margin="12,0,0,0" Click="Freeze_Click" />
             <TextBlock Text="C / P / L = count, points, level."
+                       ToolTip="C = count, P = points, L = level"
                        Style="{StaticResource CaptionText}"
                        Margin="14,0,0,0"
                        VerticalAlignment="Center"
