@@ -485,7 +485,7 @@
                               CanUserDeleteRows="False"
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
-                              RowHeight="Auto"
+                              RowHeight="NaN"
                               MinRowHeight="26"
                               MinHeight="60"
                               Margin="0,0,0,4"
