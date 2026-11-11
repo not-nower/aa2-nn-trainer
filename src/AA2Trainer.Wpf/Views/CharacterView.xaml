@@ -112,8 +112,13 @@
     </UserControl.Resources>
     <TabControl>
         <TabItem Header="Data">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <Grid Margin="12" MaxWidth="920" HorizontalAlignment="Left">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="12,12,12,6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="92" />
                         <ColumnDefinition Width="*" />
@@ -162,13 +167,6 @@
                              Text="{Binding CharacterDraft.LastName, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,6" />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Relationship"
-                               Style="{StaticResource CaptionText}" Margin="0,0,8,6" />
-                    <TextBox Grid.Row="2" Grid.Column="1"
-                             Text="{Binding SelectedSeat.Relationship}"
-                             IsReadOnly="True"
-                             Margin="0,0,16,6" />
-
                     <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,6"
                                 VerticalAlignment="Top">
                         <TextBlock Text="Profile"
@@ -185,7 +183,7 @@
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
                              VerticalContentAlignment="Top"
-                             Height="72"
+                             Height="64"
                              Margin="0,0,0,10" />
 
                     <TextBlock Grid.Row="4" Grid.ColumnSpan="4"
@@ -344,49 +342,70 @@
                                Margin="0,6,0,6" />
 
                     <UniformGrid Grid.Row="14" Grid.ColumnSpan="4"
-                                 Columns="4" Margin="0,0,0,4">
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="Victory count"
+                                 Columns="4" Margin="0,0,0,2">
+                        <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Victory count"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="Victory count" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="Classes skipped"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Classes skipped"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="Classes skipped" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="Won over"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,3" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Won over"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="Won over" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,0,6">
-                            <TextBlock Text="Partners"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,3" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Partners"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="Partners" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="Rejections"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Rejections"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="Rejections" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="H encounters"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="H encounters"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="H encounters" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="H partners"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="H partners"
+                                       Width="104"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
                                      ToolTip="H partners" />
-                        </StackPanel>
+                        </DockPanel>
                     </UniformGrid>
 
                     <TextBlock Grid.Row="15" Grid.ColumnSpan="4"
@@ -395,36 +414,48 @@
                                Margin="0,6,0,6" />
 
                     <UniformGrid Grid.Row="16" Grid.ColumnSpan="4"
-                                 Columns="2" Margin="0,0,0,4">
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="First partner"
+                                 Columns="4" Margin="0,0,0,2">
+                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="First partner"
+                                       Width="92"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.FirstTime, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Up to 31 Shift-JIS bytes" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,0,6">
-                            <TextBlock Text="First anal"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="First anal"
+                                       Width="92"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.FirstAnal, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Up to 31 Shift-JIS bytes" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,8,6">
-                            <TextBlock Text="Last partner"
+                        </DockPanel>
+                        <DockPanel Margin="0,0,8,0" LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Last partner"
+                                       Width="92"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
                                        Style="{StaticResource CaptionText}" />
                             <TextBox Text="{Binding CharacterDraft.LastTime, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Up to 31 Shift-JIS bytes" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,0,6" VerticalAlignment="Center">
-                            <TextBlock Text="Experience"
+                        </DockPanel>
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Left" Text="Exp."
+                                       Width="36"
+                                       VerticalAlignment="Center"
                                        Style="{StaticResource CaptionText}" />
-                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal"
+                                        VerticalAlignment="Center">
                                 <CheckBox Content="Vaginal"
                                           IsChecked="{Binding CharacterDraft.SexExperience, Mode=TwoWay}"
-                                          Margin="0,0,14,0" />
+                                          Margin="0,0,10,0" />
                                 <CheckBox Content="Anal"
                                           IsChecked="{Binding CharacterDraft.AnalExperience, Mode=TwoWay}" />
                             </StackPanel>
-                        </StackPanel>
+                        </DockPanel>
                     </UniformGrid>
 
                     <DockPanel Grid.Row="17" Grid.ColumnSpan="4"
@@ -433,6 +464,14 @@
                                 Content="Refresh"
                                 Width="76"
                                 Click="RefreshModules_Click" />
+                        <TextBlock DockPanel.Dock="Right"
+                                   Text="{Binding AauModuleStatus}"
+                                   Style="{StaticResource CaptionText}"
+                                   MaxWidth="260"
+                                   Margin="0,0,10,0"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding AauModuleStatus}" />
                         <TextBlock Text="Modules (AAU, read-only)"
                                    Style="{StaticResource SectionHeader}"
                                    VerticalAlignment="Center" />
@@ -446,10 +485,23 @@
                               CanUserDeleteRows="False"
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
-                              Height="120"
+                              MinHeight="60"
+                              MaxHeight="120"
                               Margin="0,0,0,4"
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid"
+                                   BasedOn="{StaticResource {x:Type DataGrid}}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AauModules.Count}"
+                                                 Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Module"
                                                 Width="220"
@@ -459,35 +511,31 @@
                                                 Binding="{Binding Description}" />
                         </DataGrid.Columns>
                     </DataGrid>
+                    </Grid>
+                </ScrollViewer>
 
-                    <TextBlock Grid.Row="19" Grid.ColumnSpan="4"
-                               Text="{Binding AauModuleStatus}"
-                               Style="{StaticResource CaptionText}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,6" />
-
-                    <Border Grid.Row="20" Grid.ColumnSpan="4"
-                            Height="1"
-                            Background="{DynamicResource Border}"
-                            Margin="0,10,0,10" />
-
-                    <StackPanel Grid.Row="21" Grid.ColumnSpan="4"
-                                Orientation="Horizontal">
-                        <Button Content="Apply" Width="76"
-                                IsEnabled="{Binding CanApply}"
-                                Click="Apply_Click" />
-                        <Button Content="Revert" Width="76" Margin="6,0,0,0"
-                                IsEnabled="{Binding CanRevert}"
-                                Click="Revert_Click" />
-                        <TextBlock x:Name="CharacterNote"
-                                   Style="{StaticResource CaptionText}"
-                                   Margin="10,0,0,0"
-                                   VerticalAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding CharacterStatus}" />
-                    </StackPanel>
-                </Grid>
-            </ScrollViewer>
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Apply" Width="76"
+                                    IsEnabled="{Binding CanApply}"
+                                    Click="Apply_Click" />
+                            <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                    IsEnabled="{Binding CanRevert}"
+                                    Click="Revert_Click" />
+                            <TextBlock x:Name="CharacterNote"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding CharacterStatus}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
         </TabItem>
 
         <TabItem Header="Traits">
