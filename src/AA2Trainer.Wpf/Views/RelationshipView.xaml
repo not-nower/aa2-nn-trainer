@@ -29,7 +29,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="8" />
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="270" />
             </Grid.ColumnDefinitions>
 
             <DataGrid Grid.Column="0"
@@ -46,24 +46,32 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Seat / Name"
                                         Width="*"
-                                        Binding="{Binding SourceText}" />
+                                        MinWidth="140"
+                                        Binding="{Binding SourceText}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                <Setter Property="ToolTip" Value="{Binding SourceText}" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                     <DataGridTextColumn Header="Love"
-                                        Width="82"
+                                        Width="58"
                                         Binding="{Binding LoveText}" />
                     <DataGridTextColumn Header="Like"
-                                        Width="82"
+                                        Width="58"
                                         Binding="{Binding LikeText}" />
                     <DataGridTextColumn Header="Dislike"
-                                        Width="82"
+                                        Width="58"
                                         Binding="{Binding DislikeText}" />
                     <DataGridTextColumn Header="Hate"
-                                        Width="82"
+                                        Width="58"
                                         Binding="{Binding HateText}" />
                     <DataGridTextColumn Header="Latest"
-                                        Width="100"
+                                        Width="72"
                                         Binding="{Binding Latest}" />
                     <DataGridCheckBoxColumn Header="Lover"
-                                            Width="54"
+                                            Width="40"
                                             Binding="{Binding IsLover, Mode=OneWay}" />
                 </DataGrid.Columns>
             </DataGrid>
@@ -77,9 +85,9 @@
 
                     <Grid Margin="0,0,0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="72" />
-                            <ColumnDefinition Width="64" />
-                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="48" />
+                            <ColumnDefinition Width="44" />
+                            <ColumnDefinition Width="44" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Feeling"
@@ -97,9 +105,9 @@
                             <DataTemplate>
                                 <Grid Margin="0,2">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="72" />
-                                        <ColumnDefinition Width="64" />
-                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="44" />
+                                        <ColumnDefinition Width="44" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding Name}"

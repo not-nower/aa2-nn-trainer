@@ -31,7 +31,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="8" />
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="270" />
             </Grid.ColumnDefinitions>
 
             <DataGrid Grid.Column="0"
@@ -47,8 +47,15 @@
                       VirtualizingStackPanel.VirtualizationMode="Recycling">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Seat / Name"
-                                        Width="220"
-                                        Binding="{Binding SourceText}" />
+                                        Width="200"
+                                        Binding="{Binding SourceText}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                <Setter Property="ToolTip" Value="{Binding SourceText}" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                     <DataGridTextColumn Header="History"
                                         Width="*"
                                         Binding="{Binding History}">
@@ -61,7 +68,7 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
                     <DataGridTextColumn Header="Latest"
-                                        Width="110"
+                                        Width="100"
                                         Binding="{Binding Latest}" />
                 </DataGrid.Columns>
             </DataGrid>

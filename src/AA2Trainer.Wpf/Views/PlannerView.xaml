@@ -125,12 +125,14 @@
             </DataGrid>
 
             <Border Grid.Column="2" Style="{StaticResource Card}">
-                <StackPanel Margin="8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="6">
                     <TextBlock Text="New step"
                                Style="{StaticResource SectionHeader}"
-                               Margin="0,0,0,8" />
+                               Margin="0,0,0,6" />
 
-                    <Grid Margin="0,0,0,6">
+                    <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
@@ -154,7 +156,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid Margin="0,0,0,8">
+                    <Grid Margin="0,0,0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
@@ -176,7 +178,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid Margin="0,0,0,8">
+                    <Grid Margin="0,0,0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
@@ -190,7 +192,7 @@
                                 Click="AddMove_Click" />
                     </Grid>
 
-                    <Grid Margin="0,0,0,6">
+                    <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
@@ -201,11 +203,11 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Button Grid.Row="0" Grid.Column="0" Content="Remove"
-                                Margin="0,0,0,6"
+                                Margin="0,0,0,4"
                                 IsEnabled="{Binding CanRemovePlannerStep}"
                                 Click="RemoveStep_Click" />
                         <Button Grid.Row="0" Grid.Column="2" Content="Clear"
-                                Margin="0,0,0,6"
+                                Margin="0,0,0,4"
                                 IsEnabled="{Binding CanEditPlanner}"
                                 Click="Clear_Click" />
                         <Button Grid.Row="1" Grid.Column="0" Content="Up"
@@ -216,6 +218,7 @@
                                 Click="MoveDown_Click" />
                     </Grid>
                 </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
 
