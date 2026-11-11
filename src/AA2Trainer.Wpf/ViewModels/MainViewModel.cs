@@ -1818,6 +1818,20 @@ namespace AA2Trainer.WpfPrototype
             if (source != null) SetLover(source, lovers);
         }
 
+        private void OnLoverCheckChanged(LoverRowItem row, bool lovers)
+        {
+            if (session == null || row == null || SelectedSeat == null)
+                return;
+            if (!session.RequestLover(row.SourceSeat,
+                SelectedSeat.SeatIndex, lovers))
+            {
+                row.SetLoverSilently(!lovers);
+                LoverEditStatus = "Lover change was not accepted.";
+                return;
+            }
+            LoverEditStatus = lovers ? "Setting lovers..." : "Breaking up...";
+        }
+
         public void ToggleRelationshipFreezeFromRow()
         {
             RelationshipRowItem row = SelectedRelationshipRow();
@@ -1955,7 +1969,8 @@ namespace AA2Trainer.WpfPrototype
                 {
                     Source = entry.Source,
                     SourceSeat = entry.Source.Seat,
-                    SourceName = entry.Source.Name ?? ""
+                    SourceName = entry.Source.Name ?? "",
+                    LoverChanged = OnLoverCheckChanged
                 };
                 loverRow.SetLiveValues(entry.Days, entry.Compatibility,
                     entry.IsLover);
@@ -2540,6 +2555,22 @@ namespace AA2Trainer.WpfPrototype
                 : "Action failed: " +
                     (string.IsNullOrEmpty(result.Error)
                         ? "unknown error" : result.Error);
+
+            if (result.Kind == 1)
+            {
+                LoverRowItem row = LoverRows.FirstOrDefault(
+                    candidate => candidate.SourceSeat == result.SourceSeat);
+                if (row != null)
+                {
+                    if (!result.Success)
+                        row.SetLoverSilently(!result.Flag);
+                    else
+                        row.SetLoverSilently(result.Flag);
+                }
+                LoverEditStatus = result.Success
+                    ? result.Message : RosterStatus;
+            }
+
             LogSession(RosterStatus, result.Success ? "Info" : "Error");
         }
 

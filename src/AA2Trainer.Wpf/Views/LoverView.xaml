@@ -44,10 +44,16 @@
                                     Width="*"
                                     IsReadOnly="True"
                                     Binding="{Binding SourceText}" />
-                <DataGridCheckBoxColumn Header="Lover"
-                                        Width="54"
-                                        IsReadOnly="True"
-                                        Binding="{Binding IsLover, Mode=OneWay}" />
+                <DataGridTemplateColumn Header="Lover" Width="54">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsLover, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      ToolTip="Set or clear lover in both directions" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Days"
                                     Width="80"
                                     Binding="{Binding Days, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />

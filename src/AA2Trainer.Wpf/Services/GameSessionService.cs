@@ -2397,7 +2397,13 @@ namespace AA2Trainer.WpfPrototype
                 rosterActionTargetSeat = -1;
             }
 
-            RosterActionResult result = new RosterActionResult();
+            RosterActionResult result = new RosterActionResult
+            {
+                Kind = kind,
+                SourceSeat = sourceSeat,
+                TargetSeat = targetSeat,
+                Flag = flag
+            };
             try
             {
                 CharacterInfo source = FindCharacterBySeat(sourceSeat);

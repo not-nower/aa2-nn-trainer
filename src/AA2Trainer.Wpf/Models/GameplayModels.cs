@@ -447,11 +447,22 @@ namespace AA2Trainer.WpfPrototype
         private int compatibility;
         private int liveDays;
         private int liveCompatibility;
+        private bool isLover;
 
         public CharacterInfo Source;
         public int SourceSeat = -1;
         public string SourceName = "";
-        public bool IsLover;
+        public Action<LoverRowItem, bool> LoverChanged;
+
+        public bool IsLover
+        {
+            get { return isLover; }
+            set
+            {
+                if (!Set(ref isLover, value)) return;
+                if (LoverChanged != null) LoverChanged(this, value);
+            }
+        }
 
         public string SourceText
         {
@@ -494,16 +505,24 @@ namespace AA2Trainer.WpfPrototype
         }
 
         public void SetLiveValues(int liveDaysValue, int liveCompatibilityValue,
-            bool isLover)
+            bool isLoverValue)
         {
             liveDays = liveDaysValue;
             liveCompatibility = liveCompatibilityValue;
             days = liveDaysValue;
             compatibility = liveCompatibilityValue;
-            IsLover = isLover;
+            isLover = isLoverValue;
             OnPropertyChanged(nameof(Days));
             OnPropertyChanged(nameof(Compatibility));
+            OnPropertyChanged(nameof(IsLover));
             OnPropertyChanged(nameof(IsDirty));
+        }
+
+        public void SetLoverSilently(bool value)
+        {
+            if (isLover == value) return;
+            isLover = value;
+            OnPropertyChanged(nameof(IsLover));
         }
 
         public void MarkClean()

@@ -13,5 +13,9 @@ namespace AA2Trainer.WpfPrototype
         public bool Success;
         public string Message = "";
         public string Error = "";
+        public int Kind = -1;
+        public int SourceSeat = -1;
+        public int TargetSeat = -1;
+        public bool Flag;
     }
 }
