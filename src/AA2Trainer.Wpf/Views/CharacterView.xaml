@@ -188,9 +188,9 @@
 
                     <Grid Grid.Row="4" Grid.ColumnSpan="4" Margin="0,0,0,4">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="1.8*" />
                             <ColumnDefinition Width="24" />
-                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="3.2*" />
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
@@ -290,7 +290,14 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="80" />
-                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="86" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="54" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="54" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="62" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -302,111 +309,108 @@
                                            Style="{StaticResource CaptionText}"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,4" />
-                                <WrapPanel Grid.Row="0" Grid.Column="1"
-                                           Orientation="Horizontal"
-                                           Margin="0,0,0,4">
-                                    <TextBlock Text="Lv"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,2,0" />
-                                    <ComboBox Width="86"
-                                              ItemsSource="{Binding CharacterOptions.Levels}"
-                                              SelectedValue="{Binding CharacterDraft.IntelligenceLevel, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                    <TextBlock Text="Rank"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Width="38"
-                                             Text="{Binding CharacterDraft.IntelligenceRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                    <TextBlock Text="Value"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Width="54"
-                                             Text="{Binding CharacterDraft.IntelligenceValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                    <TextBlock Text="Grade"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <ComboBox Width="62"
-                                              ItemsSource="{Binding CharacterOptions.Grades}"
-                                              SelectedValue="{Binding CharacterDraft.IntelligenceGrade, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                </WrapPanel>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="Lv"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,2,0" />
+                                <ComboBox Grid.Row="0" Grid.Column="2"
+                                          ItemsSource="{Binding CharacterOptions.Levels}"
+                                          SelectedValue="{Binding CharacterDraft.IntelligenceLevel, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text"
+                                          Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="0" Grid.Column="3" Text="Rank"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <TextBox Grid.Row="0" Grid.Column="4"
+                                         Text="{Binding CharacterDraft.IntelligenceRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                         Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="0" Grid.Column="5" Text="Value"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <TextBox Grid.Row="0" Grid.Column="6"
+                                         Text="{Binding CharacterDraft.IntelligenceValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                         Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="0" Grid.Column="7" Text="Grade"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <ComboBox Grid.Row="0" Grid.Column="8"
+                                          ItemsSource="{Binding CharacterOptions.Grades}"
+                                          SelectedValue="{Binding CharacterDraft.IntelligenceGrade, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text"
+                                          Margin="0,0,0,4" />
 
                                 <TextBlock Grid.Row="1" Text="Strength"
                                            Style="{StaticResource CaptionText}"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,4" />
-                                <WrapPanel Grid.Row="1" Grid.Column="1"
-                                           Orientation="Horizontal"
-                                           Margin="0,0,0,4">
-                                    <TextBlock Text="Lv"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,2,0" />
-                                    <ComboBox Width="86"
-                                              ItemsSource="{Binding CharacterOptions.Levels}"
-                                              SelectedValue="{Binding CharacterDraft.StrengthLevel, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                    <TextBlock Text="Rank"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Width="38"
-                                             Text="{Binding CharacterDraft.StrengthRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                    <TextBlock Text="Value"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Width="54"
-                                             Text="{Binding CharacterDraft.StrengthValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                    <TextBlock Text="Grade"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <ComboBox Width="62"
-                                              ItemsSource="{Binding CharacterOptions.Grades}"
-                                              SelectedValue="{Binding CharacterDraft.StrengthGrade, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                </WrapPanel>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="Lv"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,2,0" />
+                                <ComboBox Grid.Row="1" Grid.Column="2"
+                                          ItemsSource="{Binding CharacterOptions.Levels}"
+                                          SelectedValue="{Binding CharacterDraft.StrengthLevel, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text"
+                                          Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="1" Grid.Column="3" Text="Rank"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <TextBox Grid.Row="1" Grid.Column="4"
+                                         Text="{Binding CharacterDraft.StrengthRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                         Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="1" Grid.Column="5" Text="Value"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <TextBox Grid.Row="1" Grid.Column="6"
+                                         Text="{Binding CharacterDraft.StrengthValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                         Margin="0,0,0,4" />
+                                <TextBlock Grid.Row="1" Grid.Column="7" Text="Grade"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <ComboBox Grid.Row="1" Grid.Column="8"
+                                          ItemsSource="{Binding CharacterOptions.Grades}"
+                                          SelectedValue="{Binding CharacterDraft.StrengthGrade, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text"
+                                          Margin="0,0,0,4" />
 
                                 <TextBlock Grid.Row="2" Text="Club stats"
                                            Style="{StaticResource CaptionText}"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0" />
-                                <WrapPanel Grid.Row="2" Grid.Column="1"
-                                           Orientation="Horizontal">
-                                    <TextBlock Text="Lv"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,2,0" />
-                                    <ComboBox Width="56"
-                                              ItemsSource="{Binding CharacterOptions.ClubLevels}"
-                                              SelectedValue="{Binding CharacterDraft.ClubLevel, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                    <TextBlock Text="Value"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Width="64"
-                                             Text="{Binding CharacterDraft.ClubValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                    <TextBlock Text="Grade"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <ComboBox Width="62"
-                                              ItemsSource="{Binding CharacterOptions.Grades}"
-                                              SelectedValue="{Binding CharacterDraft.ClubGrade, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                </WrapPanel>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="Lv"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,2,0" />
+                                <ComboBox Grid.Row="2" Grid.Column="2"
+                                          ItemsSource="{Binding CharacterOptions.ClubLevels}"
+                                          SelectedValue="{Binding CharacterDraft.ClubLevel, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text" />
+                                <TextBlock Grid.Row="2" Grid.Column="3" Text="Value"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <TextBox Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="3"
+                                         Text="{Binding CharacterDraft.ClubValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
+                                <TextBlock Grid.Row="2" Grid.Column="7" Text="Grade"
+                                           Style="{StaticResource CaptionText}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,2,0" />
+                                <ComboBox Grid.Row="2" Grid.Column="8"
+                                          ItemsSource="{Binding CharacterOptions.Grades}"
+                                          SelectedValue="{Binding CharacterDraft.ClubGrade, Mode=TwoWay}"
+                                          SelectedValuePath="Value"
+                                          DisplayMemberPath="Text" />
                             </Grid>
                         </StackPanel>
                     </Grid>
