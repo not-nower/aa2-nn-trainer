@@ -89,6 +89,8 @@ namespace AA2Trainer.WpfPrototype
         private string cardStatus = "Portraits: not loaded";
         private string rosterStatus = "";
         private string rosterSignature = "";
+        private string seatRailSignature = "";
+        private int namedSeatCount;
         private string rosterFilter = "";
         private int seatFilterIndex;
         private int selectedTabIndex;
@@ -182,6 +184,8 @@ namespace AA2Trainer.WpfPrototype
             AauModules = new ObservableCollection<AauModuleItem>();
 
             SeedSeats();
+            SeatRailView = new ListCollectionView(Seats);
+            SeatRailView.Filter = IsNamedSeat;
             selectedSeat = Seats[0];
             SeedPlan();
             SeedLogs();
@@ -224,6 +228,16 @@ namespace AA2Trainer.WpfPrototype
         }
 
         public ObservableCollection<SeatItem> Seats { get; private set; }
+        public ICollectionView SeatRailView { get; private set; }
+
+        public string SeatRailStatus
+        {
+            get
+            {
+                return namedSeatCount +
+                    (namedSeatCount == 1 ? " seat | live" : " seats | live");
+            }
+        }
         public ObservableCollection<PlanStepItem> PlanSteps { get; private set; }
         public ObservableCollection<PlannerStepItem> PlannerSteps { get; private set; }
         public ObservableCollection<PlannerSeatOption> PlannerTargetOptions { get; private set; }
@@ -3737,6 +3751,7 @@ namespace AA2Trainer.WpfPrototype
                 }
 
                 LogLiveSeatChanges(snapshot);
+                UpdateSeatRail();
 
                 if (SelectedSeat == null || !SelectedSeat.HasName)
                 {
@@ -4053,6 +4068,49 @@ namespace AA2Trainer.WpfPrototype
             return CharacterOptions != null &&
                 CharacterOptions.HairChoices.TryGetValue(name, out list)
                 ? list : null;
+        }
+
+        private static bool IsNamedSeat(object item)
+        {
+            SeatItem seat = item as SeatItem;
+            return seat != null && seat.HasName;
+        }
+
+        private void UpdateSeatRail()
+        {
+            if (SeatRailView == null) return;
+
+            StringBuilder signature = new StringBuilder();
+            int count = 0;
+            SeatItem firstNamed = null;
+            foreach (SeatItem seat in Seats)
+            {
+                if (seat == null || !seat.HasName) continue;
+                count++;
+                if (firstNamed == null) firstNamed = seat;
+                if (signature.Length > 0) signature.Append(',');
+                signature.Append(seat.SeatIndex);
+            }
+
+            string text = signature.ToString();
+            if (text == seatRailSignature) return;
+            seatRailSignature = text;
+            namedSeatCount = count;
+
+            SeatItem keep = SelectedSeat;
+            SeatRailView.Refresh();
+            OnPropertyChanged(nameof(SeatRailStatus));
+
+            if (keep != null && keep.HasName && SeatRailView.Contains(keep))
+            {
+                if (!ReferenceEquals(SelectedSeat, keep))
+                    SelectedSeat = keep;
+            }
+            else if (firstNamed != null &&
+                !ReferenceEquals(SelectedSeat, firstNamed))
+            {
+                SelectedSeat = firstNamed;
+            }
         }
 
         private void ApplyRosterFilter()

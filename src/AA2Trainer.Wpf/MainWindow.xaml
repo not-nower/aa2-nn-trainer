@@ -471,7 +471,7 @@
                     </Grid>
 
                     <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Seats}"
+                             ItemsSource="{Binding SeatRailView}"
                              SelectedItem="{Binding SelectedSeat, Mode=TwoWay}"
                              ItemTemplate="{StaticResource SeatRailTemplate}"
                              ItemContainerStyle="{StaticResource SeatItemStyle}"
@@ -480,7 +480,7 @@
                              VirtualizingStackPanel.VirtualizationMode="Recycling" />
 
                     <TextBlock x:Name="RailFooterText" Grid.Row="2"
-                               Text="25 seats | live"
+                               Text="{Binding SeatRailStatus}"
                                Style="{StaticResource CaptionText}"
                                Margin="12,0,0,0"
                                VerticalAlignment="Center" />

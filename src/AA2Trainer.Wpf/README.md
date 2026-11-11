@@ -78,9 +78,9 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
   the choice persists beside the exe.
 - **Roster** is a fixed **5×5 classroom grid** in Japanese seat order: columns
   run right-to-left and top-to-bottom, with teacher seat **24 at the top-middle**.
-  The Class seats rail is available here and starts collapsed; the character
-  header and log drawer stay hidden so the cards keep the height. Expand the
-  rail from its top button when needed. Cards reserve a 68×80 portrait area with
+  The Class seats rail is available here, starts collapsed, and lists only
+  seats with characters; the character header and log drawer stay hidden so
+  the cards keep the height. Expand the rail from its top button when needed. Cards reserve a 68×80 portrait area with
   a seat badge overlay and no reflow on resize. Seat status is a vertical bar at
   the left of each row, so it stays visible when the rail is collapsed.
 - **Roster menu:** right-click a card for Play this character, Open in Character,
