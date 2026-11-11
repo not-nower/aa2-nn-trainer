@@ -640,8 +640,8 @@
                                 <Button Content="Clear" Style="{StaticResource ToolbarButton}"
                                         Click="ClearLog_Click" />
                                 <Button Content="Save" Style="{StaticResource ToolbarButton}"
-                                        Margin="6,0,0,0" IsEnabled="False"
-                                        ToolTip="Wired in M3" />
+                                        Margin="6,0,0,0"
+                                        Click="SaveLog_Click" />
                                 <Button x:Name="CollapseLogButton"
                                         Content="&#xE70E;"
                                         Style="{StaticResource IconButton}"

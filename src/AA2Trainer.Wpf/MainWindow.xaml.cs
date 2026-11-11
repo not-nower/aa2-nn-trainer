@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Specialized;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Microsoft.Win32;
 
 namespace AA2Trainer.WpfPrototype
 {
@@ -309,6 +312,44 @@ namespace AA2Trainer.WpfPrototype
             if (vm != null) vm.ClearLog(!live);
             if (live) liveLogAutoScroll = true;
             else plannerLogAutoScroll = true;
+        }
+
+        private void SaveLog_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel vm = DataContext as MainViewModel;
+            if (vm == null) return;
+
+            bool live = LiveLogTab.IsChecked == true;
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.Title = live ? "Save live events log" : "Save planner log";
+            dialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            dialog.DefaultExt = "txt";
+            dialog.AddExtension = true;
+            dialog.FileName = live ? "AA2LiveEvents.txt" : "AA2PlannerLog.txt";
+            dialog.InitialDirectory = Environment.GetFolderPath(
+                Environment.SpecialFolder.MyDocuments);
+            if (dialog.ShowDialog() != true) return;
+
+            try
+            {
+                StringBuilder text = new StringBuilder();
+                var lines = live ? vm.LiveLines : vm.PlannerLines;
+                foreach (LogLine line in lines)
+                    text.AppendLine(line.Time + "  " + line.Text);
+                File.WriteAllText(dialog.FileName, text.ToString());
+
+                string message = "Saved " +
+                    (live ? "live events" : "planner") + " log: " +
+                    dialog.FileName;
+                if (live) vm.LogSession(message);
+                else vm.LogPlannerMessage(message);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Could not save the log.\n\n" + ex.Message,
+                    "Save log", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CollapseLog_Click(object sender, RoutedEventArgs e)

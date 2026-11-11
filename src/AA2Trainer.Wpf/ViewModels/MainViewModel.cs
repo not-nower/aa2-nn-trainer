@@ -28,6 +28,10 @@ namespace AA2Trainer.WpfPrototype
             new List<LogLine>(LogDrainPerTick);
         private readonly List<LogLine> plannerLogBatch =
             new List<LogLine>(LogDrainPerTick);
+        private readonly Dictionary<int, string> liveEventSignatures =
+            new Dictionary<int, string>();
+        private int liveEventRosterVersion = -1;
+        private bool liveEventStarted;
         private DispatcherTimer logFlushTimer;
         private readonly List<CardEntry> cardIndex = new List<CardEntry>();
         private readonly Dictionary<string, CardImages> loadedCards =
@@ -2524,6 +2528,7 @@ namespace AA2Trainer.WpfPrototype
                 return;
             }
 
+            LogPlannerRoomWarning(selectedPlannerTarget);
             bool ok = session.Planner.AddAction(PlannerSeat, PlannerActorName,
                 selectedPlannerTarget.Seat, selectedPlannerTarget.Text,
                 selectedPlannerAbout == null ? -1 : selectedPlannerAbout.Seat,
@@ -2531,6 +2536,39 @@ namespace AA2Trainer.WpfPrototype
                 selectedPlannerAction.Value, selectedPlannerAction.Text);
             if (!ok) RosterStatus = "The step could not be added.";
             RefreshPlannerNow();
+        }
+
+        private void LogPlannerRoomWarning(PlannerSeatOption target)
+        {
+            if (SelectedSeat == null || target == null) return;
+            SeatItem targetSeat = Seats.FirstOrDefault(
+                seat => seat.SeatIndex == target.Seat);
+            if (targetSeat == null) return;
+
+            int actorRoom = RoomId(SelectedSeat);
+            int targetRoom = RoomId(targetSeat);
+            if (actorRoom < 0 || targetRoom < 0)
+            {
+                LogPlanner("Room warning: actor or target room is unknown; " +
+                    "the planner may wait for a valid room.");
+            }
+            else if (actorRoom != targetRoom)
+            {
+                LogPlanner("Room warning: actor room " + actorRoom +
+                    ", target room " + targetRoom +
+                    " (planner will route).");
+            }
+        }
+
+        private static int RoomId(SeatItem seat)
+        {
+            if (seat == null || string.IsNullOrEmpty(seat.Room)) return -1;
+            string room = seat.Room.Trim();
+            if (room.Length == 0 || room == "?") return -1;
+            int split = room.IndexOf(' ');
+            string number = split < 0 ? room : room.Substring(0, split);
+            int id;
+            return int.TryParse(number, out id) ? id : -1;
         }
 
         public void AddPlannerMove()
@@ -2626,6 +2664,82 @@ namespace AA2Trainer.WpfPrototype
             if (string.IsNullOrEmpty(message)) return;
             plannerLogBuffer.Add(new LogLine(
                 DateTime.Now.ToString("HH:mm:ss.fff"), message));
+        }
+
+        public void LogPlannerMessage(string text)
+        {
+            LogPlanner(text);
+        }
+
+        private void LogLiveSeatChanges(SessionSnapshot snapshot)
+        {
+            if (snapshot == null) return;
+            if (snapshot.RosterVersion != liveEventRosterVersion)
+            {
+                bool first = !liveEventStarted;
+                liveEventStarted = true;
+                liveEventRosterVersion = snapshot.RosterVersion;
+                liveEventSignatures.Clear();
+                LogSession(first
+                    ? "Live event stream started."
+                    : "Live event stream reset: roster changed.", "Detail");
+            }
+
+            foreach (SeatSnapshot seat in snapshot.Seats)
+            {
+                if (seat == null) continue;
+
+                string previous;
+                bool hadPrevious = liveEventSignatures.TryGetValue(
+                    seat.Seat, out previous);
+                if (string.IsNullOrEmpty(seat.Name))
+                {
+                    if (hadPrevious && !string.IsNullOrEmpty(previous))
+                        LogSession("Seat " + seat.Seat.ToString("D2") +
+                            ": empty", "Detail");
+                    liveEventSignatures[seat.Seat] = "";
+                    continue;
+                }
+
+                string signature = BuildLiveSeatSignature(seat);
+                if (hadPrevious && previous == signature) continue;
+                liveEventSignatures[seat.Seat] = signature;
+                LogSession(FormatLiveSeatEvent(seat), "Detail");
+            }
+        }
+
+        private static string BuildLiveSeatSignature(SeatSnapshot seat)
+        {
+            return (seat.Name ?? "") + "|" + (seat.Room ?? "") + "|" +
+                (seat.Action ?? "") + "|" + (seat.Status ?? "") + "|" +
+                (seat.Target ?? "") + "|" + (seat.Mood ?? "") + "|" +
+                (seat.Relationship ?? "") + "|" +
+                (seat.IsLover ? "1" : "0") + "|" +
+                (seat.IsFrozen ? "1" : "0") + "|" +
+                (seat.IsBusy ? "1" : "0");
+        }
+
+        private static string FormatLiveSeatEvent(SeatSnapshot seat)
+        {
+            StringBuilder text = new StringBuilder();
+            text.Append("Seat ").Append(seat.Seat.ToString("D2"))
+                .Append(' ').Append(seat.Name);
+            if (seat.IsPlayer) text.Append(" [PC]");
+            if (!string.IsNullOrEmpty(seat.Room))
+                text.Append(" | ").Append(seat.Room);
+            if (!string.IsNullOrEmpty(seat.Status))
+                text.Append(" | ").Append(seat.Status);
+            if (!string.IsNullOrEmpty(seat.Action) && seat.Action != "None")
+                text.Append(" | ").Append(seat.Action);
+            if (!string.IsNullOrEmpty(seat.Target))
+                text.Append(" | target ").Append(seat.Target);
+            if (!string.IsNullOrEmpty(seat.Mood) && seat.Mood != "-")
+                text.Append(" | mood ").Append(seat.Mood);
+            if (!string.IsNullOrEmpty(seat.Relationship))
+                text.Append(" | ").Append(seat.Relationship);
+            if (seat.IsLover) text.Append(" | lover");
+            if (seat.IsFrozen) text.Append(" | frozen");
+            return text.ToString();
         }
 
         private void FlushLogs()
@@ -3504,6 +3618,8 @@ namespace AA2Trainer.WpfPrototype
                         seatSnapshot.FullPortrait);
                     seat.HasActionLimits = seatSnapshot.HasActionLimits;
                 }
+
+                LogLiveSeatChanges(snapshot);
 
                 if (SelectedSeat == null || !SelectedSeat.HasName)
                 {
