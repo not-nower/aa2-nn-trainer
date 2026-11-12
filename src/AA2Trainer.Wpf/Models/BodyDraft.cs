@@ -129,7 +129,7 @@ namespace AA2Trainer.WpfPrototype
         // row: Body type | Head size, Height | Head length, Figure | Waist.
         private static readonly string[] BodyDisplayOrder = new string[]
         {
-            "BodyType", "HeadSize", "Heights", "HeadLength", "Figure", "Waist"
+            "BodyType", "Heights", "Figure", "HeadSize", "HeadLength", "Waist"
         };
 
         private int[] originalValues;

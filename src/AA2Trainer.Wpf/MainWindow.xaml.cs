@@ -6,6 +6,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -183,6 +184,66 @@ namespace AA2Trainer.WpfPrototype
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
             viewModel.Refresh();
+        }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F5 && Keyboard.Modifiers == ModifierKeys.None)
+            {
+                viewModel.Refresh();
+                e.Handled = true;
+                return;
+            }
+
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (e.Key == Key.Tab)
+                {
+                    CycleMainTab(1);
+                    e.Handled = true;
+                    return;
+                }
+
+                int index = MainTabIndex(e.Key);
+                if (index >= 0 && MainTabs != null &&
+                    index < MainTabs.Items.Count)
+                {
+                    viewModel.SelectedTabIndex = index;
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            if (Keyboard.Modifiers ==
+                (ModifierKeys.Control | ModifierKeys.Shift) &&
+                e.Key == Key.Tab)
+            {
+                CycleMainTab(-1);
+                e.Handled = true;
+            }
+        }
+
+        private static int MainTabIndex(Key key)
+        {
+            switch (key)
+            {
+                case Key.D1: case Key.NumPad1: return 0;
+                case Key.D2: case Key.NumPad2: return 1;
+                case Key.D3: case Key.NumPad3: return 2;
+                case Key.D4: case Key.NumPad4: return 3;
+                case Key.D5: case Key.NumPad5: return 4;
+                default: return -1;
+            }
+        }
+
+        private void CycleMainTab(int direction)
+        {
+            if (MainTabs == null || MainTabs.Items.Count == 0) return;
+            int count = MainTabs.Items.Count;
+            int index = MainTabs.SelectedIndex + direction;
+            if (index < 0) index = count - 1;
+            if (index >= count) index = 0;
+            viewModel.SelectedTabIndex = index;
         }
 
         private void AttachButton_Click(object sender, RoutedEventArgs e)

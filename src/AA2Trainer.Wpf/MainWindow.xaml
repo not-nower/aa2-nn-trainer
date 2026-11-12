@@ -13,6 +13,7 @@
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         Loaded="MainWindow_Loaded"
+        PreviewKeyDown="Window_PreviewKeyDown"
         TextOptions.TextFormattingMode="Display">
 
     <Window.Resources>
@@ -433,7 +434,7 @@
                         <ComboBoxItem Content="Dark" />
                     </ComboBox>
                     <Button Content="&#xE72C;" Style="{StaticResource IconButton}"
-                            ToolTip="Refresh game data"
+                            ToolTip="Refresh game data (F5)"
                             Click="Refresh_Click" />
                 </StackPanel>
             </Grid>
@@ -586,7 +587,7 @@
                 <TabControl x:Name="MainTabs" Grid.Row="1"
                             SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
                             SelectionChanged="MainTabs_SelectionChanged">
-                    <TabItem>
+                    <TabItem ToolTip="Roster (Ctrl+1)">
                         <TabItem.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets"
@@ -596,7 +597,7 @@
                         </TabItem.Header>
                         <views:RosterView />
                     </TabItem>
-                    <TabItem>
+                    <TabItem ToolTip="Character (Ctrl+2)">
                         <TabItem.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets"
@@ -606,7 +607,7 @@
                         </TabItem.Header>
                         <views:CharacterView />
                     </TabItem>
-                    <TabItem>
+                    <TabItem ToolTip="Gameplay (Ctrl+3)">
                         <TabItem.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets"
@@ -616,7 +617,7 @@
                         </TabItem.Header>
                         <views:GameplayView />
                     </TabItem>
-                    <TabItem>
+                    <TabItem ToolTip="Options (Ctrl+4)">
                         <TabItem.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
@@ -626,7 +627,7 @@
                         </TabItem.Header>
                         <views:OptionsView />
                     </TabItem>
-                    <TabItem>
+                    <TabItem ToolTip="Debug (Ctrl+5)">
                         <TabItem.Header>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE7EF;" FontFamily="Segoe MDL2 Assets"
