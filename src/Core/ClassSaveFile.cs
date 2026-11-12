@@ -17,6 +17,16 @@ namespace AA2Trainer
         public CardSnapshot Card;
         public byte[] PlayData;
         public bool Dirty;
+
+        public string DisplayName
+        {
+            get
+            {
+                string seat = Seat >= 0 ? Seat.ToString("D2") + "  " : "";
+                string name = Card == null ? "" : Card.Name ?? "";
+                return seat + name;
+            }
+        }
     }
 
     /// <summary>

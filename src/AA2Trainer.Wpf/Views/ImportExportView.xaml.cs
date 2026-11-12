@@ -109,7 +109,10 @@ namespace AA2Trainer.WpfPrototype.Views
             box.Content = label;
             box.Tag = name;
             box.IsChecked = true;
-            box.Margin = new Thickness(0, 0, 12, 4);
+            box.Margin = new Thickness(0, 1, 0, 1);
+            box.MinHeight = 18;
+            box.HorizontalAlignment = HorizontalAlignment.Stretch;
+            box.VerticalContentAlignment = VerticalAlignment.Center;
             box.Checked += Section_Changed;
             box.Unchecked += Section_Changed;
             SectionsPanel.Children.Add(box);
@@ -218,6 +221,13 @@ namespace AA2Trainer.WpfPrototype.Views
             CardFaceImage.Source = sourceCard == null
                 ? null
                 : CardImageLoader.ToImage(sourceCard.FacePng, 200);
+            SaveFaceLabel.Text = selectedEntry == null ||
+                selectedEntry.Card == null
+                ? "In save: (none)"
+                : "In save: " + selectedEntry.DisplayName;
+            CardFaceLabel.Text = sourceCard == null
+                ? "Card: (none)"
+                : "Card: " + (sourceCard.Name ?? "");
         }
 
         private void UpdateComparison()
