@@ -11,7 +11,7 @@ namespace AA2Trainer.WpfPrototype
     /// </summary>
     public sealed class OutfitDraft : ObservableObject
     {
-        public OutfitDraft(CharacterOptions options)
+        public OutfitDraft(CharacterOptions options, bool female)
         {
             Func<string, List<CharacterOption>> selector = name =>
             {
@@ -26,8 +26,33 @@ namespace AA2Trainer.WpfPrototype
             Swim = new FieldDraft(AppearanceFields.Outfits(2), selector);
             Club = new FieldDraft(AppearanceFields.Outfits(3), selector);
 
+            if (!female)
+            {
+                foreach (FieldDraft draft in AllDrafts())
+                {
+                    foreach (FieldItem item in draft.AllItems())
+                    {
+                        if (IsFemaleOnly(item.Name))
+                            item.Visible = false;
+                    }
+                }
+            }
+
             foreach (FieldDraft draft in AllDrafts())
                 draft.PropertyChanged += Draft_PropertyChanged;
+        }
+
+        private static bool IsFemaleOnly(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            return name.EndsWith("SkirtLen", StringComparison.Ordinal) ||
+                name.EndsWith("Onepiece", StringComparison.Ordinal) ||
+                name.EndsWith("Skirt", StringComparison.Ordinal) ||
+                name.EndsWith("SkirtT", StringComparison.Ordinal) ||
+                name.EndsWith("SkirtH", StringComparison.Ordinal) ||
+                name.EndsWith("SkirtL", StringComparison.Ordinal) ||
+                name.EndsWith("SkirtShdH", StringComparison.Ordinal) ||
+                name.EndsWith("SkirtShdL", StringComparison.Ordinal);
         }
 
         public FieldDraft School { get; private set; }

@@ -33,6 +33,7 @@ namespace AA2Trainer.WpfPrototype
         public int Index;
         public int Minimum;
         public int Maximum;
+        public bool UseSlider = true;
     }
 
     public sealed class FieldItem : ObservableObject
@@ -51,6 +52,7 @@ namespace AA2Trainer.WpfPrototype
             Group = def.Group ?? "";
             Minimum = def.Minimum;
             Maximum = def.Maximum;
+            UseSlider = def.UseSlider;
             Options = new ObservableCollection<CharacterOption>(
                 options ?? Enumerable.Empty<CharacterOption>());
         }
@@ -63,7 +65,15 @@ namespace AA2Trainer.WpfPrototype
         public string Group { get; private set; }
         public int Minimum { get; private set; }
         public int Maximum { get; private set; }
+        public bool UseSlider { get; private set; }
         public ObservableCollection<CharacterOption> Options { get; private set; }
+
+        private bool visible = true;
+        public bool Visible
+        {
+            get { return visible; }
+            set { Set(ref visible, value); }
+        }
 
         public bool IsChoice { get { return Kind == FieldKind.Choice; } }
         public bool IsNumber
@@ -226,6 +236,21 @@ namespace AA2Trainer.WpfPrototype
         public ObservableCollection<FieldGroup> Groups { get; private set; }
         public uint Pointer { get; private set; }
         public int SeatIndex { get; private set; } = -1;
+
+        public FieldGroup this[string title]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(title)) return null;
+                foreach (FieldGroup group in Groups)
+                {
+                    if (string.Equals(group.Title, title,
+                        StringComparison.Ordinal))
+                        return group;
+                }
+                return null;
+            }
+        }
 
         public int[] OriginalValues
         {

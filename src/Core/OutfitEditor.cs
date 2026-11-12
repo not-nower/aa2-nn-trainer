@@ -19,7 +19,8 @@ namespace AA2Trainer
         Garment,
         Top,
         Bottom,
-        Accessories,
+        Socks,
+        Shoes,
         Underwear
     }
 
@@ -78,10 +79,10 @@ namespace AA2Trainer
         private static readonly Template[] template = new Template[]
         {
             T("UType", "Outfit type", 0x00, OutfitFieldKind.Choice, OutfitFieldGroup.Garment),
-            T("SkirtLen", "Skirt length", 0x04, OutfitFieldKind.Number, OutfitFieldGroup.Garment),
-            T("Socks", "Socks type", 0x05, OutfitFieldKind.Choice, OutfitFieldGroup.Accessories),
-            T("InShoes", "In-shoes type", 0x06, OutfitFieldKind.Choice, OutfitFieldGroup.Accessories),
-            T("OutShoes", "Out-shoes type", 0x07, OutfitFieldKind.Choice, OutfitFieldGroup.Accessories),
+            T("SkirtLen", "Skirt length", 0x04, OutfitFieldKind.Number, OutfitFieldGroup.Bottom),
+            T("Socks", "Socks type", 0x05, OutfitFieldKind.Choice, OutfitFieldGroup.Socks),
+            T("InShoes", "In-shoes type", 0x06, OutfitFieldKind.Choice, OutfitFieldGroup.Shoes),
+            T("OutShoes", "Out-shoes type", 0x07, OutfitFieldKind.Choice, OutfitFieldGroup.Shoes),
             T("Onepiece", "One-piece", 0x08, OutfitFieldKind.Toggle, OutfitFieldGroup.Garment),
             T("Undie", "Underwear", 0x09, OutfitFieldKind.Toggle, OutfitFieldGroup.Garment),
             T("Skirt", "Skirt", 0x0A, OutfitFieldKind.Toggle, OutfitFieldGroup.Garment),
@@ -102,17 +103,22 @@ namespace AA2Trainer
 
             T("UndieC", "Underwear", 0x24, OutfitFieldKind.Color, OutfitFieldGroup.Underwear),
             T("UndieO", "Underwear", 0x27, OutfitFieldKind.Opacity, OutfitFieldGroup.Underwear),
-            T("UndieT", "Underwear texture", 0x38, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear),
-            T("UndieH", "Underwear hue", 0x4C, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, -359, 359),
-            T("UndieL", "Underwear lightness", 0x50, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, -100, 100),
+            T("SkirtT", "Skirt texture", 0x34, OutfitFieldKind.Int32, OutfitFieldGroup.Bottom, 0, int.MaxValue),
+            T("UndieT", "Underwear texture", 0x38, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, 0, int.MaxValue),
+            T("SkirtH", "Skirt hue", 0x3C, OutfitFieldKind.Int32, OutfitFieldGroup.Bottom, -359, 359),
+            T("SkirtL", "Skirt lightness", 0x40, OutfitFieldKind.Int32, OutfitFieldGroup.Bottom, -100, 100),
+            T("UndieH", "Underwear hue", 0x44, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, -359, 359),
+            T("UndieL", "Underwear lightness", 0x48, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, -100, 100),
+            T("SkirtShdH", "Skirt shadow hue", 0x4C, OutfitFieldKind.Int32, OutfitFieldGroup.Bottom, -359, 359),
+            T("SkirtShdL", "Skirt shadow light", 0x50, OutfitFieldKind.Int32, OutfitFieldGroup.Bottom, -100, 100),
             T("UndieShdH", "Underwear shadow hue", 0x54, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, -359, 359),
             T("UndieShdL", "Underwear shadow light", 0x58, OutfitFieldKind.Int32, OutfitFieldGroup.Underwear, -100, 100),
-            T("SocksC", "Socks", 0x28, OutfitFieldKind.Color, OutfitFieldGroup.Accessories),
-            T("SocksO", "Socks", 0x2B, OutfitFieldKind.Opacity, OutfitFieldGroup.Accessories),
-            T("InShoesC", "In-shoes", 0x2C, OutfitFieldKind.Color, OutfitFieldGroup.Accessories),
-            T("InShoesO", "In-shoes", 0x2F, OutfitFieldKind.Opacity, OutfitFieldGroup.Accessories),
-            T("OutShoesC", "Out-shoes", 0x30, OutfitFieldKind.Color, OutfitFieldGroup.Accessories),
-            T("OutShoesO", "Out-shoes", 0x33, OutfitFieldKind.Opacity, OutfitFieldGroup.Accessories)
+            T("SocksC", "Socks", 0x28, OutfitFieldKind.Color, OutfitFieldGroup.Socks),
+            T("SocksO", "Socks", 0x2B, OutfitFieldKind.Opacity, OutfitFieldGroup.Socks),
+            T("InShoesC", "In-shoes", 0x2C, OutfitFieldKind.Color, OutfitFieldGroup.Shoes),
+            T("InShoesO", "In-shoes", 0x2F, OutfitFieldKind.Opacity, OutfitFieldGroup.Shoes),
+            T("OutShoesC", "Out-shoes", 0x30, OutfitFieldKind.Color, OutfitFieldGroup.Shoes),
+            T("OutShoesO", "Out-shoes", 0x33, OutfitFieldKind.Opacity, OutfitFieldGroup.Shoes)
         };
 
         private static readonly OutfitFieldDef[] fields = BuildFields();

@@ -82,11 +82,13 @@ namespace AA2Trainer.WpfPrototype
                     Label = label,
                     Tip = def.Name + "   (char + 0x" +
                         def.Offset.ToString("X") + ")",
-                    Kind = OutfitKind(def.Kind),
+                    Kind = IsSkirtLength(def.Name)
+                        ? FieldKind.Choice : OutfitKind(def.Kind),
                     Group = OutfitGroupTitle(def.Group),
                     Index = i,
                     Minimum = def.Minimum,
-                    Maximum = def.Maximum
+                    Maximum = def.Maximum,
+                    UseSlider = !IsTextureField(def.Name)
                 });
             }
             return list;
@@ -153,14 +155,28 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        private static bool IsTextureField(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            return name.EndsWith("UndieT", StringComparison.Ordinal) ||
+                name.EndsWith("SkirtT", StringComparison.Ordinal);
+        }
+
+        private static bool IsSkirtLength(string name)
+        {
+            return !string.IsNullOrEmpty(name) &&
+                name.EndsWith("SkirtLen", StringComparison.Ordinal);
+        }
+
         private static string OutfitGroupTitle(OutfitFieldGroup group)
         {
             switch (group)
             {
                 case OutfitFieldGroup.Garment: return "Uniform";
                 case OutfitFieldGroup.Top: return "Tops";
-                case OutfitFieldGroup.Bottom: return "Bottoms";
-                case OutfitFieldGroup.Accessories: return "Shoes & socks";
+                case OutfitFieldGroup.Bottom: return "Bottoms & skirt";
+                case OutfitFieldGroup.Socks: return "Socks";
+                case OutfitFieldGroup.Shoes: return "Shoes";
                 default: return "Underwear";
             }
         }

@@ -4,110 +4,309 @@
              xmlns:controls="clr-namespace:AA2Trainer.WpfPrototype.Controls"
              xmlns:views="clr-namespace:AA2Trainer.WpfPrototype.Views">
     <UserControl.Resources>
+        <DataTemplate x:Key="FieldItemTemplate">
+            <Grid Margin="0,2,8,2">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Visible}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}"
+                           Style="{StaticResource CaptionText}"
+                           ToolTip="{Binding Tip}" />
+                <ComboBox x:Name="ChoiceControl"
+                          Grid.Column="1"
+                          ItemsSource="{Binding Options}"
+                          SelectedValue="{Binding Value, Mode=TwoWay}"
+                          SelectedValuePath="Value"
+                          DisplayMemberPath="Text"
+                          Visibility="Collapsed" />
+                <Grid x:Name="NumberControl"
+                      Grid.Column="1"
+                      Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="58" />
+                    </Grid.ColumnDefinitions>
+                    <Slider Minimum="{Binding Minimum}"
+                            Maximum="{Binding Maximum}"
+                            Value="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            IsSnapToTickEnabled="True"
+                            IsMoveToPointEnabled="True"
+                            TickFrequency="1"
+                            SmallChange="1"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0">
+                        <Slider.Style>
+                            <Style TargetType="Slider">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UseSlider}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Slider.Style>
+                    </Slider>
+                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                             HorizontalContentAlignment="Right">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox"
+                                   BasedOn="{StaticResource {x:Type TextBox}}">
+                                <Setter Property="Grid.Column" Value="1" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UseSlider}" Value="False">
+                                        <Setter Property="Grid.Column" Value="0" />
+                                        <Setter Property="Grid.ColumnSpan" Value="2" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                </Grid>
+                <CheckBox x:Name="ToggleControl"
+                          Grid.Column="1"
+                          IsChecked="{Binding ToggleValue, Mode=TwoWay}"
+                          Content="On"
+                          VerticalAlignment="Center"
+                          Visibility="Collapsed" />
+                <TextBox x:Name="TextControl"
+                         Grid.Column="1"
+                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                         Visibility="Collapsed" />
+                <Grid x:Name="ColorControl"
+                      Grid.Column="1"
+                      Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="26" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="ColorButton"
+                            Width="24" Height="22"
+                            Background="{Binding Swatch}"
+                            Tag="{Binding ElementName=ColorPopup}"
+                            Click="ColorButton_Click"
+                            ToolTip="Click to edit color">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{DynamicResource Border}"
+                                        BorderThickness="1"
+                                        CornerRadius="3" />
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <TextBox Grid.Column="1"
+                             Margin="4,0,0,0"
+                             Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Hex color (#RRGGBB)" />
+                    <Popup x:Name="ColorPopup"
+                           Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=ColorButton}"
+                           StaysOpen="False"
+                           AllowsTransparency="True">
+                        <Border Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Border}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="8">
+                            <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
+                        </Border>
+                    </Popup>
+                </Grid>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsChoice}" Value="True">
+                    <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsNumber}" Value="True">
+                    <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsToggle}" Value="True">
+                    <Setter TargetName="ToggleControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsText}" Value="True">
+                    <Setter TargetName="TextControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsColor}" Value="True">
+                    <Setter TargetName="ColorControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
         <DataTemplate x:Key="FieldGroupTemplate">
-            <StackPanel Margin="0,0,0,10">
-                <TextBlock Text="{Binding Title}"
-                           Style="{StaticResource SectionHeader}"
-                           Margin="0,0,0,6" />
-                <ItemsControl ItemsSource="{Binding Items}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="2" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,2,8,2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Label}"
-                                           Style="{StaticResource CaptionText}"
-                                           ToolTip="{Binding Tip}" />
-                                <ComboBox x:Name="ChoiceControl"
-                                          Grid.Column="1"
-                                          ItemsSource="{Binding Options}"
-                                          SelectedValue="{Binding Value, Mode=TwoWay}"
-                                          SelectedValuePath="Value"
-                                          DisplayMemberPath="Text"
-                                          Visibility="Collapsed" />
-                                <TextBox x:Name="NumberControl"
-                                         Grid.Column="1"
-                                         Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                         Visibility="Collapsed" />
-                                <CheckBox x:Name="ToggleControl"
-                                          Grid.Column="1"
-                                          IsChecked="{Binding ToggleValue, Mode=TwoWay}"
-                                          Content="On"
-                                          VerticalAlignment="Center"
-                                          Visibility="Collapsed" />
-                                <TextBox x:Name="TextControl"
-                                         Grid.Column="1"
-                                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
-                                         Visibility="Collapsed" />
-                                <Grid x:Name="ColorControl"
-                                      Grid.Column="1"
-                                      Visibility="Collapsed">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="26" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="ColorButton"
-                                            Width="24" Height="22"
-                                            Background="{Binding Swatch}"
-                                            Tag="{Binding ElementName=ColorPopup}"
-                                            Click="ColorButton_Click"
-                                            ToolTip="Click to edit color">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}"
-                                                        BorderBrush="{DynamicResource Border}"
-                                                        BorderThickness="1"
-                                                        CornerRadius="3" />
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
-                                    <TextBox Grid.Column="1"
-                                             Margin="4,0,0,0"
-                                             Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="Hex color (#RRGGBB)" />
-                                    <Popup x:Name="ColorPopup"
-                                           Placement="Bottom"
-                                           PlacementTarget="{Binding ElementName=ColorButton}"
-                                           StaysOpen="False"
-                                           AllowsTransparency="True">
-                                        <Border Background="{DynamicResource Surface}"
-                                                BorderBrush="{DynamicResource Border}"
-                                                BorderThickness="1"
-                                                CornerRadius="4"
-                                                Padding="8">
-                                            <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
-                                        </Border>
-                                    </Popup>
-                                </Grid>
-                            </Grid>
-                            <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding IsChoice}" Value="True">
-                                    <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                                    <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsToggle}" Value="True">
-                                    <Setter TargetName="ToggleControl" Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsText}" Value="True">
-                                    <Setter TargetName="TextControl" Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsColor}" Value="True">
-                                    <Setter TargetName="ColorControl" Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </DataTemplate.Triggers>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,0,0,6" />
+                    <ItemsControl ItemsSource="{Binding Items}"
+                                  ItemTemplate="{StaticResource FieldItemTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FieldGroupSingleColumnTemplate">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,0,0,6" />
+                    <ItemsControl ItemsSource="{Binding Items}"
+                                  ItemTemplate="{StaticResource FieldItemTemplate}" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FieldToggleTemplate">
+            <Grid Margin="0,2,0,2" MinHeight="26">
+                <CheckBox IsChecked="{Binding ToggleValue, Mode=TwoWay}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          ToolTip="{Binding Label}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="OutfitSetTemplate">
+            <Grid Margin="0,12,0,8">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <ContentControl Content="{Binding [Uniform]}"
+                                    ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                    <ContentControl Content="{Binding [Tops]}"
+                                    ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                    <ContentControl Content="{Binding [Underwear]}"
+                                    ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <ContentControl Content="{Binding [Bottoms &amp; skirt]}"
+                                    ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                    <ContentControl Content="{Binding [Socks]}"
+                                    ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                    <ContentControl Content="{Binding [Shoes]}"
+                                    ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="BodyFieldTemplate">
+            <Grid Margin="0,2,8,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}"
+                           Style="{StaticResource CaptionText}"
+                           ToolTip="{Binding Tip}" />
+                <ComboBox x:Name="ChoiceControl"
+                          Grid.Column="1"
+                          ItemsSource="{Binding Options}"
+                          SelectedValue="{Binding Value, Mode=TwoWay}"
+                          SelectedValuePath="Value"
+                          DisplayMemberPath="Text"
+                          Visibility="Collapsed" />
+                <Grid x:Name="NumberControl"
+                      Grid.Column="1"
+                      Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="58" />
+                    </Grid.ColumnDefinitions>
+                    <Slider Minimum="0"
+                            Maximum="255"
+                            Value="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            IsSnapToTickEnabled="True"
+                            IsMoveToPointEnabled="True"
+                            TickFrequency="1"
+                            SmallChange="1"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0" />
+                    <TextBox Grid.Column="1"
+                             Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                             HorizontalContentAlignment="Right" />
+                </Grid>
+                <Grid x:Name="ColorControl"
+                      Grid.Column="1"
+                      Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="26" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="ColorButton"
+                            Width="24" Height="22"
+                            Background="{Binding Swatch}"
+                            Tag="{Binding ElementName=ColorPopup}"
+                            Click="ColorButton_Click"
+                            ToolTip="Click to edit color">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{DynamicResource Border}"
+                                        BorderThickness="1"
+                                        CornerRadius="3" />
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <TextBox Grid.Column="1"
+                             Margin="4,0,0,0"
+                             Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Hex color (#RRGGBB)" />
+                    <Popup x:Name="ColorPopup"
+                           Placement="Bottom"
+                           PlacementTarget="{Binding ElementName=ColorButton}"
+                           StaysOpen="False"
+                           AllowsTransparency="True">
+                        <Border Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Border}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="8">
+                            <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
+                        </Border>
+                    </Popup>
+                </Grid>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsChoice}" Value="True">
+                    <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsNumber}" Value="True">
+                    <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsColor}" Value="True">
+                    <Setter TargetName="ColorControl" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
     </UserControl.Resources>
     <TabControl>
@@ -117,480 +316,491 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <Grid Margin="12,12,12,6">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.8*" />
-                                <ColumnDefinition Width="24" />
-                                <ColumnDefinition Width="3.2*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0"><StackPanel
-                                        Margin="0,0,0,8">
-                                <TextBlock Text="Identity"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,4" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="First name"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,6,4" />
-                                    <TextBox Grid.Row="0" Grid.Column="1"
-                                             Text="{Binding CharacterDraft.FirstName, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="1" Text="Last name"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,6,4" />
-                                    <TextBox Grid.Row="1" Grid.Column="1"
-                                             Text="{Binding CharacterDraft.LastName, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="2" Text="Profile"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,6,4" />
-                                    <TextBlock Grid.Row="2" Grid.Column="1"
-                                               Text="{Binding CharacterDraft.ProfileByteCount}"
-                                               FontSize="9"
-                                               Foreground="{DynamicResource TextMuted}"
-                                               HorizontalAlignment="Right"
-                                               Margin="0,0,0,4"
-                                               ToolTip="Profile bytes used / allowed" />
-                                    <TextBox Grid.Row="3" Grid.ColumnSpan="2"
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="12,12,12,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="44*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="56*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left column: identity, status, history -->
+                        <StackPanel Grid.Column="0">
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Identity"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="First name"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding CharacterDraft.FirstName, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Last name"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding CharacterDraft.LastName, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <DockPanel Margin="0,6,0,2">
+                                        <TextBlock DockPanel.Dock="Right"
+                                                   Text="{Binding CharacterDraft.ProfileByteCount}"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Bottom"
+                                                   ToolTip="Profile bytes used / allowed" />
+                                        <TextBlock Text="Profile"
+                                                   Style="{StaticResource CaptionText}" />
+                                    </DockPanel>
+                                    <TextBox Height="44"
                                              Text="{Binding CharacterDraft.Profile, UpdateSourceTrigger=PropertyChanged}"
                                              AcceptsReturn="True"
                                              TextWrapping="Wrap"
                                              VerticalContentAlignment="Top"
-                                             Height="64" />
-                                </Grid>
-                            </StackPanel>
+                                             VerticalScrollBarVisibility="Auto" />
+                                </StackPanel>
+                            </Border>
 
-                            <StackPanel>
-                                <TextBlock Text="Attributes"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,4" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="Personality"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <ComboBox Grid.Row="0" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.Personality}"
-                                              SelectedValue="{Binding CharacterDraft.Personality, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="1" Text="Club"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <ComboBox Grid.Row="1" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.Club}"
-                                              SelectedValue="{Binding CharacterDraft.Club, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="2" Text="Social"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <ComboBox Grid.Row="2" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.Social}"
-                                              SelectedValue="{Binding CharacterDraft.Social, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="3" Text="Fighting style"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <ComboBox Grid.Row="3" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.FightingStyle}"
-                                              SelectedValue="{Binding CharacterDraft.FightingStyle, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="4" Text="Virtue"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <ComboBox Grid.Row="4" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.Virtue}"
-                                              SelectedValue="{Binding CharacterDraft.Virtue, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="5" Text="Orientation"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <ComboBox Grid.Row="5" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.Orientation}"
-                                              SelectedValue="{Binding CharacterDraft.Orientation, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="6" Text="Voice pitch"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,0" />
-                                    <ComboBox Grid.Row="6" Grid.Column="1"
-                                              ItemsSource="{Binding CharacterOptions.VoicePitch}"
-                                              SelectedValue="{Binding CharacterDraft.VoicePitch, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                </Grid>
-                            </StackPanel>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Status"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="92" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
 
-                                                        </StackPanel>
-                            <StackPanel Grid.Column="2">
-<StackPanel
-                                        Margin="0">
-                                <TextBlock Text="Academics"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,4" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="86" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="54" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="54" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="62" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0" Text="Intelligence"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Lv"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,2,0" />
-                                    <ComboBox Grid.Row="0" Grid.Column="2"
-                                              ItemsSource="{Binding CharacterOptions.Levels}"
-                                              SelectedValue="{Binding CharacterDraft.IntelligenceLevel, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="Rank"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Grid.Row="0" Grid.Column="4"
-                                             Text="{Binding CharacterDraft.IntelligenceRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="0" Grid.Column="5" Text="Value"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Grid.Row="0" Grid.Column="6"
-                                             Text="{Binding CharacterDraft.IntelligenceValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="0" Grid.Column="7" Text="Grade"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <ComboBox Grid.Row="0" Grid.Column="8"
-                                              ItemsSource="{Binding CharacterOptions.Grades}"
-                                              SelectedValue="{Binding CharacterDraft.IntelligenceGrade, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-
-                                    <TextBlock Grid.Row="1" Text="Strength"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,4" />
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Lv"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,2,0" />
-                                    <ComboBox Grid.Row="1" Grid.Column="2"
-                                              ItemsSource="{Binding CharacterOptions.Levels}"
-                                              SelectedValue="{Binding CharacterDraft.StrengthLevel, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="Rank"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Grid.Row="1" Grid.Column="4"
-                                             Text="{Binding CharacterDraft.StrengthRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="1" Grid.Column="5" Text="Value"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Grid.Row="1" Grid.Column="6"
-                                             Text="{Binding CharacterDraft.StrengthValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             Margin="0,0,0,4" />
-                                    <TextBlock Grid.Row="1" Grid.Column="7" Text="Grade"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <ComboBox Grid.Row="1" Grid.Column="8"
-                                              ItemsSource="{Binding CharacterOptions.Grades}"
-                                              SelectedValue="{Binding CharacterDraft.StrengthGrade, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text"
-                                              Margin="0,0,0,4" />
-
-                                    <TextBlock Grid.Row="2" Text="Club stats"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,0" />
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Lv"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,2,0" />
-                                    <ComboBox Grid.Row="2" Grid.Column="2"
-                                              ItemsSource="{Binding CharacterOptions.ClubLevels}"
-                                              SelectedValue="{Binding CharacterDraft.ClubLevel, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                    <TextBlock Grid.Row="2" Grid.Column="3" Text="Value"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <TextBox Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="3"
-                                             Text="{Binding CharacterDraft.ClubValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" />
-                                    <TextBlock Grid.Row="2" Grid.Column="7" Text="Grade"
-                                               Style="{StaticResource CaptionText}"
-                                               VerticalAlignment="Center"
-                                               Margin="4,0,2,0" />
-                                    <ComboBox Grid.Row="2" Grid.Column="8"
-                                              ItemsSource="{Binding CharacterOptions.Grades}"
-                                              SelectedValue="{Binding CharacterDraft.ClubGrade, Mode=TwoWay}"
-                                              SelectedValuePath="Value"
-                                              DisplayMemberPath="Text" />
-                                </Grid>
-                            </StackPanel>
-
-                            <StackPanel>
-                                <TextBlock Text="Status"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,4" />
-                                <UniformGrid Columns="2" Margin="0,0,0,2">
-                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Victory count"
-                                                   Width="104"
+                                        <TextBlock Grid.Row="0" Text="Victory count"
+                                                   Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                   Margin="0,0,6,4" />
+                                        <TextBox Grid.Row="0" Grid.Column="1"
+                                                 Text="{Binding CharacterDraft.VictoryCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,0,4"
                                                  ToolTip="Victory count" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Classes skipped"
-                                                   Width="104"
+                                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Classes skipped"
+                                                   Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                   Margin="0,0,6,4" />
+                                        <TextBox Grid.Row="0" Grid.Column="4"
+                                                 Text="{Binding CharacterDraft.ClassSkip, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,0,4"
                                                  ToolTip="Classes skipped" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Won over"
-                                                   Width="104"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 ToolTip="Won over" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Partners"
-                                                   Width="104"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 ToolTip="Partners" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Rejections"
-                                                   Width="104"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 ToolTip="Rejections" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="H encounters"
-                                                   Width="104"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 ToolTip="H encounters" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="H partners"
-                                                   Width="104"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 ToolTip="H partners" />
-                                    </DockPanel>
-                                </UniformGrid>
 
-                                <TextBlock Text="H History"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,6,0,4" />
-                                <UniformGrid Columns="2" Margin="0,0,0,2">
-                                    <DockPanel Margin="0,0,8,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="First partner"
-                                                   Width="88"
+                                        <TextBlock Grid.Row="1" Text="Won over"
+                                                   Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.FirstTime, UpdateSourceTrigger=PropertyChanged}"
-                                                 ToolTip="Up to 31 Shift-JIS bytes" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,0,3" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="First anal"
-                                                   Width="88"
+                                                   Margin="0,0,6,4" />
+                                        <TextBox Grid.Row="1" Grid.Column="1"
+                                                 Text="{Binding CharacterDraft.WinningOver, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,0,4"
+                                                 ToolTip="Won over" />
+                                        <TextBlock Grid.Row="1" Grid.Column="3" Text="Partners"
+                                                   Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.FirstAnal, UpdateSourceTrigger=PropertyChanged}"
-                                                 ToolTip="Up to 31 Shift-JIS bytes" />
-                                    </DockPanel>
-                                    <DockPanel Margin="0,0,8,0" LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Last partner"
-                                                   Width="88"
+                                                   Margin="0,0,6,4" />
+                                        <TextBox Grid.Row="1" Grid.Column="4"
+                                                 Text="{Binding CharacterDraft.Partner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,0,4"
+                                                 ToolTip="Partners" />
+
+                                        <TextBlock Grid.Row="2" Text="Rejections"
+                                                   Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
-                                        <TextBox Text="{Binding CharacterDraft.LastTime, UpdateSourceTrigger=PropertyChanged}"
-                                                 ToolTip="Up to 31 Shift-JIS bytes" />
-                                    </DockPanel>
-                                    <DockPanel LastChildFill="True">
-                                        <TextBlock DockPanel.Dock="Left" Text="Experience"
-                                                   Width="88"
+                                                   Margin="0,0,6,4" />
+                                        <TextBox Grid.Row="2" Grid.Column="1"
+                                                 Text="{Binding CharacterDraft.Rejected, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,0,4"
+                                                 ToolTip="Rejections" />
+                                        <TextBlock Grid.Row="2" Grid.Column="3" Text="H encounters"
+                                                   Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Style="{StaticResource CaptionText}" />
+                                                   Margin="0,0,6,4" />
+                                        <TextBox Grid.Row="2" Grid.Column="4"
+                                                 Text="{Binding CharacterDraft.SexIntercourse, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,0,4"
+                                                 ToolTip="H encounters" />
+
+                                        <TextBlock Grid.Row="3" Text="H partners"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,0" />
+                                        <TextBox Grid.Row="3" Grid.Column="1"
+                                                 Text="{Binding CharacterDraft.SexPartner, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 ToolTip="H partners" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="H History"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel Grid.Row="0">
+                                            <TextBlock Text="First partner"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding CharacterDraft.FirstTime, UpdateSourceTrigger=PropertyChanged}"
+                                                     Margin="0,0,0,4"
+                                                     ToolTip="Up to 31 Shift-JIS bytes" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="First anal"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding CharacterDraft.FirstAnal, UpdateSourceTrigger=PropertyChanged}"
+                                                     Margin="0,0,0,4"
+                                                     ToolTip="Up to 31 Shift-JIS bytes" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="1">
+                                            <TextBlock Text="Last partner"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="0,0,0,2" />
+                                            <TextBox Text="{Binding CharacterDraft.LastTime, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Up to 31 Shift-JIS bytes" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" Grid.Column="2">
+                                            <TextBlock Text="Experience"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="0,0,0,2" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <CheckBox Content="Vaginal"
+                                                          IsChecked="{Binding CharacterDraft.SexExperience, Mode=TwoWay}"
+                                                          Margin="0,0,10,0" />
+                                                <CheckBox Content="Anal"
+                                                          IsChecked="{Binding CharacterDraft.AnalExperience, Mode=TwoWay}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Right column: attributes, academics, modules -->
+                        <StackPanel Grid.Column="2">
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Attributes"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="72" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Text="Personality"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,4" />
+                                        <ComboBox Grid.Row="0" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.Personality}"
+                                                  SelectedValue="{Binding CharacterDraft.Personality, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+                                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Club"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,4" />
+                                        <ComboBox Grid.Row="0" Grid.Column="4"
+                                                  ItemsSource="{Binding CharacterOptions.Club}"
+                                                  SelectedValue="{Binding CharacterDraft.Club, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+
+                                        <TextBlock Grid.Row="1" Text="Social"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,4" />
+                                        <ComboBox Grid.Row="1" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.Social}"
+                                                  SelectedValue="{Binding CharacterDraft.Social, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+                                        <TextBlock Grid.Row="1" Grid.Column="3" Text="Fighting"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,4"
+                                                   ToolTip="Fighting style" />
+                                        <ComboBox Grid.Row="1" Grid.Column="4"
+                                                  ItemsSource="{Binding CharacterOptions.FightingStyle}"
+                                                  SelectedValue="{Binding CharacterDraft.FightingStyle, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4"
+                                                  ToolTip="Fighting style" />
+
+                                        <TextBlock Grid.Row="2" Text="Virtue"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,4" />
+                                        <ComboBox Grid.Row="2" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.Virtue}"
+                                                  SelectedValue="{Binding CharacterDraft.Virtue, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+                                        <TextBlock Grid.Row="2" Grid.Column="3" Text="Orientation"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,4" />
+                                        <ComboBox Grid.Row="2" Grid.Column="4"
+                                                  ItemsSource="{Binding CharacterOptions.Orientation}"
+                                                  SelectedValue="{Binding CharacterDraft.Orientation, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+
+                                        <TextBlock Grid.Row="3" Text="Voice"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,6,0"
+                                                   ToolTip="Voice pitch" />
+                                        <ComboBox Grid.Row="3" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.VoicePitch}"
+                                                  SelectedValue="{Binding CharacterDraft.VoicePitch, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  ToolTip="Voice pitch" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Academics"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="54" />
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Text="Subject"
+                                                   Style="{StaticResource CaptionText}"
+                                                   Margin="0,0,0,3" />
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="Lv"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,4,3" />
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Rank"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,4,3" />
+                                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Value"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,4,3" />
+                                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Grade"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,0,3" />
+
+                                        <TextBlock Grid.Row="1" Text="Intelligence"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,0,4" />
+                                        <ComboBox Grid.Row="1" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.Levels}"
+                                                  SelectedValue="{Binding CharacterDraft.IntelligenceLevel, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,4,4" />
+                                        <TextBox Grid.Row="1" Grid.Column="2"
+                                                 Text="{Binding CharacterDraft.IntelligenceRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,4,4" />
+                                        <TextBox Grid.Row="1" Grid.Column="3"
+                                                 Text="{Binding CharacterDraft.IntelligenceValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,4,4" />
+                                        <ComboBox Grid.Row="1" Grid.Column="4"
+                                                  ItemsSource="{Binding CharacterOptions.Grades}"
+                                                  SelectedValue="{Binding CharacterDraft.IntelligenceGrade, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+
+                                        <TextBlock Grid.Row="2" Text="Strength"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,0,4" />
+                                        <ComboBox Grid.Row="2" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.Levels}"
+                                                  SelectedValue="{Binding CharacterDraft.StrengthLevel, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,4,4" />
+                                        <TextBox Grid.Row="2" Grid.Column="2"
+                                                 Text="{Binding CharacterDraft.StrengthRank, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,4,4" />
+                                        <TextBox Grid.Row="2" Grid.Column="3"
+                                                 Text="{Binding CharacterDraft.StrengthValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,4,4" />
+                                        <ComboBox Grid.Row="2" Grid.Column="4"
+                                                  ItemsSource="{Binding CharacterOptions.Grades}"
+                                                  SelectedValue="{Binding CharacterDraft.StrengthGrade, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,0,4" />
+
+                                        <TextBlock Grid.Row="3" Text="Club stats"
+                                                   Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center" />
+                                        <ComboBox Grid.Row="3" Grid.Column="1"
+                                                  ItemsSource="{Binding CharacterOptions.ClubLevels}"
+                                                  SelectedValue="{Binding CharacterDraft.ClubLevel, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text"
+                                                  Margin="0,0,4,0" />
+                                        <TextBlock Grid.Row="3" Grid.Column="2"
+                                                   Text="-"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                        <TextBox Grid.Row="3" Grid.Column="3"
+                                                 Text="{Binding CharacterDraft.ClubValue, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                                 Margin="0,0,4,0" />
+                                        <ComboBox Grid.Row="3" Grid.Column="4"
+                                                  ItemsSource="{Binding CharacterOptions.Grades}"
+                                                  SelectedValue="{Binding CharacterDraft.ClubGrade, Mode=TwoWay}"
+                                                  SelectedValuePath="Value"
+                                                  DisplayMemberPath="Text" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <DockPanel Grid.Row="0">
+                                        <Button DockPanel.Dock="Right"
+                                                Content="Refresh"
+                                                Width="70"
+                                                Click="RefreshModules_Click" />
                                         <StackPanel Orientation="Horizontal"
                                                     VerticalAlignment="Center">
-                                            <CheckBox Content="Vaginal"
-                                                      IsChecked="{Binding CharacterDraft.SexExperience, Mode=TwoWay}"
-                                                      Margin="0,0,10,0" />
-                                            <CheckBox Content="Anal"
-                                                      IsChecked="{Binding CharacterDraft.AnalExperience, Mode=TwoWay}" />
+                                            <TextBlock Text="Modules (AAU)"
+                                                       Style="{StaticResource SectionHeader}" />
+                                            <TextBlock Text="{Binding AauModuleStatus}"
+                                                       Style="{StaticResource CaptionText}"
+                                                       Margin="8,0,0,0"
+                                                       MaxWidth="140"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding AauModuleStatus}" />
                                         </StackPanel>
                                     </DockPanel>
-                                </UniformGrid>
-                            </StackPanel>
-                                                    </StackPanel>
-                        </Grid>
 
-<StackPanel Grid.Row="1" Margin="0,8,0,0">
-                            <DockPanel Margin="0,0,0,4">
-                                <Button DockPanel.Dock="Right"
-                                        Content="Refresh"
-                                        Width="76"
-                                        Click="RefreshModules_Click" />
-                                <TextBlock DockPanel.Dock="Right"
-                                           Text="{Binding AauModuleStatus}"
-                                           Style="{StaticResource CaptionText}"
-                                           MaxWidth="260"
-                                           Margin="0,0,10,0"
-                                           VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis"
-                                           ToolTip="{Binding AauModuleStatus}" />
-                                <TextBlock Text="Modules (AAU, read-only)"
-                                           Style="{StaticResource SectionHeader}"
-                                           VerticalAlignment="Center" />
-                            </DockPanel>
-                            <DataGrid ItemsSource="{Binding AauModules}"
-                                      AutoGenerateColumns="False"
-                                      IsReadOnly="True"
-                                      CanUserAddRows="False"
-                                      CanUserDeleteRows="False"
-                                      HeadersVisibility="Column"
-                                      GridLinesVisibility="Horizontal"
-                                      RowHeight="NaN"
-                                      MinRowHeight="26"
-                                      MinHeight="60"
-                                      Margin="0,0,0,4"
-                                      VirtualizingStackPanel.IsVirtualizing="True"
-                                      VirtualizingStackPanel.VirtualizationMode="Recycling">
-                                <DataGrid.Style>
-                                    <Style TargetType="DataGrid"
-                                           BasedOn="{StaticResource {x:Type DataGrid}}">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding AauModules.Count}"
-                                                         Value="0">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </DataGrid.Style>
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Module"
-                                                        Width="220"
-                                                        Binding="{Binding Name}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="TextWrapping" Value="Wrap" />
-                                                <Setter Property="Margin" Value="0,2" />
+                                    <DataGrid Grid.Row="1"
+                                              ItemsSource="{Binding AauModules}"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal"
+                                              RowHeight="NaN"
+                                              MinRowHeight="26"
+                                              MinHeight="60"
+                                              MaxHeight="150"
+                                              Margin="0,4,0,0"
+                                              VirtualizingStackPanel.IsVirtualizing="True"
+                                              VirtualizingStackPanel.VirtualizationMode="Recycling">
+                                        <DataGrid.Style>
+                                            <Style TargetType="DataGrid"
+                                                   BasedOn="{StaticResource {x:Type DataGrid}}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding AauModules.Count}"
+                                                                 Value="0">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
                                             </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                    <DataGridTextColumn Header="Description"
-                                                        Width="*"
-                                                        Binding="{Binding Description}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="TextWrapping" Value="Wrap" />
-                                                <Setter Property="Margin" Value="0,2" />
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                        </DataGrid.Style>
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Module"
+                                                                Width="130"
+                                                                Binding="{Binding Name}">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                                        <Setter Property="Margin" Value="0,3" />
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="Description"
+                                                                Width="*"
+                                                                Binding="{Binding Description}">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                                        <Setter Property="Margin" Value="0,3" />
+                                                        <Setter Property="ToolTip" Value="{Binding Description}" />
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
@@ -618,491 +828,470 @@
                 </Border>
             </Grid>
         </TabItem>
-
         <TabItem Header="Traits">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="61*" />
-                        <ColumnDefinition Width="39*" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
-                        <TextBlock Text="Traits" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <Border Style="{StaticResource Card}" Margin="0,0,0,10">
-                            <ItemsControl ItemsSource="{Binding TraitDraft.TraitItems}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="3" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <CheckBox Content="{Binding Display}"
-                                                  IsChecked="{Binding IsOn, Mode=TwoWay}"
-                                                  ToolTip="{Binding Tip}"
-                                                  Margin="0,2,6,2" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Border>
-
-                        <TextBlock Text="Extra" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <Border Style="{StaticResource Card}">
-                            <ItemsControl ItemsSource="{Binding TraitDraft.ExtraItems}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <CheckBox Content="{Binding Display}"
-                                                  IsChecked="{Binding IsOn, Mode=TwoWay}"
-                                                  ToolTip="{Binding Tip}"
-                                                  Margin="0,2" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Border>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="0" Grid.Column="1">
-                        <TextBlock Text="H Preferences" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <Border Style="{StaticResource Card}" Margin="0,0,0,10">
-                            <ItemsControl ItemsSource="{Binding TraitDraft.PreferenceItems}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <CheckBox Content="{Binding Display}"
-                                                  IsChecked="{Binding IsOn, Mode=TwoWay}"
-                                                  ToolTip="{Binding Tip}"
-                                                  Margin="0,2,6,2" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Border>
-
-                        <TextBlock Text="Risk" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <Border Style="{StaticResource Card}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="72" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="1"
-                                           Text="First week"
-                                           Style="{StaticResource CaptionText}"
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,4" />
-                                <TextBlock Grid.Row="0" Grid.Column="2"
-                                           Text="Second week"
-                                           Style="{StaticResource CaptionText}"
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,4" />
-
-                                <ItemsControl Grid.Row="1" Grid.ColumnSpan="3"
-                                              ItemsSource="{Binding TraitDraft.RiskRows}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,1">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="72" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding DayName}"
-                                                           Style="{StaticResource CaptionText}" />
-                                                <ComboBox Grid.Column="1"
-                                                          ItemsSource="{Binding DataContext.TraitDraft.RiskOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                          SelectedValue="{Binding Week1, Mode=TwoWay}"
-                                                          SelectedValuePath="Value"
-                                                          DisplayMemberPath="Text"
-                                                          Margin="2,0" />
-                                                <ComboBox Grid.Column="2"
-                                                          ItemsSource="{Binding DataContext.TraitDraft.RiskOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                          SelectedValue="{Binding Week2, Mode=TwoWay}"
-                                                          SelectedValuePath="Value"
-                                                          DisplayMemberPath="Text"
-                                                          Margin="2,0" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2"
-                                Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Apply" Width="76"
-                                IsEnabled="{Binding CanApplyTraits}"
-                                Click="ApplyTraits_Click" />
-                        <Button Content="Revert" Width="76" Margin="6,0,0,0"
-                                IsEnabled="{Binding CanRevertTraits}"
-                                Click="RevertTraits_Click" />
-                        <TextBlock Style="{StaticResource CaptionText}"
-                                   Margin="10,0,0,0"
-                                   VerticalAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding TraitStatus}" />
-                    </StackPanel>
-                </Grid>
-            </ScrollViewer>
-        </TabItem>
-        <TabItem Header="Body">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0">
-                        <TextBlock Text="Body" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <ItemsControl ItemsSource="{Binding BodyDraft.BodyFields}"
-                                      Margin="0,0,0,10">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="2" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,2,8,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="110" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Label}"
-                                                   Style="{StaticResource CaptionText}"
-                                                   ToolTip="{Binding Tip}" />
-                                        <ComboBox x:Name="ChoiceControl"
-                                                  Grid.Column="1"
-                                                  ItemsSource="{Binding Options}"
-                                                  SelectedValue="{Binding Value, Mode=TwoWay}"
-                                                  SelectedValuePath="Value"
-                                                  DisplayMemberPath="Text"
-                                                  Visibility="Collapsed" />
-                                        <TextBox x:Name="NumberControl"
-                                                 Grid.Column="1"
-                                                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 Visibility="Collapsed" />
-                                        <Grid x:Name="ColorControl"
-                                              Grid.Column="1"
-                                              Visibility="Collapsed">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="26" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Button x:Name="ColorButton"
-                                                          Width="24" Height="22"
-                                                          Background="{Binding Swatch}"
-                                                          Tag="{Binding ElementName=ColorPopup}"
-                                                          Click="ColorButton_Click"
-                                                          ToolTip="Click to edit color">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderBrush="{DynamicResource Border}"
-                                                                BorderThickness="1"
-                                                                CornerRadius="3" />
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                            <TextBox Grid.Column="1"
-                                                     Margin="4,0,0,0"
-                                                     Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
-                                                     ToolTip="Hex color (#RRGGBB)" />
-                                            <Popup x:Name="ColorPopup"
-                                                   Placement="Bottom"
-                                                   PlacementTarget="{Binding ElementName=ColorButton}"
-                                                   StaysOpen="False"
-                                                   AllowsTransparency="True">
-                                                <Border Background="{DynamicResource Surface}"
-                                                        BorderBrush="{DynamicResource Border}"
-                                                        BorderThickness="1"
-                                                        CornerRadius="4"
-                                                        Padding="8">
-                                                    <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
-                                                </Border>
-                                            </Popup>
-                                        </Grid>
-                                    </Grid>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding IsChoice}" Value="True">
-                                            <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                                            <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsColor}" Value="True">
-                                            <Setter TargetName="ColorControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Text="Breasts" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <ItemsControl ItemsSource="{Binding BodyDraft.BreastFields}"
-                                      Margin="0,0,0,10">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="2" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,2,8,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="110" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Label}"
-                                                   Style="{StaticResource CaptionText}"
-                                                   ToolTip="{Binding Tip}" />
-                                        <ComboBox x:Name="ChoiceControl"
-                                                  Grid.Column="1"
-                                                  ItemsSource="{Binding Options}"
-                                                  SelectedValue="{Binding Value, Mode=TwoWay}"
-                                                  SelectedValuePath="Value"
-                                                  DisplayMemberPath="Text"
-                                                  Visibility="Collapsed" />
-                                        <TextBox x:Name="NumberControl"
-                                                 Grid.Column="1"
-                                                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 Visibility="Collapsed" />
-                                    </Grid>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding IsChoice}" Value="True">
-                                            <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                                            <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Text="Skin" Style="{StaticResource SectionHeader}"
-                                   Margin="0,0,0,6" />
-                        <ItemsControl ItemsSource="{Binding BodyDraft.SkinFields}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="2" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,2,8,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="110" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Label}"
-                                                   Style="{StaticResource CaptionText}"
-                                                   ToolTip="{Binding Tip}" />
-                                        <ComboBox x:Name="ChoiceControl"
-                                                  Grid.Column="1"
-                                                  ItemsSource="{Binding Options}"
-                                                  SelectedValue="{Binding Value, Mode=TwoWay}"
-                                                  SelectedValuePath="Value"
-                                                  DisplayMemberPath="Text"
-                                                  Visibility="Collapsed" />
-                                        <TextBox x:Name="NumberControl"
-                                                 Grid.Column="1"
-                                                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                                 Visibility="Collapsed" />
-                                        <Grid x:Name="ColorControl"
-                                              Grid.Column="1"
-                                              Visibility="Collapsed">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="26" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Button x:Name="ColorButton"
-                                                          Width="24" Height="22"
-                                                          Background="{Binding Swatch}"
-                                                          Tag="{Binding ElementName=ColorPopup}"
-                                                          Click="ColorButton_Click"
-                                                          ToolTip="Click to edit color">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}"
-                                                                BorderBrush="{DynamicResource Border}"
-                                                                BorderThickness="1"
-                                                                CornerRadius="3" />
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                            <TextBox Grid.Column="1"
-                                                     Margin="4,0,0,0"
-                                                     Text="{Binding ColorText, UpdateSourceTrigger=PropertyChanged}"
-                                                     ToolTip="Hex color (#RRGGBB)" />
-                                            <Popup x:Name="ColorPopup"
-                                                   Placement="Bottom"
-                                                   PlacementTarget="{Binding ElementName=ColorButton}"
-                                                   StaysOpen="False"
-                                                   AllowsTransparency="True">
-                                                <Border Background="{DynamicResource Surface}"
-                                                        BorderBrush="{DynamicResource Border}"
-                                                        BorderThickness="1"
-                                                        CornerRadius="4"
-                                                        Padding="8">
-                                                    <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
-                                                </Border>
-                                            </Popup>
-                                        </Grid>
-                                    </Grid>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding IsChoice}" Value="True">
-                                            <Setter TargetName="ChoiceControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsNumber}" Value="True">
-                                            <Setter TargetName="NumberControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsColor}" Value="True">
-                                            <Setter TargetName="ColorControl" Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="1" Orientation="Horizontal"
-                                Margin="0,10,0,0">
-                        <Button Content="Apply" Width="76"
-                                IsEnabled="{Binding CanApplyBody}"
-                                Click="ApplyBody_Click" />
-                        <Button Content="Revert" Width="76" Margin="6,0,0,0"
-                                IsEnabled="{Binding CanRevertBody}"
-                                Click="RevertBody_Click" />
-                        <TextBlock Style="{StaticResource CaptionText}"
-                                   Margin="10,0,0,0"
-                                   VerticalAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding BodyStatus}" />
-                    </StackPanel>
-                </Grid>
-            </ScrollViewer>
-        </TabItem>
-        <TabItem Header="Face">
-            <Grid Margin="12">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+
                 <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding FaceDraft.Groups}"
-                                  ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                    <Grid Margin="12,12,12,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="61*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="39*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Traits"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding TraitDraft.TraitItems}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="3" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox Content="{Binding Display}"
+                                                          IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                                          ToolTip="{Binding Tip}"
+                                                          Margin="0,2,6,2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Extra"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding TraitDraft.ExtraItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox Content="{Binding Display}"
+                                                          IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                                          ToolTip="{Binding Tip}"
+                                                          Margin="0,2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="H Preferences"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding TraitDraft.PreferenceItems}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="2" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox Content="{Binding Display}"
+                                                          IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                                          ToolTip="{Binding Tip}"
+                                                          Margin="0,2,6,2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Risk"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="First week"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,0,4" />
+                                        <TextBlock Grid.Row="0" Grid.Column="2"
+                                                   Text="Second week"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,0,4" />
+
+                                        <ItemsControl Grid.Row="1" Grid.ColumnSpan="3"
+                                                      ItemsSource="{Binding TraitDraft.RiskRows}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,1">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="72" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding DayName}"
+                                                                   Style="{StaticResource CaptionText}" />
+                                                        <ComboBox Grid.Column="1"
+                                                                  ItemsSource="{Binding DataContext.TraitDraft.RiskOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                  SelectedValue="{Binding Week1, Mode=TwoWay}"
+                                                                  SelectedValuePath="Value"
+                                                                  DisplayMemberPath="Text"
+                                                                  Margin="2,0" />
+                                                        <ComboBox Grid.Column="2"
+                                                                  ItemsSource="{Binding DataContext.TraitDraft.RiskOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                  SelectedValue="{Binding Week2, Mode=TwoWay}"
+                                                                  SelectedValuePath="Value"
+                                                                  DisplayMemberPath="Text"
+                                                                  Margin="2,0" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                 </ScrollViewer>
-                <StackPanel Grid.Row="1" Orientation="Horizontal"
-                            Margin="0,8,0,0">
-                    <Button Content="Apply" Width="76"
-                            IsEnabled="{Binding CanApplyFace}"
-                            Click="ApplyFace_Click" />
-                    <Button Content="Revert" Width="76" Margin="6,0,0,0"
-                            IsEnabled="{Binding CanRevertFace}"
-                            Click="RevertFace_Click" />
-                    <TextBlock Text="{Binding FaceStatus}"
-                               Style="{StaticResource CaptionText}"
-                               Margin="10,0,0,0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Apply" Width="76"
+                                    IsEnabled="{Binding CanApplyTraits}"
+                                    Click="ApplyTraits_Click" />
+                            <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                    IsEnabled="{Binding CanRevertTraits}"
+                                    Click="RevertTraits_Click" />
+                            <TextBlock Style="{StaticResource CaptionText}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding TraitStatus}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Body">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="12,12,12,8">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="Body"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+                                <ItemsControl ItemsSource="{Binding BodyDraft.BodyFields}"
+                                              ItemTemplate="{StaticResource BodyFieldTemplate}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="Breasts"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+                                <ItemsControl ItemsSource="{Binding BodyDraft.BreastFields}"
+                                              ItemTemplate="{StaticResource BodyFieldTemplate}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Skin"
+                                           Style="{StaticResource SectionHeader}"
+                                           Margin="0,0,0,6" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ItemsControl Grid.Column="0"
+                                                  ItemsSource="{Binding BodyDraft.SkinLeftFields}"
+                                                  ItemTemplate="{StaticResource BodyFieldTemplate}" />
+                                    <ItemsControl Grid.Column="2"
+                                                  ItemsSource="{Binding BodyDraft.SkinRightFields}"
+                                                  ItemTemplate="{StaticResource BodyFieldTemplate}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Apply" Width="76"
+                                    IsEnabled="{Binding CanApplyBody}"
+                                    Click="ApplyBody_Click" />
+                            <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                    IsEnabled="{Binding CanRevertBody}"
+                                    Click="RevertBody_Click" />
+                            <TextBlock Style="{StaticResource CaptionText}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding BodyStatus}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Face">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="12,12,12,8">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FaceDraft}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <ContentControl Content="{Binding FaceDraft[Face]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                            <ContentControl Content="{Binding FaceDraft[Eyes]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                            <ContentControl Content="{Binding FaceDraft[Brow]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <ContentControl Content="{Binding FaceDraft[Iris]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                            <ContentControl Content="{Binding FaceDraft[Glasses]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                            <ContentControl Content="{Binding FaceDraft[Mole]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                            <ContentControl Content="{Binding FaceDraft[External textures]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Apply" Width="76"
+                                    IsEnabled="{Binding CanApplyFace}"
+                                    Click="ApplyFace_Click" />
+                            <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                    IsEnabled="{Binding CanRevertFace}"
+                                    Click="RevertFace_Click" />
+                            <TextBlock Text="{Binding FaceStatus}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </TabItem>
         <TabItem Header="Hair">
-            <Grid Margin="12">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+
                 <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding HairDraft.Groups}"
-                                  ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                    <Grid Margin="12,12,12,8">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HairDraft}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="56" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Style"
+                                                   Style="{StaticResource SectionHeader}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="Flip"
+                                                   Style="{StaticResource CaptionText}"
+                                                   HorizontalAlignment="Center" />
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="56" />
+                                        </Grid.ColumnDefinitions>
+                                        <ItemsControl Grid.Column="0"
+                                                      ItemsSource="{Binding HairDraft[Style].Items}"
+                                                      ItemTemplate="{StaticResource FieldItemTemplate}" />
+                                        <ItemsControl Grid.Column="2"
+                                                      ItemsSource="{Binding HairDraft[Flip].Items}"
+                                                      ItemTemplate="{StaticResource FieldToggleTemplate}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <ContentControl Content="{Binding HairDraft[Length]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                            <ContentControl Content="{Binding HairDraft[Color]}"
+                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                        </StackPanel>
+                    </Grid>
                 </ScrollViewer>
-                <StackPanel Grid.Row="1" Orientation="Horizontal"
-                            Margin="0,8,0,0">
-                    <Button Content="Apply" Width="76"
-                            IsEnabled="{Binding CanApplyHair}"
-                            Click="ApplyHair_Click" />
-                    <Button Content="Revert" Width="76" Margin="6,0,0,0"
-                            IsEnabled="{Binding CanRevertHair}"
-                            Click="RevertHair_Click" />
-                    <TextBlock Text="{Binding HairStatus}"
-                               Style="{StaticResource CaptionText}"
-                               Margin="10,0,0,0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Apply" Width="76"
+                                    IsEnabled="{Binding CanApplyHair}"
+                                    Click="ApplyHair_Click" />
+                            <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                    IsEnabled="{Binding CanRevertHair}"
+                                    Click="RevertHair_Click" />
+                            <TextBlock Text="{Binding HairStatus}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </TabItem>
         <TabItem Header="Outfits">
-            <Grid Margin="12">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <TabControl Grid.Row="0">
+
+                <TabControl Grid.Row="0" Margin="12,12,12,0">
                     <TabItem Header="School">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl Margin="8"
-                                          ItemsSource="{Binding OutfitDraft.School.Groups}"
-                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                            <ContentControl Content="{Binding OutfitDraft.School}"
+                                            ContentTemplate="{StaticResource OutfitSetTemplate}" />
                         </ScrollViewer>
                     </TabItem>
                     <TabItem Header="Sport">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl Margin="8"
-                                          ItemsSource="{Binding OutfitDraft.Sport.Groups}"
-                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                            <ContentControl Content="{Binding OutfitDraft.Sport}"
+                                            ContentTemplate="{StaticResource OutfitSetTemplate}" />
                         </ScrollViewer>
                     </TabItem>
                     <TabItem Header="Swimsuit">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl Margin="8"
-                                          ItemsSource="{Binding OutfitDraft.Swim.Groups}"
-                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                            <ContentControl Content="{Binding OutfitDraft.Swim}"
+                                            ContentTemplate="{StaticResource OutfitSetTemplate}" />
                         </ScrollViewer>
                     </TabItem>
                     <TabItem Header="Club">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl Margin="8"
-                                          ItemsSource="{Binding OutfitDraft.Club.Groups}"
-                                          ItemTemplate="{StaticResource FieldGroupTemplate}" />
+                            <ContentControl Content="{Binding OutfitDraft.Club}"
+                                            ContentTemplate="{StaticResource OutfitSetTemplate}" />
                         </ScrollViewer>
                     </TabItem>
                 </TabControl>
-                <StackPanel Grid.Row="1" Orientation="Horizontal"
-                            Margin="0,8,0,0">
-                    <Button Content="Apply" Width="76"
-                            IsEnabled="{Binding CanApplyOutfit}"
-                            Click="ApplyOutfit_Click" />
-                    <Button Content="Revert" Width="76" Margin="6,0,0,0"
-                            IsEnabled="{Binding CanRevertOutfit}"
-                            Click="RevertOutfit_Click" />
-                    <TextBlock Text="{Binding OutfitStatus}"
-                               Style="{StaticResource CaptionText}"
-                               Margin="10,0,0,0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="0,1,0,0">
+                    <Grid Margin="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Apply" Width="76"
+                                    IsEnabled="{Binding CanApplyOutfit}"
+                                    Click="ApplyOutfit_Click" />
+                            <Button Content="Revert" Width="76" Margin="6,0,0,0"
+                                    IsEnabled="{Binding CanRevertOutfit}"
+                                    Click="RevertOutfit_Click" />
+                            <TextBlock Text="{Binding OutfitStatus}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </TabItem>
         <TabItem Header="Import/Export">

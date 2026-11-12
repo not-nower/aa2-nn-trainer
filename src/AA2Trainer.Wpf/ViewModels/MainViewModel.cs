@@ -53,6 +53,8 @@ namespace AA2Trainer.WpfPrototype
         private ScheduleDraft scheduleDraft;
         private ScheduleSnapshot liveSchedule;
         private CharacterOptions characterOptions;
+        private CharacterOptions faceOptionsSource;
+        private CharacterOptions outfitOptionsSource;
         private CharacterSnapshot liveCharacter;
         private uint livePointer;
         private bool[] liveTraits;
@@ -4120,17 +4122,21 @@ namespace AA2Trainer.WpfPrototype
                 !ReferenceEquals(liveFaceTexts, snapshot.FaceTexts);
             bool sameCharacter = FaceDraft != null &&
                 FaceDraft.Pointer == snapshot.SelectedPointer;
+            bool optionsChanged =
+                !ReferenceEquals(faceOptionsSource, CharacterOptions);
 
             liveFaceValues = snapshot.FaceValues;
             liveFaceTexts = snapshot.FaceTexts;
 
-            if (!sameCharacter)
+            if (!sameCharacter ||
+                (optionsChanged && (FaceDraft == null || !FaceDraft.IsDirty)))
             {
                 FieldDraft draft = new FieldDraft(AppearanceFields.Face(),
                     FaceChoice);
                 draft.Load(snapshot.FaceValues, snapshot.FaceTexts,
                     snapshot.SelectedPointer, snapshot.SelectedSeat);
                 FaceDraft = draft;
+                faceOptionsSource = CharacterOptions;
                 FaceStatus = "No changes.";
             }
             else if (!FaceDraft.IsDirty && rawChanged)
@@ -4186,15 +4192,20 @@ namespace AA2Trainer.WpfPrototype
                 !ReferenceEquals(liveOutfitValues, snapshot.OutfitValues);
             bool sameCharacter = OutfitDraft != null &&
                 OutfitDraft.Pointer == snapshot.SelectedPointer;
+            bool optionsChanged =
+                !ReferenceEquals(outfitOptionsSource, CharacterOptions);
 
             liveOutfitValues = snapshot.OutfitValues;
 
-            if (!sameCharacter)
+            if (!sameCharacter ||
+                (optionsChanged && (OutfitDraft == null || !OutfitDraft.IsDirty)))
             {
-                OutfitDraft draft = new OutfitDraft(CharacterOptions);
+                OutfitDraft draft = new OutfitDraft(CharacterOptions,
+                    snapshot.SelectedGender != 0);
                 draft.Load(snapshot.OutfitValues, snapshot.SelectedPointer,
                     snapshot.SelectedSeat);
                 OutfitDraft = draft;
+                outfitOptionsSource = CharacterOptions;
                 OutfitStatus = "No changes.";
             }
             else if (!OutfitDraft.IsDirty && rawChanged)

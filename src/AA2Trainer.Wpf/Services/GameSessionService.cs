@@ -1590,6 +1590,9 @@ namespace AA2Trainer.WpfPrototype
             List<CharacterOption> outfitTypes = BuildNameOptions(clothes, true);
             List<CharacterOption> sockTypes = BuildNameOptions(socks);
             List<CharacterOption> shoeTypes = BuildNameOptions(shoes);
+            List<CharacterOption> skirtLengths = new List<CharacterOption>();
+            skirtLengths.Add(new CharacterOption { Value = 0, Text = "Long" });
+            skirtLengths.Add(new CharacterOption { Value = 1, Text = "Short" });
 
             Dictionary<string, List<CharacterOption>> map =
                 new Dictionary<string, List<CharacterOption>>(StringComparer.Ordinal);
@@ -1597,6 +1600,7 @@ namespace AA2Trainer.WpfPrototype
             foreach (string prefix in prefixes)
             {
                 map[prefix + "UType"] = outfitTypes;
+                map[prefix + "SkirtLen"] = skirtLengths;
                 map[prefix + "Socks"] = sockTypes;
                 map[prefix + "InShoes"] = shoeTypes;
                 map[prefix + "OutShoes"] = shoeTypes;

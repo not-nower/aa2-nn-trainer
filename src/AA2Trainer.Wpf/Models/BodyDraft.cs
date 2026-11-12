@@ -125,6 +125,13 @@ namespace AA2Trainer.WpfPrototype
     /// </summary>
     public sealed class BodyDraft : ObservableObject
     {
+        // Display order for the Body card. Fills the two-column grid row by
+        // row: Body type | Head size, Height | Head length, Figure | Waist.
+        private static readonly string[] BodyDisplayOrder = new string[]
+        {
+            "BodyType", "HeadSize", "Heights", "HeadLength", "Figure", "Waist"
+        };
+
         private int[] originalValues;
         private bool suppress;
 
@@ -133,6 +140,8 @@ namespace AA2Trainer.WpfPrototype
             BodyFields = new ObservableCollection<BodyFieldItem>();
             BreastFields = new ObservableCollection<BodyFieldItem>();
             SkinFields = new ObservableCollection<BodyFieldItem>();
+            SkinLeftFields = new ObservableCollection<BodyFieldItem>();
+            SkinRightFields = new ObservableCollection<BodyFieldItem>();
 
             IList<BodyFieldDef> defs = BodyEditor.Fields;
             Dictionary<string, List<CharacterOption>> choices =
@@ -153,11 +162,50 @@ namespace AA2Trainer.WpfPrototype
                 else
                     SkinFields.Add(item);
             }
+
+            SortBodyFields();
+            SplitSkinFields();
+        }
+
+        private void SplitSkinFields()
+        {
+            // Fill the first Skin column top to bottom, then the second.
+            int rows = (SkinFields.Count + 1) / 2;
+            for (int i = 0; i < SkinFields.Count; i++)
+            {
+                if (i < rows) SkinLeftFields.Add(SkinFields[i]);
+                else SkinRightFields.Add(SkinFields[i]);
+            }
+        }
+
+        private void SortBodyFields()
+        {
+            List<BodyFieldItem> ordered =
+                new List<BodyFieldItem>(BodyFields.Count);
+            foreach (string name in BodyDisplayOrder)
+            {
+                int index = BodyEditor.IndexOf(name);
+                if (index < 0) continue;
+                foreach (BodyFieldItem item in BodyFields)
+                {
+                    if (item.Index != index) continue;
+                    ordered.Add(item);
+                    break;
+                }
+            }
+            foreach (BodyFieldItem item in BodyFields)
+                if (!ordered.Contains(item)) ordered.Add(item);
+
+            BodyFields.Clear();
+            foreach (BodyFieldItem item in ordered)
+                BodyFields.Add(item);
         }
 
         public ObservableCollection<BodyFieldItem> BodyFields { get; private set; }
         public ObservableCollection<BodyFieldItem> BreastFields { get; private set; }
         public ObservableCollection<BodyFieldItem> SkinFields { get; private set; }
+        public ObservableCollection<BodyFieldItem> SkinLeftFields { get; private set; }
+        public ObservableCollection<BodyFieldItem> SkinRightFields { get; private set; }
 
         public uint Pointer { get; private set; }
         public int SeatIndex { get; private set; } = -1;
