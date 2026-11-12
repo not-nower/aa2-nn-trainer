@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Windows.Threading;
 using AA2Trainer;
@@ -173,6 +174,10 @@ namespace AA2Trainer.WpfPrototype
         private volatile bool detachRequested;
         private volatile bool disposed;
         private SessionSnapshot pendingSnapshot;
+        private List<DebugFieldItem> debugFields = new List<DebugFieldItem>();
+        private DateTime lastDebugUtc = DateTime.MinValue;
+        private volatile bool debugActive;
+        private volatile bool debugRefreshRequested;
 
         public GameSessionService(Dispatcher dispatcher)
         {
@@ -212,6 +217,22 @@ namespace AA2Trainer.WpfPrototype
                 liveIntervalAuto = value;
                 ScheduleNextPoll();
             }
+        }
+
+        public bool DebugActive
+        {
+            get { return debugActive; }
+            set
+            {
+                if (debugActive == value) return;
+                debugActive = value;
+                if (value) debugRefreshRequested = true;
+            }
+        }
+
+        public void RequestDebugRefresh()
+        {
+            debugRefreshRequested = true;
         }
 
         public int RefreshIntervalMs
@@ -822,6 +843,9 @@ namespace AA2Trainer.WpfPrototype
             selectedRiskValues = null;
             selectedBodyValues = null;
             ClearSelectedModules();
+            debugFields = new List<DebugFieldItem>();
+            lastDebugUtc = DateTime.MinValue;
+            debugRefreshRequested = false;
             lastContextUtc = DateTime.MinValue;
             lastHealthUtc = DateTime.MinValue;
             lastDisconnectedUtc = DateTime.MinValue;
@@ -904,7 +928,21 @@ namespace AA2Trainer.WpfPrototype
             portraits.Refresh(ctx, ctx.Selected);
             LiveSnapshot liveSnapshot = live.Read();
             UpdateLiveActivity(liveSnapshot);
+            RefreshDebugFields();
             Publish(BuildSnapshot(liveSnapshot));
+        }
+
+        private void RefreshDebugFields()
+        {
+            if (!debugActive) return;
+            DateTime now = DateTime.UtcNow;
+            if (!debugRefreshRequested &&
+                (now - lastDebugUtc).TotalMilliseconds < 1000)
+                return;
+
+            debugRefreshRequested = false;
+            lastDebugUtc = now;
+            debugFields = BuildDebugFields();
         }
 
         private SessionSnapshot BuildSnapshot(LiveSnapshot liveSnapshot)
@@ -950,7 +988,7 @@ namespace AA2Trainer.WpfPrototype
             snapshot.LoverRows = selectedLoverRows;
             snapshot.PromiseRows = selectedPromiseRows;
             snapshot.RosterCharacters = selectedRosterCharacters;
-            snapshot.DebugFields = BuildDebugFields(liveSnapshot);
+            snapshot.DebugFields = debugFields;
             snapshot.AauModules = selectedModules;
             snapshot.AauModuleStatus = selectedModuleStatus;
 
@@ -1103,182 +1141,122 @@ namespace AA2Trainer.WpfPrototype
             return text;
         }
 
-        private List<DebugFieldItem> BuildDebugFields(LiveSnapshot liveSnapshot)
+        private List<DebugFieldItem> BuildDebugFields()
         {
             List<DebugFieldItem> fields = new List<DebugFieldItem>();
-
-            AddDebug(fields, "Module base", 0, "ptr",
-                PointerText(mem.ModuleBase), "AA2Play.exe image base");
-            AddDebug(fields, "Global root", mem.ModuleBase + 0x376164, "ptr",
-                PointerText(ctx.GlobalRoot), "S = [module + 0x376164]");
-            AddDebug(fields, "Class data", ctx.GlobalRoot + 0x28, "ptr",
-                PointerText(ctx.ClassData), "[S + 0x28]");
-            AddDebug(fields, "Class array", ctx.GlobalRoot + 0x6C, "ptr",
-                PointerText(ctx.ClassArray), "[S + 0x6C] start");
-            AddDebug(fields, "Class array end", ctx.GlobalRoot + 0x70, "ptr",
-                PointerText(ctx.ClassArrayEnd), "[S + 0x70] end");
-            AddDebug(fields, "Class count", 0, "int",
-                ctx.Characters.Count.ToString(), "entries between array bounds");
-
             CharacterInfo selected = ctx.Selected;
-            AddDebug(fields, "Selected seat", 0, "int",
-                selected == null ? "-" : selected.Seat.ToString(), "");
-            AddDebug(fields, "Selected name", 0, "string",
-                selected == null ? "" : selected.Name ?? "", "");
-
-            uint character = ctx.SelectedChar;
-            AddDebug(fields, "Character", 0, "ptr", PointerText(character),
-                "CharacterInfo");
-            AddDebug(fields, "Character data",
-                character != 0 ? character + 0x28 : 0, "ptr",
-                PointerText(ctx.SelectedCharData), "[character + 0x28]");
-            AddDebug(fields, "Status", character != 0 ? character + 0xF6C : 0,
-                "ptr", PointerText(ctx.Status), "[character + 0xF6C]");
-            AddDebug(fields, "Activity", ctx.Status != 0 ? ctx.Status + 0x28 : 0,
-                "ptr", PointerText(ctx.Activity), "[status + 0x28]");
-            AddDebug(fields, "Relations", 0, "ptr",
-                PointerText(ctx.Relations), "relationship table");
-
-            CharacterState state = debugStateReader.ReadState(character,
-                ctx.Characters);
-            if (state == null)
+            fields.Add(new DebugFieldItem
             {
-                AddDebug(fields, "Character state", 0, "string", "unavailable",
-                    "ActionStateReader returned no state");
-            }
-            else
+                Category = "Overview",
+                Name = "Selected seat",
+                Type = "int",
+                Value = selected == null ? "-" : selected.Seat.ToString(),
+                Status = "OK"
+            });
+            fields.Add(new DebugFieldItem
             {
-                uint activity = state.Activity;
-                uint npc = state.NpcData;
-                uint room = state.RoomPointer;
+                Category = "Overview",
+                Name = "Selected name",
+                Type = "string",
+                Value = selected == null ? "" : selected.Name ?? "",
+                Status = "OK"
+            });
+            fields.Add(new DebugFieldItem
+            {
+                Category = "Overview",
+                Name = "Class count",
+                Type = "int",
+                Value = ctx.Characters.Count.ToString(),
+                Note = "entries between class array bounds",
+                Status = "OK"
+            });
 
-                AddDebug(fields, "AI", activity + 0xEC, "ptr",
-                    PointerText(state.Ai), "[activity + 0xEC]");
-                AddDebug(fields, "Target activity", activity + 0x38, "ptr",
-                    PointerText(state.TargetActivity), "[activity + 0x38]");
-                AddDebug(fields, "Target character", 0, "ptr",
-                    PointerText(state.TargetChar), "[target activity + 0xE0]");
-                AddDebug(fields, "Descriptor", activity + 0xE4, "ptr",
-                    PointerText(state.Descriptor), "[activity + 0xE4]");
-                AddDebug(fields, "Movement holder", 0, "ptr",
-                    PointerText(state.MovementHolder), "movement descriptor");
-                AddDebug(fields, "Walk target interface", 0, "ptr",
-                    PointerText(state.WalkTargetInterface), "holder + base + 0x130");
-                AddDebug(fields, "Walk target character", 0, "ptr",
-                    PointerText(state.WalkTargetChar), "holder + base + 0x158");
-                AddDebug(fields, "Stare target interface", activity + 0xD8, "ptr",
-                    PointerText(state.StareTargetInterface), "[activity + 0xD8]");
-                AddDebug(fields, "Stare target character", 0, "ptr",
-                    PointerText(state.StareTargetChar), "");
-                AddDebug(fields, "NPC data",
-                    character != 0 ? character + 0xF58 : 0, "ptr",
-                    PointerText(npc), "[character + 0xF58]");
-                AddDebug(fields, "Room pointer",
-                    npc != 0 ? npc + 0x1F4 : 0, "ptr",
-                    PointerText(room), "[npc data + 0x1F4]");
-                AddDebug(fields, "Room", room != 0 ? room + 0x14 : 0, "int",
-                    state.Room < 0 ? "-" :
-                        state.Room + " " + LocationName(state.Room),
-                    "[room pointer + 0x14]");
-                AddDebug(fields, "NPC target",
-                    npc != 0 ? npc + 0x26C : 0, "ptr",
-                    PointerText(state.TargetNpc), "[npc data + 0x26C]");
-                AddDebug(fields, "Movement mirror", 0, "int",
-                    state.MovementMirror.ToString(), "");
-                AddDebug(fields, "Movement type", activity + 0x3C, "int",
-                    state.MovementType.ToString(), "[activity + 0x3C]");
-                AddDebug(fields, "Action", activity + 0x40, "int",
-                    state.ActionId < 0 ? "-" :
-                        state.ActionId + " " + ActionName(state.ActionId),
-                    "[activity + 0x40]");
-                AddDebug(fields, "Conversation", activity + 0x44, "int",
-                    state.ConversationId.ToString(), "[activity + 0x44]");
-                AddDebug(fields, "Location", activity + 0x48, "int",
-                    state.Location < 0 ? "-" :
-                        state.Location + " " + LocationName(state.Location),
-                    "[activity + 0x48]");
-                AddDebug(fields, "Mood action", activity + 0x50, "int",
-                    state.MoodAction.ToString(), "[activity + 0x50]");
-                AddDebug(fields, "Response", activity + 0x5C, "int",
-                    state.Response.ToString(), "[activity + 0x5C]");
-                AddDebug(fields, "Instruction wait", activity + 0x74, "int",
-                    state.InstructionWait.ToString(), "[activity + 0x74]");
-                AddDebug(fields, "Instruction time", activity + 0x78, "int",
-                    state.InstructionTime.ToString(), "[activity + 0x78]");
-                AddDebug(fields, "Anim locked", activity + 0x14, "byte",
-                    state.AnimLocked.ToString(), "[activity + 0x14]");
-                AddDebug(fields, "Loading", activity + 0x15, "byte",
-                    state.Loading.ToString(), "[activity + 0x15]");
-                AddDebug(fields, "In conversation", activity + 0x19, "byte",
-                    state.InConversation.ToString(), "[activity + 0x19]");
-                AddDebug(fields, "Talking", activity + 0x1B, "byte",
-                    state.Talking.ToString(), "[activity + 0x1B]");
-                AddDebug(fields, "Busy", 0, "bool",
-                    state.IsBusy ? "true" : "false", "anim/load/conversation");
+            List<DebugFieldItem> definitions =
+                new List<DebugFieldItem>(Definitions.All.Length);
+            foreach (PointerDef def in Definitions.All)
+            {
+                if (def == null) continue;
+
+                EvalResult result;
+                try
+                {
+                    result = Evaluator.Evaluate(mem, ctx, def, 0);
+                }
+                catch (Exception ex)
+                {
+                    result = new EvalResult
+                    {
+                        Def = def,
+                        Status = "UNREADABLE",
+                        Value = ex.Message ?? ""
+                    };
+                }
+
+                string status = result.Status ?? "";
+                bool optional = def.Optional;
+                definitions.Add(new DebugFieldItem
+                {
+                    Category = DebugCategoryLabel(def.Category),
+                    Name = def.Name ?? "",
+                    Address = result.HasAddress ? Hex(result.Address) : "",
+                    Type = Evaluator.TypeName(def.Type),
+                    Value = result.Value ?? "",
+                    Chain = Evaluator.ChainText(def.Chain),
+                    Status = status,
+                    Optional = optional,
+                    IsProblem = !optional &&
+                        !string.Equals(status, "OK",
+                            StringComparison.OrdinalIgnoreCase),
+                    IsPointer = def.Category == "Pointer" ||
+                        Evaluator.IsPointerName(def.Name),
+                    Trace = result.Trace ?? "",
+                    BytesText = FormatDebugBytes(result.Bytes),
+                    Note = string.IsNullOrEmpty(def.Context)
+                        ? "" : def.Context + (optional ? " / optional" : "")
+                });
             }
 
-            LiveCharacterStatus status = liveSnapshot == null
-                ? null : liveSnapshot.SelectedStatus;
-            if (status != null)
+            definitions.Sort(delegate(DebugFieldItem a, DebugFieldItem b)
             {
-                AddDebug(fields, "Victory count", 0, "int",
-                    status.VictoryCount.ToString(), "");
-                AddDebug(fields, "Class skip", 0, "int",
-                    status.ClassSkip.ToString(), "");
-                AddDebug(fields, "Winning over", 0, "int",
-                    status.WinningOver.ToString(), "");
-                AddDebug(fields, "Partner", 0, "int",
-                    status.Partner.ToString(), "");
-                AddDebug(fields, "Rejected", 0, "int",
-                    status.Rejected.ToString(), "");
-                AddDebug(fields, "Intelligence grade", 0, "int",
-                    status.IntelligenceGrade.ToString(), "");
-                AddDebug(fields, "Strength grade", 0, "int",
-                    status.StrengthGrade.ToString(), "");
-                AddDebug(fields, "Club grade", 0, "int",
-                    status.ClubGrade.ToString(), "");
-                AddDebug(fields, "Sex intercourse", 0, "int",
-                    status.SexIntercourse.ToString(), "");
-                AddDebug(fields, "Sex partner", 0, "int",
-                    status.SexPartner.ToString(), "");
-                AddDebug(fields, "Experiences", 0, "string",
-                    "sex=" + status.SexExperience +
-                    " anal=" + status.AnalExperience, "");
-            }
-
-            if (schedule != null)
-            {
-                AddDebug(fields, "Save name", 0, "string",
-                    schedule.SaveName ?? "", "class save");
-                AddDebug(fields, "Academy", 0, "string",
-                    schedule.Academy ?? "", "");
-                AddDebug(fields, "Week", 0, "int",
-                    schedule.Week + " / day " + schedule.GameDay, "");
-                AddDebug(fields, "Weekday", 0, "int",
-                    schedule.Weekday.ToString(), "");
-                AddDebug(fields, "Period", 0, "int",
-                    schedule.Period + " (" + schedule.PeriodDuration + " slots)",
-                    "");
-                AddDebug(fields, "Game time", 0, "int",
-                    schedule.TimeMilliseconds + " ms", "");
-            }
-
+                int result = StringComparer.OrdinalIgnoreCase.Compare(
+                    a.Category, b.Category);
+                if (result != 0) return result;
+                result = StringComparer.OrdinalIgnoreCase.Compare(
+                    a.Name, b.Name);
+                if (result != 0) return result;
+                result = StringComparer.Ordinal.Compare(a.Type, b.Type);
+                if (result != 0) return result;
+                return StringComparer.Ordinal.Compare(a.Chain, b.Chain);
+            });
+            fields.AddRange(definitions);
             return fields;
         }
 
-        private static void AddDebug(List<DebugFieldItem> fields, string name,
-            uint address, string type, string value, string note)
+        private static string DebugCategoryLabel(string category)
         {
-            fields.Add(new DebugFieldItem
+            switch (category)
             {
-                Name = name ?? "",
-                Address = address == 0 ? "" : Hex(address),
-                Type = type ?? "",
-                Value = value ?? "",
-                Note = note ?? ""
-            });
+                case "Relation": return "Relationships";
+                case "Promise": return "Promises";
+                default:
+                    return string.IsNullOrEmpty(category)
+                        ? "Other" : category;
+            }
         }
 
+        private static string FormatDebugBytes(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0) return "";
+            StringBuilder text = new StringBuilder();
+            int count = Math.Min(bytes.Length, 32);
+            for (int i = 0; i < count; i++)
+            {
+                if (i > 0) text.Append(' ');
+                text.Append(bytes[i].ToString("X2"));
+            }
+            if (bytes.Length > count) text.Append(" ...");
+            return text.ToString();
+        }
         private static string Hex(uint value)
         {
             return "0x" + value.ToString("X8");

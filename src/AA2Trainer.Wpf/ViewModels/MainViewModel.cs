@@ -153,7 +153,19 @@ namespace AA2Trainer.WpfPrototype
         private string loverEditStatus = "No changes.";
         private string debugFilter = "";
         private int debugTypeIndex;
+        private int debugCategoryIndex;
+        private bool debugOnlyProblems;
         private ICollectionView debugFieldsView;
+        private DebugFieldItem selectedDebugField;
+        private string debugDetails = "Select a row to inspect its pointer chain.";
+        private string debugCountText = "";
+        private List<DebugFieldItem> debugSource;
+        private static readonly string[] DebugCategoryChoices =
+            new string[]
+            {
+                "All categories", "Overview", "Character", "Relationships",
+                "Activity", "Mood", "Promises", "Class", "Config", "Pointer"
+            };
 
         public MainViewModel()
         {
@@ -986,7 +998,16 @@ namespace AA2Trainer.WpfPrototype
         public int SelectedTabIndex
         {
             get { return selectedTabIndex; }
-            set { Set(ref selectedTabIndex, value); }
+            set
+            {
+                if (!Set(ref selectedTabIndex, value)) return;
+                if (session != null)
+                {
+                    bool debugActive = value == 4;
+                    session.DebugActive = debugActive;
+                    if (debugActive) session.RequestDebugRefresh();
+                }
+            }
         }
 
         public string HookState { get { return plannerHookState; } }
@@ -1572,8 +1593,7 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 if (!Set(ref debugFilter, value ?? "")) return;
-                if (debugFieldsView != null) debugFieldsView.Refresh();
-                UpdateDebugEmptyText();
+                RefreshDebugFilter();
             }
         }
 
@@ -1583,9 +1603,55 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 if (!Set(ref debugTypeIndex, value)) return;
-                if (debugFieldsView != null) debugFieldsView.Refresh();
-                UpdateDebugEmptyText();
+                RefreshDebugFilter();
             }
+        }
+
+        public string[] DebugCategories
+        {
+            get { return DebugCategoryChoices; }
+        }
+
+        public int DebugCategoryIndex
+        {
+            get { return debugCategoryIndex; }
+            set
+            {
+                if (!Set(ref debugCategoryIndex, value)) return;
+                RefreshDebugFilter();
+            }
+        }
+
+        public bool DebugOnlyProblems
+        {
+            get { return debugOnlyProblems; }
+            set
+            {
+                if (!Set(ref debugOnlyProblems, value)) return;
+                RefreshDebugFilter();
+            }
+        }
+
+        public DebugFieldItem SelectedDebugField
+        {
+            get { return selectedDebugField; }
+            set
+            {
+                if (!Set(ref selectedDebugField, value)) return;
+                DebugDetails = BuildDebugDetails(value);
+            }
+        }
+
+        public string DebugDetails
+        {
+            get { return debugDetails; }
+            private set { Set(ref debugDetails, value ?? ""); }
+        }
+
+        public string DebugCountText
+        {
+            get { return debugCountText; }
+            private set { Set(ref debugCountText, value ?? ""); }
         }
 
         private bool FilterDebugField(object item)
@@ -1593,20 +1659,34 @@ namespace AA2Trainer.WpfPrototype
             DebugFieldItem field = item as DebugFieldItem;
             if (field == null) return false;
 
+            if (debugOnlyProblems && !field.IsProblem) return false;
+
+            if (debugCategoryIndex > 0 &&
+                debugCategoryIndex < DebugCategoryChoices.Length)
+            {
+                string category = DebugCategoryChoices[debugCategoryIndex];
+                if (!string.Equals(field.Category, category,
+                    StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
             if (!string.IsNullOrEmpty(debugFilter))
             {
-                if (!ContainsText(field.Name) &&
+                if (!ContainsText(field.Category) &&
+                    !ContainsText(field.Name) &&
                     !ContainsText(field.Address) &&
                     !ContainsText(field.Type) &&
                     !ContainsText(field.Value) &&
-                    !ContainsText(field.Note))
+                    !ContainsText(field.Note) &&
+                    !ContainsText(field.Chain) &&
+                    !ContainsText(field.Status))
                     return false;
             }
 
             switch (debugTypeIndex)
             {
                 case 1:
-                    return field.Type == "ptr";
+                    return field.IsPointer;
                 case 2:
                     return IsIntegerType(field.Type);
                 case 3:
@@ -1618,6 +1698,50 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
+        private void RefreshDebugFilter()
+        {
+            if (debugFieldsView != null) debugFieldsView.Refresh();
+            UpdateDebugFilterState();
+        }
+
+        private void UpdateDebugFilterState()
+        {
+            int visible = 0;
+            if (debugFieldsView != null)
+            {
+                foreach (object item in debugFieldsView) visible++;
+            }
+            DebugCountText = DebugFields.Count == 0
+                ? "" : visible + " / " + DebugFields.Count + " fields";
+            UpdateDebugEmptyText();
+        }
+
+        private static string BuildDebugDetails(DebugFieldItem field)
+        {
+            if (field == null)
+                return "Select a row to inspect its pointer chain.";
+
+            StringBuilder text = new StringBuilder();
+            text.AppendLine("Name:     " + field.Name);
+            text.AppendLine("Category: " + field.Category +
+                "    Type: " + field.Type);
+            text.AppendLine("Address:  " +
+                (string.IsNullOrEmpty(field.Address) ? "-" : field.Address));
+            text.AppendLine("Status:   " + field.Status +
+                (field.Optional ? "  (optional)" : ""));
+            text.AppendLine("Value:    " + field.Value);
+            text.AppendLine("Chain:    " + field.Chain);
+            text.AppendLine("Note:     " + field.Note);
+            text.AppendLine();
+            text.Append(field.Trace ?? "");
+            if (!string.IsNullOrEmpty(field.BytesText))
+            {
+                text.AppendLine();
+                text.AppendLine("Bytes:    " + field.BytesText);
+            }
+            return text.ToString();
+        }
+
         private bool ContainsText(string value)
         {
             return !string.IsNullOrEmpty(value) &&
@@ -1627,25 +1751,41 @@ namespace AA2Trainer.WpfPrototype
         private static bool IsIntegerType(string type)
         {
             return type == "int" || type == "uint" || type == "u32" ||
-                type == "i32" || type == "long" || type == "short" ||
-                type == "byte" || type == "u8";
+                type == "i32" || type == "int32" || type == "long" ||
+                type == "short" || type == "byte" || type == "u8";
         }
 
         private void ApplyDebugFields(SessionSnapshot sessionSnapshot)
         {
             List<DebugFieldItem> source = sessionSnapshot.DebugFields;
-            if (source == null || debugFieldsView == null)
+            if (debugFieldsView == null) return;
+
+            if (source == null || source.Count == 0)
             {
-                DebugEmptyText = "No debug fields available.";
+                ClearDebugFields();
+                UpdateDebugEmptyText();
                 return;
             }
+
+            // The service rebuilds the list at most once per second while the
+            // Debug tab is visible; other polls publish the same list.
+            if (ReferenceEquals(source, debugSource))
+            {
+                UpdateDebugFilterState();
+                return;
+            }
+            debugSource = source;
+
+            string keepName = selectedDebugField == null
+                ? null : selectedDebugField.Name;
 
             bool rebuild = DebugFields.Count != source.Count;
             if (!rebuild)
             {
                 for (int i = 0; i < DebugFields.Count; i++)
                 {
-                    if (DebugFields[i].Name != source[i].Name)
+                    if (DebugFields[i].Name != source[i].Name ||
+                        DebugFields[i].Category != source[i].Category)
                     {
                         rebuild = true;
                         break;
@@ -1665,10 +1805,45 @@ namespace AA2Trainer.WpfPrototype
                     DebugFields[i].Apply(source[i]);
             }
 
-            if (!string.IsNullOrEmpty(debugFilter) || debugTypeIndex != 0)
-                debugFieldsView.Refresh();
+            if (rebuild)
+            {
+                SelectedDebugField = string.IsNullOrEmpty(keepName)
+                    ? null : FindDebugField(keepName);
+            }
 
-            UpdateDebugEmptyText();
+            RefreshDebugFilter();
+        }
+
+        private DebugFieldItem FindDebugField(string name)
+        {
+            foreach (DebugFieldItem field in DebugFields)
+            {
+                if (string.Equals(field.Name, name,
+                    StringComparison.OrdinalIgnoreCase))
+                    return field;
+            }
+            return null;
+        }
+
+        private void ClearDebugFields()
+        {
+            if (DebugFields.Count == 0 && debugSource == null) return;
+            debugSource = null;
+            DebugFields.Clear();
+            SelectedDebugField = null;
+            if (debugFieldsView != null) debugFieldsView.Refresh();
+            DebugCountText = "";
+        }
+
+        private bool IsDebugFilterActive
+        {
+            get
+            {
+                return debugOnlyProblems ||
+                    debugCategoryIndex > 0 ||
+                    debugTypeIndex != 0 ||
+                    !string.IsNullOrEmpty(debugFilter);
+            }
         }
 
         private void UpdateDebugEmptyText()
@@ -1685,8 +1860,7 @@ namespace AA2Trainer.WpfPrototype
                 return;
             }
             DebugEmptyText = debugFieldsView != null &&
-                debugFieldsView.IsEmpty &&
-                (!string.IsNullOrEmpty(debugFilter) || debugTypeIndex != 0)
+                debugFieldsView.IsEmpty && IsDebugFilterActive
                 ? "No fields match the filter." : "";
         }
 
@@ -3715,8 +3889,7 @@ namespace AA2Trainer.WpfPrototype
                 }
                 else
                 {
-                    DebugFields.Clear();
-                    if (debugFieldsView != null) debugFieldsView.Refresh();
+                    ClearDebugFields();
                     DebugEmptyText =
                         "Not attached. Debug data appears when AA2Play is attached.";
                 }
