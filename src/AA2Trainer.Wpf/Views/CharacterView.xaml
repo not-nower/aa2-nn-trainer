@@ -182,6 +182,30 @@
             </Grid>
         </DataTemplate>
 
+        <DataTemplate x:Key="FieldToggleLabelledTemplate">
+            <CheckBox Content="{Binding Label}"
+                      IsChecked="{Binding ToggleValue, Mode=TwoWay}"
+                      Margin="0,3,10,3" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="FieldGroupToggleGridTemplate">
+            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}"
+                               Style="{StaticResource SectionHeader}"
+                               Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Items}"
+                                  ItemTemplate="{StaticResource FieldToggleLabelledTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
         <DataTemplate x:Key="OutfitSetTemplate">
             <Grid Margin="0,12,0,8">
                 <Grid.Style>
@@ -1002,60 +1026,67 @@
                 </Grid.RowDefinitions>
 
                 <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="12,12,12,8">
-                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Body"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,6" />
-                                <ItemsControl ItemsSource="{Binding BodyDraft.BodyFields}"
-                                              ItemTemplate="{StaticResource BodyFieldTemplate}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="2" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
+                    <Grid Margin="12,12,12,8">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BodyDraft}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="Breasts"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,6" />
-                                <ItemsControl ItemsSource="{Binding BodyDraft.BreastFields}"
-                                              ItemTemplate="{StaticResource BodyFieldTemplate}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="2" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Grid.Column="0">
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Body"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding BodyDraft.BodyFields}"
+                                                  ItemTemplate="{StaticResource BodyFieldTemplate}" />
+                                </StackPanel>
+                            </Border>
 
-                        <Border Style="{StaticResource Card}">
-                            <StackPanel>
-                                <TextBlock Text="Skin"
-                                           Style="{StaticResource SectionHeader}"
-                                           Margin="0,0,0,6" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="14" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <ItemsControl Grid.Column="0"
-                                                  ItemsSource="{Binding BodyDraft.SkinLeftFields}"
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Skin"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding BodyDraft.SkinLeftFields}"
                                                   ItemTemplate="{StaticResource BodyFieldTemplate}" />
-                                    <ItemsControl Grid.Column="2"
-                                                  ItemsSource="{Binding BodyDraft.SkinRightFields}"
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Breasts"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding BodyDraft.BreastFields}"
                                                   ItemTemplate="{StaticResource BodyFieldTemplate}" />
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Nipples &amp; tan"
+                                               Style="{StaticResource SectionHeader}"
+                                               Margin="0,0,0,6" />
+                                    <ItemsControl ItemsSource="{Binding BodyDraft.SkinRightFields}"
+                                                  ItemTemplate="{StaticResource BodyFieldTemplate}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                 </ScrollViewer>
 
                 <Border Grid.Row="1"
@@ -1120,7 +1151,7 @@
                             <ContentControl Content="{Binding FaceDraft[Glasses]}"
                                             ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
                             <ContentControl Content="{Binding FaceDraft[Mole]}"
-                                            ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
+                                            ContentTemplate="{StaticResource FieldGroupToggleGridTemplate}" />
                             <ContentControl Content="{Binding FaceDraft[External textures]}"
                                             ContentTemplate="{StaticResource FieldGroupSingleColumnTemplate}" />
                         </StackPanel>

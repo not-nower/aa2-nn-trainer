@@ -169,13 +169,22 @@ namespace AA2Trainer.WpfPrototype
 
         private void SplitSkinFields()
         {
-            // Fill the first Skin column top to bottom, then the second.
-            int rows = (SkinFields.Count + 1) / 2;
-            for (int i = 0; i < SkinFields.Count; i++)
+            foreach (BodyFieldItem item in SkinFields)
             {
-                if (i < rows) SkinLeftFields.Add(SkinFields[i]);
-                else SkinRightFields.Add(SkinFields[i]);
+                if (IsSkinBaseField(item.Index))
+                    SkinLeftFields.Add(item);
+                else
+                    SkinRightFields.Add(item);
             }
+        }
+
+        private static bool IsSkinBaseField(int index)
+        {
+            return index == BodyEditor.IndexOf("SkinColor") ||
+                index == BodyEditor.IndexOf("PubHairType") ||
+                index == BodyEditor.IndexOf("PubHairOpa") ||
+                index == BodyEditor.IndexOf("PubHairColor") ||
+                index == BodyEditor.IndexOf("PussyMosaic");
         }
 
         private void SortBodyFields()
