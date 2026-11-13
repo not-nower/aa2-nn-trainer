@@ -1,302 +1,119 @@
 # NN's AA2 Trainer
 
-Inspired by Ahrie's AA2Trainer.
-Fully vibe coded.
+Inspired by Ahrie's AA2Trainer. Fully vibe coded.
 
-> **Save safety:** this tool writes to game memory and can rewrite class save
-> files. Back up your saves first. Import/Export and Options → Trainer → Save backups
-> write timestamped `.bak` files next to the save before changing it, and
-> Restore creates safety backups of the current save and AAU sidecar first.
-> That is a convenience, not a guarantee. Memory edits are lost unless you save in-game, and editing is
-> only tested against AA2Play 2.0.1. After restoring a save, reload the class or
-> restart AA2Play. Use at your own risk.
+> **Save safety:** this tool writes to game memory and can rewrite class save files.
+> Back up your saves first. Import/Export and **Options → Trainer → Save backups**
+> create timestamped `.bak` files beside the save; memory edits are lost unless you
+> save in-game. Tested against AA2Play 2.0.1. Use at your own risk.
 
 ## Features
 
-- **Class Roster** — live cards with portrait, name, personality, location, action, target, and a small portrait of the current target; hover portraits, play-as, PC/teacher badges, and relationship menu.
-- **Gameplay** — Action/Planner (single action plus per-character multi-step plans), Relationship, Behavior History, Lover, Promises, and Limits (per-character persistent lists of actions that character may not perform; select the character in the roster to edit their list).
-- **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
-- **Options** — live-refresh settings, portable save Backup/Restore (including AAUnlimited `.json` data), and bundled name-table updates, plus game System/Sound/Additional options.
-- **Debug** — a read-only game-memory browser with definition search, category/type/text filters, and pointer-chain details.
-- **Top bar** — weekday/week/period, clock (click for schedule edits and time freeze), and the live academy/save context.
-- **Live refresh** — adaptive background polling.
+- **Class Roster** — live 5×5 classroom cards with portrait, name, personality,
+  location, action, target, target portrait, PC/teacher badges, filters, play-as,
+  and relationship menu.
+- **Gameplay** — Planner (multi-step plans, modes, triggers, drag reorder, Force
+  Actions, copy/paste, save/load), Limits, Relationship, Behavior, Lover, Promises.
+- **Character Editor** — Data, Traits, Body, Face, Hair, Outfits, and Import/Export
+  (offline save/card replacer with card-face previews and card export).
+- **Options** — live refresh, save backups, name tables, and game options
+  (System/Sound/Additional).
+- **Debug** — read-only game-memory browser with filters and pointer details.
+- **Top bar** — game time, schedule editor, time freeze, and live academy/save.
+- **Live refresh** — adaptive background polling with Live events / Planner log.
 
 ## Requirements
 
 - Windows with .NET Framework 4.8.
-- A writable folder for `AA2Trainer.exe`; settings and the optional name overlay are stored beside it.
-- x86 AA2Play, tested against version 2.0.1.
-- Run the trainer as administrator for reliable read/write access. Without it, the trainer may attach read-only.
-- A class/save loaded in AA2Play.
-- AAUnlimited is optional. It is needed for AAU modules and the AAU planner-entry hook mode.
-- Action/Planner actions require free roam/gameplay, not the class-load screen.
+- x86 AA2Play 2.0.1, with a class/save loaded.
+- Run the trainer as administrator for reliable read/write access.
+- A writable folder for `AA2Trainer.exe`; settings are stored beside it.
+- AAUnlimited is optional (AAU modules, planner-entry hook mode).
+- Action/Planner actions require free roam, not the class-load screen.
 
 ## Quick start
 
 1. Download the latest `AA2Trainer-v*-win-x86.zip` from the
    [Releases page](https://github.com/not-nower/aa2-nn-trainer/releases/latest)
-   and extract it. The zip contains `AA2Trainer.exe`, its `.config`, `LICENSE`,
-   and `README.md`.
+   and extract it.
 2. Start AA2Play and load a class/save.
 3. Run `AA2Trainer.exe` as administrator.
-4. The trainer attaches automatically. Use the ↻ button to re-attach or refresh.
+4. The trainer attaches automatically; use ↻ to re-attach or refresh.
 5. Select a character in Class Seats or the roster.
 6. Use the tabs to view or edit the selected character.
-7. For Action/Planner, enter free roam, select an actor and target, then run the action.
-8. For multi-step plans, build a step list in Action/Planner, choose a mode and
-   trigger, then click **Start plan**.
-9. Use **Options → Trainer → Save backups** to create or restore a timestamped
-   save backup before making large changes.
+7. For plans, open **Gameplay → Planner**, install the hook, build steps, and
+   press **Start plan**.
+8. Before large edits, use **Options → Trainer → Save backups**.
 
-## Name tables
+## Planner
 
-Name tables are embedded and built from the game XML set dated **2026-09-06**
-(`clothes.xml`, `HEXAOC.xml`, `personalities.xml`). At runtime the trainer also
-merges `*.xml` found in the game folder.
+Build steps with **Add Action** (Target / About / Action) or **Add Move** (Room).
+Drag rows to reorder, remove steps, or uncheck **On** to skip one. **Force Action**
+and **Force Move** run the current selection once without changing the plan.
 
-If the community releases newer XMLs, open **Options → Trainer → Name tables**
-and use **Update from XMLs...**. The trainer writes `NameData.local.tsv` next
-to `AA2Trainer.exe`, reloads the names, and keeps the overlay across exe
-updates. Imports only add or rename entries — names are never removed — and
-**Reset overlay** deletes the file. Only the folder you pick is read (no
-subfolders), so ReiEdit/mod override tables are not pulled in.
+| Mode | Behavior |
+|---|---|
+| Normal | Waits for the character to start toward the step's target; the plan then substitutes the step. |
+| Forced Interaction | Arms when the character starts an interaction; does not force from idle. |
+| Forced Perform | Arms immediately, even while busy; may use a direct activity write fallback. |
+| Ignore Interaction | Cancels the current action, then arms the step. |
 
-## Save backups
+- **Trigger** (Actor / Target / Either) applies to Normal mode.
+- **Repeat / Shuffle** loop the plan or play every step once in random order.
+- **Copy plan / Paste plan** work across characters; paste replaces the current plan.
+- **Save plans / Load plans** use `AA2TrainerPlans.xml` beside the exe.
+- **Start plan / Stop plan** — steps show pending, running, done, failed, or skipped.
+- **Planner hook** — use **Install hook**, and **Repair hook** after a force-closed
+  trainer. Normal close restores the original game bytes.
+- **Live events / Planner log** keep the newest 5,000 lines and auto-scroll only
+  while you're at the bottom. Clear and Save act on the active tab.
 
-**Options → Trainer → Save backups** works on the class save the game currently
-has loaded. Import/Export creates the same timestamped backups for the save it
-has open.
+## Backups and name tables
 
-- **Backup** copies the `.sav` and, when present, the AAUnlimited `.json`
-  sidecar to timestamped `.bak` files beside the original.
-- Both files use the same timestamp. If no `.json` exists, the backup is
-  `.sav` only.
-- **Restore...** lists timestamped backups with their creation time, verifies
-  the chosen backup, and creates a safety backup of the current save and
-  sidecar before replacing them.
-- Import/Export backups and Backup-created backups use the same naming, so
-  either function can restore the other's files.
-- Backups with AAU data restore both files. Older sav-only backups leave the
-  current `.json` unchanged.
-- Reload the class or restart AA2Play after restoring.
+- **Save backups** copy the current `.sav` and, when present, the AAU `.json`
+  sidecar to timestamped `.bak` files. **Restore...** verifies the backup and
+  creates a safety backup first. Reload the class after restoring.
+- **Import/Export** creates the same backup format for the save it has open.
+- **Name tables** are embedded from the 2026-09-06 XMLs. **Update from XMLs...**
+  merges newer `clothes.xml` / `HEXAOC.xml` / `personalities.xml` into
+  `NameData.local.tsv` (adds/renames only). **Reset overlay** deletes it.
 
-If Import/Export currently has that save open, the trainer reloads it after a
-restore so stale in-memory card data cannot overwrite the restored file.
+## Settings
 
-## Portable settings
-
-The default WPF build stores its preferences beside `AA2Trainer.exe` in
-`AA2Trainer.settings`:
-
-```ini
-LiveRefresh=1
-RefreshIntervalMs=250
-LiveIntervalAuto=1
-ObserveOnly=0
-Theme=System
-WindowLeft=120
-WindowTop=80
-WindowWidth=1280
-WindowHeight=850
-WindowMaximized=0
-RailCollapsed=0
-RosterRailCollapsed=1
-LogCollapsed=0
-```
-
-- `LiveRefresh` - pause/resume live polling (writes still process while paused)
-- `RefreshIntervalMs` - manual poll interval, 50-2000 ms
-- `LiveIntervalAuto` - use 100 ms while active / 500 ms when idle (default)
-- `ObserveOnly` - remember the planner observe-only choice for the next hook install
-- `Theme` - `System`, `Light`, or `Dark`
-- window keys - last physical-pixel bounds and maximized state; bounds are
-  validated against the connected desktop, so an unplugged monitor centers the
-  window instead of stranding it off-screen
-- `RailCollapsed`, `RosterRailCollapsed`, `LogCollapsed` - panel states
-
-Action limits are per character in `AA2Trainer.ini` beside the exe as
-`limit-actions-00` through `limit-actions-24`.
-
-The legacy WinForms build stores its own settings beside `bin\AA2Trainer.exe` in
-`AA2Trainer.ini` (`limit-actions`, `last-save`).
-
-Both formats are portable: copying or moving the exe folder carries the
-settings with it. The trainer does not write to `%APPDATA%`. If the folder is
-read-only, the trainer still runs but cannot remember changes.
-
-## Plan Multiple Action
-
-Gameplay → Action/Planner can run a playlist of steps for each character,
-in the same spirit as TAA2's Plan Multiple Action.
-
-- **Build a plan** — select a character, then **Add Action** (Target / About /
-  Action) or **Add Move** (Room). Reorder by dragging a row with the mouse,
-  and remove steps before starting. **Force Action** / **Force Move** run the
-  current selection once, immediately, without touching the plan.
-- **Modes**
-  - **Normal (character chooses)** — passive: the plan does nothing until the
-    character herself starts walking toward the step's target; it then
-    substitutes the step. It never starts an interaction on its own.
-  - **Forced Interaction** — waits until the character starts an interaction
-    (with any partner) and then substitutes the step. It does not force while idle.
-  - **Forced Perform** — applies the step immediately, including a direct
-    activity write when the game's planner is not responding.
-  - **Ignore Interaction** — cancels the current action so the step can run.
-- **Trigger** — Actor initiates (default), Target initiates, or Either initiates.
-- **Repeat / Shuffle** — loop the playlist, or play every step once in random order.
-- **Copy plan / Paste plan** — in-memory clipboard; works across characters and
-  keeps target/about seats. Paste replaces the current plan after confirmation.
-- **Start plan / Stop plan** — the list shows each step as pending, running, done,
-  failed, or skipped. A step the game refuses after its retries is marked failed
-  and the plan moves on; it does not stop the plan.
-- **Enable/disable a step** — clear the row's **On** checkbox to skip it without
-  deleting or reordering. Skipped steps stay in the list, show `skipped`, and are
-  ignored on every repeat cycle. Hover a row to see its last skip or failure reason.
-- **Save plans / Load plans** — `AA2TrainerPlans.xml` beside `AA2Trainer.exe`.
-  It stores seats and parameters only (no pointers), so it survives class/scene
-  reloads and moves with the folder. Load merges by seat, skips running plans,
-  and does not auto-start anything.
-- **Live events** – the first log tab records seat state changes as they
-  happen, with the partner name. **Planner log** holds the runner trace.
-  Clear and Save act on the active tab. Both logs keep the newest 5,000
-  lines, drain in 100 ms batches, and auto-scroll only while the view is at
-  the bottom.
-- **Planner hook** — explicit **Install hook** / **Uninstall hook** in Gameplay → Planner.
-  Normal close restores the original game bytes; **Repair hook** recovers a
-  patch left behind by a force-closed trainer. AAUnlimited is optional; plans
-  use the game's planner entry either way.
+Preferences live in `AA2Trainer.settings` beside the exe: theme, window bounds,
+rail/log state, polling, and observe-only. Action limits are per character in
+`AA2Trainer.ini`. Copying or moving the exe folder carries the settings; the
+trainer does not write to `%APPDATA%`.
 
 ## Build
 
-Requires the .NET SDK 8 or newer (`dotnet --version`). End users only need .NET Framework 4.8.
+Requires the .NET SDK 8 or newer; end users only need .NET Framework 4.8.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-Default output is the WPF app: `bin\WPF\AA2Trainer.exe` (x86, .NET Framework
-4.8) plus its `AA2Trainer.Core.dll`, WPF assemblies, `.config`, and manifest.
-Keep the whole folder together; that folder is the portable deployment.
-
-The WinForms build is kept as a legacy fallback for one release:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File build.ps1 -Legacy
-```
-
-That writes `bin\AA2Trainer.exe` plus `bin\AA2Trainer.Core.dll`.
-
-`build.ps1` stops a running trainer before building. `-KeepRunning` opts out,
-but the build will fail while the trainer is running.
-`dotnet build AA2Trainer.sln -c Release` also works, with the same running-app
-caveat.
-
-## Dependencies
-
-- **Runtime:** Windows x86 with .NET Framework 4.8 and AA2Play 2.0.1. Optional:
-  AAUnlimited for AAU modules and the planner hook. No external data files —
-  name, trait and card-field tables are embedded in `AA2Trainer.Core.dll`.
-- **Build:** .NET SDK 8+ and the `Microsoft.NETFramework.ReferenceAssemblies`
-  NuGet package (build-only).
-- **Tools only:** Python 3 for the `tools/` exporters. They are not part of the
-  build; the generated TSVs are committed and embedded as-is.
-
-## Layout
-
-- `AA2Trainer.sln` — solution for the WPF app (default), WinForms legacy app, and Core library.
-- `src/`
-  - `Program.cs` — application entry point
-  - `MainForm.cs` — main window, tab shell, attach/refresh, fail-safe pointer gate
-  - `MainForm.Roster.cs` — class seats, hover portrait, play-as character
-  - `MainForm.CharacterEditor.cs` — Character Editor tab, sub-tabs, and save-path sharing
-  - `MainForm.Gameplay.cs` — Gameplay tab wiring
-  - `MainForm.Options.cs` — Option tab wiring, portable settings, and save path sharing
-  - `MainForm.Debug.cs` — Debug tab, grids and filters, and Status Preview
-  - `MainForm.Live.cs` — background live poller and adaptive refresh
-  - `MainForm.TopPanel.cs` — top summary, schedule header, clock and freeze
-  - `MainForm.Text.cs` — text and formatting helpers
-  - `UI/` — WinForms controls
-    - `ClassRosterControl.cs` — roster cards and relationship context menu
-    - `CharacterDataControl.cs` — Character Data, including read-only AAU modules
-    - `TraitsControl.cs` — Traits and H Preferences
-    - `BodyControl.cs`, `FaceControl.cs`, `HairControl.cs`, `OutfitsControl.cs` — appearance editors
-    - `GameplayControl.cs` — Gameplay sub-tab host, including Limits
-    - `ActionPlannerControl.cs` — Action/Planner (single action, multi-step plans, live events)
-    - `ActionLimitControl.cs` — Limits checkbox UI
-    - `RelationshipControl.cs` — Relationship
-    - `BehaviorHistoryControl.cs` — Behavior History
-    - `LoverControl.cs` — Lover
-    - `PromisesControl.cs` — Promises
-    - `OptionsControl.cs` — Option editor and save backups
-    - `RestoreBackupDialog.cs` — timestamped backup picker
-    - `ImportReplaceControl.cs` — offline save/card replacer and card exporter
-    - `FieldGridControl.cs` — reusable debug field grid
-    - `PortraitLoader.cs` — portrait image loading
-    - `DashboardData.cs` — definition lookup
-  - `Core/` — `AA2Trainer.Core.csproj`, a net48 class library with no UI references
-    - `AA2Trainer.Core.csproj` — Core library project
-    - `GameMemory.cs`, `MemoryWriter.cs` — process attach, reads, verified writes
-    - `GameProfile.cs`, `PointerHealth.cs` — build detection and pointer health
-    - `GameContext.cs`, `LiveReader.cs` — class roster context and live snapshots
-    - `Definitions.cs`, `Evaluator.cs`, `NameMap.cs` — definition tables and name lookup
-    - `CharacterEditor.cs`, `BodyEditor.cs`, `FaceEditor.cs`, `HairEditor.cs`, `OutfitEditor.cs` — character and appearance data
-    - `Traits.cs`, `OptionEditor.cs`, `ScheduleEditor.cs`, `RiskSchedule.cs` — traits, options and schedule
-    - `RelationshipData.cs`, `RelationshipEditor.cs`, `LoverEditor.cs`, `PromiseReader.cs` — relationship data
-    - `RelationshipStatus.cs` — status catalog and candidate derivation
-    - `ActionParams.cs`, `ActionStateReader.cs`, `ActionPlannerEngine.cs`, `PlannerHook.cs` — Action/Planner and planner hook
-    - `PlanStep.cs`, `PlanQueue.cs`, `PlanRunner.cs`, `PlannerPrimitives.cs`, `PlanStore.cs` — multi-step plans, runner, and portable plan file
-    - `ActionLimitList.cs`, `ActionLimiter.cs` — persistent limits and poll/cancel limiter
-    - `AauModuleReader.cs` — read-only AAU module list parser
-    - `CardFields.cs` — card edit-data field definitions
-    - `CardSnapshot.cs` — card PNG/edit-data parser
-    - `ClassSaveFile.cs` — class save parser/writer
-    - `SaveBackup.cs` — timestamped backup listing, validation, and restore
-    - `TrainerSettings.cs` — portable `AA2Trainer.ini` settings
-    - `NameOverlay.cs` — user name-table overlay (`NameData.local.tsv`)
-    - `PlayerSwitch.cs` — play-as helper
-    - `DisplayText.cs` — action display text shared by Core and UI
-  - `Data/`
-    - `NameData.tsv` — action, location, personality and name tables (embedded in Core)
-    - `TraitEffects.tsv` — trait effect tooltip text (embedded in Core)
-    - `CardFields.tsv` — card edit-data field table (embedded in Core)
-- `src\AA2Trainer.Wpf\` — WPF app with live session polling; default build output is `bin\WPF\AA2Trainer.exe`
-- `tools/ExportNameData.py` — regenerates `NameData.tsv` from the game or AA2QtEdit XML (merge-only)
-- `tools/ExportCardFields.py` — regenerates `CardFields.tsv` from AA2QtEdit `chardata.xml`
-- `tools/README.md` — exporter usage notes
-- `build.ps1` — stops a running trainer, then builds the WPF x86 app to `bin\WPF\AA2Trainer.exe`; `-Legacy` builds WinForms to `bin\AA2Trainer.exe`
-- `AA2Trainer.csproj` — SDK-style .NET Framework 4.8 WinForms app; references `src/Core/AA2Trainer.Core.csproj`
+Output is `bin\WPF\AA2Trainer.exe` (WPF, x86) plus `AA2Trainer.Core.dll` and
+`.config`. The WinForms fallback is available with `build.ps1 -Legacy`.
 
 ## Troubleshooting
 
-- **Not attached / OpenProcess failed** — start AA2Play and run the trainer as administrator.
-- **Class data is not loaded** — load a save/class in AA2Play first.
-- **Action/Planner does nothing** — make sure you are in free roam, the actor is idle, and a valid target is selected. Check the planner log for the hook state.
-- **Build fails because the trainer is running** — `build.ps1` stops it automatically; `-KeepRunning` skips the stop, so close the trainer first.
-- **Names look outdated** — Options → Trainer → Name tables → **Update from XMLs...** with the folder containing the newer `clothes.xml`, `HEXAOC.xml`, or `personalities.xml`.
-- **Restored save is not visible in AA2Play** — reload the class or restart AA2Play after restoring.
-- **Settings are not remembered** — the folder containing `AA2Trainer.exe` must be writable. Avoid running the portable build from a read-only folder such as Program Files.
-- **Restore does not list a backup** — only files named like `<name>.sav.YYYYMMDD-HHMMSS.bak` are shown. Backup and Import/Export create that format automatically.
-- **AAUnlimited data was not restored** — the backup was made before AAU backup support, or the `.json` was missing at backup time. Sav-only backups leave the current sidecar unchanged; make a new backup to include it.
-- **A plan does not start** — Normal waits until the character starts toward the
-  step's target; Forced Interaction waits until she starts an interaction. Check the Live
-  events tab, the mode, and that a target is selected.
-- **A plan step shows failed** — the game did not accept the injected action
-  after its retries (for example, the character was already performing it). The
-  plan continues with the next step.
-- **A step is always skipped** — its **On** checkbox is off. Tick it before
-  starting the plan.
-- **Plans file is missing** — run **Save plans** once; it creates
-  `AA2TrainerPlans.xml` beside `AA2Trainer.exe`.
-- **Crash** — `crash.log` is written next to `AA2Trainer.exe`.
+- **Not attached** — start AA2Play and run the trainer as administrator.
+- **Class data missing** — load a save/class in AA2Play first.
+- **Planner does nothing** — check free roam, the selected target, and the mode.
+  Normal waits for the character; Forced Interaction waits for an interaction.
+- **A step is skipped** — its **On** checkbox is off.
+- **Names look outdated** — update them from the newer XML folder.
+- **Restored save not visible** — reload the class or restart AA2Play.
+- **Crash** — `crash.log` is written beside `AA2Trainer.exe`.
 
 ## Credits
 
-- **Ahrie** — original AA2Trainer; inspiration and reference for the game's memory structures.
-- **AAUnlimited Contributors** — [AAUnlimited](https://github.com/aa2g/AA2Unlimited); module/trigger format, planner entry, and modding framework.
-- **geneishouko** — [AA2QtEdit](https://github.com/geneishouko/AA2QtEdit); used as a reference for save and card data handling.
-- **usagirei** — [ReiEdit](https://github.com/usagirei/ReiEdit-AA2); original 2017 XML name tables (the shipped baseline has since been extended from the game's XMLs).
+- **Ahrie** — original AA2Trainer; inspiration and memory-structure reference.
+- **AAUnlimited Contributors** — module/trigger format and planner entry.
+- **geneishouko** — AA2QtEdit; save and card data reference.
+- **usagirei** — ReiEdit; original name tables.
 
 ## License
 
 GNU General Public License v3.0 — see [LICENSE](LICENSE).
-
