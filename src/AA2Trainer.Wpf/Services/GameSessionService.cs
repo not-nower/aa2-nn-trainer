@@ -1052,8 +1052,9 @@ namespace AA2Trainer.WpfPrototype
                 string action = actionId >= 0
                     ? ActionName(actionId) : "None";
                 string personality = PersonalityName(liveState);
+                int targetSeat;
                 string target = TargetText(liveState, byNpcData, byActivity,
-                    byPointer);
+                    byPointer, out targetSeat);
                 string mood = liveState != null && liveState.MoodAction >= 0
                     ? liveState.MoodAction.ToString() : "-";
 
@@ -1082,6 +1083,7 @@ namespace AA2Trainer.WpfPrototype
                     HeaderRelationship = headerRelationship,
                     Personality = personality,
                     Target = target,
+                    TargetSeat = targetSeat,
                     Mood = mood,
                     IsBusy = liveState != null && liveState.IsBusy,
                     HasRelationship = hasRelationships.ContainsKey(seat) &&
@@ -1112,8 +1114,10 @@ namespace AA2Trainer.WpfPrototype
         private string TargetText(LiveCharacterState state,
             Dictionary<uint, LiveCharacterState> byNpcData,
             Dictionary<uint, LiveCharacterState> byActivity,
-            Dictionary<uint, LiveCharacterState> byPointer)
+            Dictionary<uint, LiveCharacterState> byPointer,
+            out int targetSeat)
         {
+            targetSeat = -1;
             if (state == null) return "";
 
             LiveCharacterState target = null;
@@ -1133,6 +1137,7 @@ namespace AA2Trainer.WpfPrototype
                     ? "NPC" : "";
             }
 
+            targetSeat = target.Seat;
             string text = target.Seat >= 0
                 ? target.Seat.ToString("D2") + " " + (target.Name ?? "")
                 : target.Name ?? "";

@@ -100,13 +100,17 @@
                         </Border.ContextMenu>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="68" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <Border Width="68" Height="80"
+                            <Border Grid.Column="0"
+                                    Width="68"
+                                    Height="80"
+                                    Margin="0,0,8,0"
                                     CornerRadius="3"
                                     Background="{DynamicResource AccentSoft}"
+                                    ClipToBounds="True"
                                     VerticalAlignment="Center">
                                 <Grid>
                                     <TextBlock Text="{Binding Initial}"
@@ -115,15 +119,12 @@
                                                FontSize="18"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center" />
-                                    <Image Source="{Binding RosterImage}"
-                                           Stretch="Uniform"
-                                           RenderOptions.BitmapScalingMode="HighQuality">
-                                        <Image.Clip>
-                                            <RectangleGeometry Rect="0,0,68,80"
-                                                               RadiusX="3"
-                                                               RadiusY="3" />
-                                        </Image.Clip>
-                                    </Image>
+                                    <Border CornerRadius="3">
+                                        <Border.Background>
+                                            <ImageBrush ImageSource="{Binding RosterImage}"
+                                                        Stretch="UniformToFill" />
+                                        </Border.Background>
+                                    </Border>
                                     <Border HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
                                             Background="{DynamicResource Surface}"
@@ -136,84 +137,123 @@
                                                    FontSize="9"
                                                    Foreground="{DynamicResource TextMuted}" />
                                     </Border>
-                                    <Border x:Name="TeacherBadge"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Bottom"
-                                            Background="{DynamicResource AccentSoft}"
-                                            BorderBrush="{DynamicResource AccentSoft}"
-                                            BorderThickness="1"
-                                            CornerRadius="6"
-                                            Padding="4,1"
-                                            Margin="3"
-                                            Visibility="Collapsed"
-                                            ToolTip="Teacher seat">
-                                        <TextBlock x:Name="TeacherBadgeText"
-                                                   Text="Teacher"
-                                                   FontSize="8"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource Accent}" />
-                                    </Border>
-                                    <Border x:Name="PcBadge"
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Bottom"
+                                                Margin="3">
+                                        <Border x:Name="TeacherBadge"
+                                                Background="{DynamicResource AccentSoft}"
+                                                BorderBrush="{DynamicResource AccentSoft}"
+                                                BorderThickness="1"
+                                                CornerRadius="6"
+                                                Padding="4,1"
+                                                Margin="0,0,3,0"
+                                                Visibility="Collapsed"
+                                                ToolTip="Teacher seat">
+                                            <TextBlock x:Name="TeacherBadgeText"
+                                                       Text="Teacher"
+                                                       FontSize="8"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Accent}" />
+                                        </Border>
+                                        <Border x:Name="PcBadge"
+                                                Background="{DynamicResource Accent}"
+                                                BorderBrush="{DynamicResource Accent}"
+                                                BorderThickness="1"
+                                                CornerRadius="6"
+                                                Padding="4,1"
+                                                Visibility="Collapsed"
+                                                ToolTip="Player character">
+                                            <TextBlock Text="PC"
+                                                       FontSize="8"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Surface}" />
+                                        </Border>
+                                    </StackPanel>
+
+                                    <Border x:Name="TargetMini"
+                                            Width="28" Height="28"
+                                            CornerRadius="14"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Bottom"
-                                            Background="{DynamicResource Accent}"
-                                            BorderBrush="{DynamicResource Accent}"
-                                            BorderThickness="1"
-                                            CornerRadius="6"
-                                            Padding="4,1"
-                                            Margin="3"
+                                            Margin="0"
+                                            Background="{DynamicResource SurfaceAlt}"
+                                            BorderBrush="{DynamicResource Surface}"
+                                            BorderThickness="1.5"
+                                            ClipToBounds="True"
                                             Visibility="Collapsed"
-                                            ToolTip="Player character">
-                                        <TextBlock Text="PC"
-                                                   FontSize="8"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource Surface}" />
+                                            ToolTip="{Binding Target}">
+                                        <Grid>
+                                            <TextBlock Text="{Binding TargetSeatItem.Initial}"
+                                                       Foreground="{DynamicResource Accent}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                            <Border CornerRadius="13">
+                                                <Border.Background>
+                                                    <ImageBrush ImageSource="{Binding TargetSeatItem.RosterImage}"
+                                                                Stretch="UniformToFill" />
+                                                </Border.Background>
+                                            </Border>
+                                        </Grid>
                                     </Border>
                                 </Grid>
                             </Border>
 
-                            <StackPanel Grid.Column="1" Margin="6,0,0,0"
+                            <StackPanel Grid.Column="1"
                                         VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Name}"
+                                           FontSize="13"
                                            FontWeight="SemiBold"
                                            TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding RoomAction}"
-                                           Style="{StaticResource CaptionText}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,2,0,0" />
-                                <TextBlock Text="{Binding DetailLine}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,1,0,0"
-                                           FontSize="9"
-                                           Foreground="{DynamicResource TextMuted}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding DetailLine}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <Ellipse x:Name="StatusDot"
-                                             Width="7" Height="7"
-                                             Fill="{DynamicResource Success}"
-                                             Margin="0,0,5,0"
-                                             VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Status}"
+                                <StackPanel x:Name="DetailFields"
+                                            Margin="0,1,0,0">
+                                    <TextBlock Text="{Binding Personality}"
                                                Style="{StaticResource CaptionText}"
-                                               Margin="0,0,8,0" />
-                                    <TextBlock Text="{Binding Relationship}"
-                                               Style="{StaticResource CaptionText}" />
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Location}"
+                                               Style="{StaticResource CaptionText}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Action}"
+                                               Style="{StaticResource CaptionText}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Target}"
+                                               Style="{StaticResource CaptionText}"
+                                               TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
+                                <Grid Margin="0,5,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0"
+                                                Orientation="Horizontal">
+                                        <Ellipse x:Name="StatusDot"
+                                                 Width="7" Height="7"
+                                                 Fill="{DynamicResource Success}"
+                                                 Margin="0,0,5,0"
+                                                 VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Status}"
+                                                   Style="{StaticResource CaptionText}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Relationship}"
+                                               Style="{StaticResource CaptionText}"
+                                               Margin="8,0,0,0"
+                                               TextTrimming="CharacterEllipsis" />
+                                </Grid>
                             </StackPanel>
                         </Grid>
                     </Border>
                     </Grid>
                     <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding HasName}" Value="False">
+                            <Setter TargetName="DetailFields" Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding HasTargetSeatItem}" Value="True">
+                            <Setter TargetName="TargetMini" Property="Visibility" Value="Visible" />
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
                                      Value="True">
                             <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource Accent}" />

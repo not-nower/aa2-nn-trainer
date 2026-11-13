@@ -27,7 +27,12 @@ namespace AA2Trainer.WpfPrototype
 
         public int SeatIndex { get; set; } = -1;
         public string Seat { get; set; } = "";
-        public bool IsPc { get; set; }
+        private bool isPc;
+        public bool IsPc
+        {
+            get { return isPc; }
+            set { Set(ref isPc, value); }
+        }
         public bool IsTeacher { get; set; }
         public bool HasRelationship { get; set; }
         public bool IsLover { get; set; }
@@ -210,9 +215,26 @@ namespace AA2Trainer.WpfPrototype
             set
             {
                 if (!Set(ref personality, value ?? "")) return;
+                OnPropertyChanged(nameof(HeaderPersonality));
+                OnPropertyChanged(nameof(HasPersonality));
                 OnPropertyChanged(nameof(DetailLine));
                 OnPropertyChanged(nameof(DetailTooltip));
             }
+        }
+
+        /// <summary>Personality text for the character header, or empty.</summary>
+        public string HeaderPersonality
+        {
+            get
+            {
+                return string.IsNullOrEmpty(personality)
+                    ? "" : "Personality: " + personality;
+            }
+        }
+
+        public bool HasPersonality
+        {
+            get { return !string.IsNullOrEmpty(personality); }
         }
 
         public string Target
@@ -224,6 +246,25 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(DetailLine));
                 OnPropertyChanged(nameof(DetailTooltip));
             }
+        }
+
+        private SeatItem targetSeatItem;
+
+        /// <summary>Seat of the character this one is acting on, for the card
+        /// target thumbnail. Null when there is no resolvable target.</summary>
+        public SeatItem TargetSeatItem
+        {
+            get { return targetSeatItem; }
+            set
+            {
+                if (!Set(ref targetSeatItem, value)) return;
+                OnPropertyChanged(nameof(HasTargetSeatItem));
+            }
+        }
+
+        public bool HasTargetSeatItem
+        {
+            get { return targetSeatItem != null; }
         }
 
         public string Location

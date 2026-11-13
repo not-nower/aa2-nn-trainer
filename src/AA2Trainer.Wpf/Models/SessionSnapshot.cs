@@ -20,6 +20,7 @@ namespace AA2Trainer.WpfPrototype
         public string HeaderRelationship = "";
         public string Personality = "";
         public string Target = "";
+        public int TargetSeat = -1;
         public string Mood = "";
         public bool IsBusy;
         public bool HasRelationship;

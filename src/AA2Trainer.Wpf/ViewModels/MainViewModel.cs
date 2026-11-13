@@ -790,6 +790,52 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref currentSavePath, value); }
         }
 
+        private string academyName = "";
+        private string saveFileName = "";
+
+        public string AcademyName
+        {
+            get { return academyName; }
+            private set
+            {
+                if (!Set(ref academyName, value ?? "")) return;
+                OnPropertyChanged(nameof(SaveContextText));
+            }
+        }
+
+        public string SaveFileName
+        {
+            get { return saveFileName; }
+            private set
+            {
+                if (!Set(ref saveFileName, value ?? "")) return;
+                OnPropertyChanged(nameof(SaveContextText));
+            }
+        }
+
+        /// <summary>Academy and save file shown in the top bar.</summary>
+        public string SaveContextText
+        {
+            get
+            {
+                string academy = string.IsNullOrEmpty(academyName)
+                    ? "-" : academyName;
+                string save = string.IsNullOrEmpty(saveFileName)
+                    ? "-" : saveFileName;
+                return academy + "  |  " + save;
+            }
+        }
+
+        public string SaveContextToolTip
+        {
+            get
+            {
+                return string.IsNullOrEmpty(currentSavePath)
+                    ? "Academy and save file are read from the live game."
+                    : currentSavePath;
+            }
+        }
+
         public int[] RefreshIntervals
         {
             get { return RefreshIntervalChoices; }
@@ -1479,6 +1525,9 @@ namespace AA2Trainer.WpfPrototype
 
         private void UpdateSaveContext(SessionSnapshot snapshot)
         {
+            AcademyName = snapshot.Schedule == null
+                ? "" : (snapshot.Schedule.Academy ?? "").Trim();
+
             string saveName = snapshot.Schedule == null
                 ? "" : snapshot.Schedule.SaveName ?? "";
             bool changed = saveName != lastSaveName;
@@ -1500,6 +1549,7 @@ namespace AA2Trainer.WpfPrototype
                 {
                     CurrentSavePath = path;
                     OnPropertyChanged(nameof(CanBackup));
+                    OnPropertyChanged(nameof(SaveContextToolTip));
                     if (!string.IsNullOrEmpty(path))
                         BackupStatus = "Current save: " + Path.GetFileName(path);
                 }
@@ -1509,6 +1559,9 @@ namespace AA2Trainer.WpfPrototype
                 if (reindex && !cardIndexRunning)
                     LoadCardsAsync();
             }
+
+            SaveFileName = string.IsNullOrEmpty(currentSavePath)
+                ? "" : Path.GetFileName(currentSavePath);
         }
 
         private void BuildGameOptionSections()
@@ -4004,6 +4057,10 @@ namespace AA2Trainer.WpfPrototype
                     seat.ApplyLiveDetails(seatSnapshot.Personality,
                         seatSnapshot.Target, seatSnapshot.Location,
                         seatSnapshot.Mood);
+                    seat.TargetSeatItem = seatSnapshot.TargetSeat >= 0 &&
+                        seatSnapshot.TargetSeat < Seats.Count &&
+                        seatSnapshot.TargetSeat != seatSnapshot.Seat
+                        ? Seats[seatSnapshot.TargetSeat] : null;
                     seat.ApplyLivePortrait(seatSnapshot.Thumbnail,
                         seatSnapshot.FullPortrait);
                     seat.HasActionLimits = seatSnapshot.HasActionLimits;

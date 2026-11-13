@@ -413,9 +413,12 @@
                         </Border>
                     </Popup>
                     <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding PointerHealth}"
-                               ToolTip="{Binding PointerHealth}"
-                               Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="{Binding SaveContextText}"
+                               ToolTip="{Binding SaveContextToolTip}"
+                               Style="{StaticResource CaptionText}"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="420"
+                               VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal"
@@ -538,6 +541,21 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding SelectedSeat.Name}"
                                            FontSize="16" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding SelectedSeat.HeaderPersonality}"
+                                           Margin="10,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock"
+                                               BasedOn="{StaticResource CaptionText}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedSeat.HasPersonality}"
+                                                             Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Text="Seat " Style="{StaticResource CaptionText}"
                                            Margin="10,0,2,0" />
                                 <TextBlock Text="{Binding SelectedSeat.Seat}"
