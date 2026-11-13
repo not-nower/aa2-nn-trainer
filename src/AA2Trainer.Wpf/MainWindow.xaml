@@ -547,14 +547,16 @@
                                     VerticalAlignment="Center">
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding SelectedSeat.Name}"
                                            FontSize="16" FontWeight="SemiBold"
+                                           MaxWidth="260"
                                            TextTrimming="CharacterEllipsis"
                                            ToolTip="{Binding SelectedSeat.Name}" />
                                 <TextBlock Grid.Column="1"

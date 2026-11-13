@@ -34,9 +34,9 @@
                         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
                             <StackPanel DockPanel.Dock="Right"
                                         Orientation="Horizontal">
-                                <Button Content="Select All"
+                                <Button Content="Select all"
                                         Click="SelectAll_Click" />
-                                <Button Content="Select None"
+                                <Button Content="Select none"
                                         Margin="6,0,0,0"
                                         Click="SelectNone_Click" />
                             </StackPanel>
@@ -120,7 +120,7 @@
                         <TextBox x:Name="SavePathBox" Grid.Column="1"
                                  IsReadOnly="True"
                                  ToolTip="AA2 class save (.sav)" />
-                        <Button Content="Select Save..."
+                        <Button Content="Select save..."
                                 Grid.Column="2"
                                 Margin="6,0,0,0"
                                 Click="SelectSave_Click" />
@@ -143,7 +143,7 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Content="Export Card..."
+                        <Button Content="Export card..."
                                 Grid.Row="1" Grid.Column="2"
                                 Margin="6,6,0,0"
                                 Click="ExportCard_Click" />
@@ -158,7 +158,7 @@
                                  Margin="0,6,0,0"
                                  IsReadOnly="True"
                                  ToolTip="AA2 character card (.png)" />
-                        <Button Content="Select Card..."
+                        <Button Content="Select card..."
                                 Grid.Row="2" Grid.Column="2"
                                 Margin="6,6,0,0"
                                 Click="SelectCard_Click" />

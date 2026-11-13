@@ -201,7 +201,6 @@ namespace AA2Trainer.WpfPrototype
             SeatRailView = new ListCollectionView(Seats);
             SeatRailView.Filter = IsNamedSeat;
             selectedSeat = Seats[0];
-            SeedPlan();
             SeedLogs();
             BuildGameOptionSections();
 
@@ -4824,37 +4823,6 @@ namespace AA2Trainer.WpfPrototype
                     Mood = "-"
                 });
             }
-        }
-
-        private void SeedPlan()
-        {
-            PlanSteps.Add(new PlanStepItem
-            {
-                Number = 1,
-                Description = "Pet -> seat 00",
-                State = "done"
-            });
-            PlanSteps.Add(new PlanStepItem
-            {
-                Number = 2,
-                Description = "Hug -> seat 00",
-                State = "skipped",
-                Enabled = false,
-                Note = "disabled"
-            });
-            PlanSteps.Add(new PlanStepItem
-            {
-                Number = 3,
-                Description = "Encourage -> seat 00",
-                State = "running",
-                Note = "queued for key 0x211B11C8"
-            });
-            PlanSteps.Add(new PlanStepItem
-            {
-                Number = 4,
-                Description = "Talk About Love -> seat 00",
-                State = "pending"
-            });
         }
 
         private void SeedLogs()

@@ -971,9 +971,9 @@ namespace AA2Trainer
             switch (mode)
             {
                 case PlanMode.Normal: return "Normal";
-                case PlanMode.Forced: return "Forced interaction";
-                case PlanMode.ForcedPerform: return "Forced perform";
-                case PlanMode.Ignore: return "Ignore interaction";
+                case PlanMode.Forced: return "Forced Interaction";
+                case PlanMode.ForcedPerform: return "Forced Perform";
+                case PlanMode.Ignore: return "Ignore Interaction";
                 default: return mode.ToString();
             }
         }

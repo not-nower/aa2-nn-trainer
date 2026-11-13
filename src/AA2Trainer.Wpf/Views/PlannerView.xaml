@@ -20,8 +20,8 @@
                       ToolTip="Plan mode">
                 <ComboBoxItem Content="Normal" />
                 <ComboBoxItem Content="Forced Interaction" />
-                <ComboBoxItem Content="Forced perform" />
-                <ComboBoxItem Content="Ignore" />
+                <ComboBoxItem Content="Forced Perform" />
+                <ComboBoxItem Content="Ignore Interaction" />
             </ComboBox>
             <ComboBox Width="82" Margin="0,0,10,0"
                       SelectedIndex="{Binding PlannerTriggerIndex, Mode=TwoWay}"
@@ -96,11 +96,11 @@
                         </TextBlock>
 
                         <TextBlock TextWrapping="Wrap" Margin="0,0,0,6">
-                            <Run FontWeight="SemiBold" Text="Forced perform" /><Run Text=" — arms immediately even while busy, skips the walk-in, and may use the in-place fallback." />
+                            <Run FontWeight="SemiBold" Text="Forced Perform" /><Run Text=" — arms immediately even while busy, skips the walk-in, and may use the in-place fallback." />
                         </TextBlock>
 
                         <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run FontWeight="SemiBold" Text="Ignore" /><Run Text=" — cancels the current action, then arms the step." />
+                            <Run FontWeight="SemiBold" Text="Ignore Interaction" /><Run Text=" — cancels the current action, then arms the step." />
                         </TextBlock>
 
                         <TextBlock Text="Trigger (Actor / Target / Either) applies to Normal mode."
@@ -272,10 +272,10 @@
                             <ColumnDefinition Width="6" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Add action"
+                        <Button Grid.Column="0" Content="Add Action"
                                 IsEnabled="{Binding CanEditPlanner}"
                                 Click="AddAction_Click" />
-                        <Button Grid.Column="2" Content="Add move"
+                        <Button Grid.Column="2" Content="Add Move"
                                 IsEnabled="{Binding CanEditPlanner}"
                                 Click="AddMove_Click" />
                     </Grid>

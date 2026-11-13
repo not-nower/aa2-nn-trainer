@@ -65,7 +65,7 @@ namespace AA2Trainer
             F("CameraAngle", "Auto Reset Camera", 0x2D8, OptionKind.Toggle),
             F("DisplayBGChar", "Display BG Character", 0x2BF, OptionKind.Toggle),
             F("Display3D", "Display 3D Objects", 0x2C0, OptionKind.Toggle),
-            F("ClickFocus", "Click to move Focus Camera", 0x2D6, OptionKind.Toggle),
+            F("ClickFocus", "Click to move focus camera", 0x2D6, OptionKind.Toggle),
 
             F("MonoMan", "Man Monochrome", 0x2C1, OptionKind.Toggle),
             F("MonoManRed", "Red", 0x2C4, OptionKind.PercentFloat, 0, 100),

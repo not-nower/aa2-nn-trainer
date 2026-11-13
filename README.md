@@ -129,19 +129,19 @@ read-only, the trainer still runs but cannot remember changes.
 Gameplay → Action/Planner can run a playlist of steps for each character,
 in the same spirit as TAA2's Plan Multiple Action.
 
-- **Build a plan** — select a character, then **Add action** (Target / About /
-  Action) or **Add move** (Room). Reorder by dragging a row with the mouse,
+- **Build a plan** — select a character, then **Add Action** (Target / About /
+  Action) or **Add Move** (Room). Reorder by dragging a row with the mouse,
   and remove steps before starting. **Force Action** / **Force Move** run the
   current selection once, immediately, without touching the plan.
 - **Modes**
   - **Normal (character chooses)** — passive: the plan does nothing until the
     character herself starts walking toward the step's target; it then
     substitutes the step. It never starts an interaction on its own.
-  - **Forced interaction** — waits until the character starts an interaction
+  - **Forced Interaction** — waits until the character starts an interaction
     (with any partner) and then substitutes the step. It does not force while idle.
-  - **Forced perform** — applies the step immediately, including a direct
+  - **Forced Perform** — applies the step immediately, including a direct
     activity write when the game's planner is not responding.
-  - **Ignore interaction** — cancels the current action so the step can run.
+  - **Ignore Interaction** — cancels the current action so the step can run.
 - **Trigger** — Actor initiates (default), Target initiates, or Either initiates.
 - **Repeat / Shuffle** — loop the playlist, or play every step once in random order.
 - **Copy plan / Paste plan** — in-memory clipboard; works across characters and
@@ -278,7 +278,7 @@ caveat.
 - **Restore does not list a backup** — only files named like `<name>.sav.YYYYMMDD-HHMMSS.bak` are shown. Backup and Import/Export create that format automatically.
 - **AAUnlimited data was not restored** — the backup was made before AAU backup support, or the `.json` was missing at backup time. Sav-only backups leave the current sidecar unchanged; make a new backup to include it.
 - **A plan does not start** — Normal waits until the character starts toward the
-  step's target; Forced waits until she starts an interaction. Check the Live
+  step's target; Forced Interaction waits until she starts an interaction. Check the Live
   events tab, the mode, and that a target is selected.
 - **A plan step shows failed** — the game did not accept the injected action
   after its retries (for example, the character was already performing it). The
