@@ -228,6 +228,12 @@
                                             Width="76"
                                             Margin="6,0,0,0"
                                             Click="ReloadNames_Click" />
+                                    <Button Content="Reset overlay"
+                                            Width="100"
+                                            Margin="6,0,0,0"
+                                            IsEnabled="{Binding CanResetNameOverlay}"
+                                            ToolTip="Delete NameData.local.tsv and reload the bundled names"
+                                            Click="ResetNames_Click" />
                                 </StackPanel>
                                 <TextBlock Text="{Binding NameTableStatus}"
                                            Style="{StaticResource CaptionText}"

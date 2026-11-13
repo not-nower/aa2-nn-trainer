@@ -4,7 +4,7 @@ Inspired by Ahrie's AA2Trainer.
 Fully vibe coded.
 
 > **Save safety:** this tool writes to game memory and can rewrite class save
-> files. Back up your saves first. Import/Export and Option → Trainer → Backup
+> files. Back up your saves first. Import/Export and Options → Trainer → Save backups
 > write timestamped `.bak` files next to the save before changing it, and
 > Restore creates safety backups of the current save and AAU sidecar first.
 > That is a convenience, not a guarantee. Memory edits are lost unless you save in-game, and editing is
@@ -13,12 +13,12 @@ Fully vibe coded.
 
 ## Features
 
-- **Class Roster** — live cards, action/target/location, hover portraits, play-as, relationship menu.
+- **Class Roster** — live cards with portrait, name, personality, location, action, target, and a small portrait of the current target; hover portraits, play-as, PC/teacher badges, and relationship menu.
 - **Gameplay** — Action/Planner (single action plus per-character multi-step plans), Relationship, Behavior History, Lover, Promises, and Limits (per-character persistent lists of actions that character may not perform; select the character in the roster to edit their list).
 - **Character Editor** — Character Data (including the read-only AAU module list), Traits, Body, Face, Hair, Outfits, and Import/Export (offline save/card replacer with side-by-side card-face previews and card export).
-- **Option** — live-refresh settings, portable save Backup/Restore (including AAUnlimited `.json` data), and bundled name-table updates, plus game System/Sound/Additional options.
-- **Debug** — pointer/definition browser and filters, plus the experimental Status Preview.
-- **Top bar** — weekday/week/period, clock, schedule edits, and time freeze.
+- **Options** — live-refresh settings, portable save Backup/Restore (including AAUnlimited `.json` data), and bundled name-table updates, plus game System/Sound/Additional options.
+- **Debug** — a read-only game-memory browser with definition search, category/type/text filters, and pointer-chain details.
+- **Top bar** — weekday/week/period, clock (click for schedule edits and time freeze), and the live academy/save context.
 - **Live refresh** — adaptive background polling.
 
 ## Requirements
@@ -45,7 +45,7 @@ Fully vibe coded.
 7. For Action/Planner, enter free roam, select an actor and target, then run the action.
 8. For multi-step plans, build a step list in Action/Planner, choose a mode and
    trigger, then click **Start plan**.
-9. Use **Option → Trainer → Save backups** to create or restore a timestamped
+9. Use **Options → Trainer → Save backups** to create or restore a timestamped
    save backup before making large changes.
 
 ## Name tables
@@ -54,7 +54,7 @@ Name tables are embedded and built from the game XML set dated **2026-09-06**
 (`clothes.xml`, `HEXAOC.xml`, `personalities.xml`). At runtime the trainer also
 merges `*.xml` found in the game folder.
 
-If the community releases newer XMLs, open **Option → Trainer → Name tables**
+If the community releases newer XMLs, open **Options → Trainer → Name tables**
 and use **Update from XMLs...**. The trainer writes `NameData.local.tsv` next
 to `AA2Trainer.exe`, reloads the names, and keeps the overlay across exe
 updates. Imports only add or rename entries — names are never removed — and
@@ -63,8 +63,9 @@ subfolders), so ReiEdit/mod override tables are not pulled in.
 
 ## Save backups
 
-**Option → Trainer → Save backups** works on the `.sav` selected in
-Import/Export or chosen with **Select save...**.
+**Options → Trainer → Save backups** works on the class save the game currently
+has loaded. Import/Export creates the same timestamped backups for the save it
+has open.
 
 - **Backup** copies the `.sav` and, when present, the AAUnlimited `.json`
   sidecar to timestamped `.bak` files beside the original.
@@ -129,8 +130,9 @@ Gameplay → Action/Planner can run a playlist of steps for each character,
 in the same spirit as TAA2's Plan Multiple Action.
 
 - **Build a plan** — select a character, then **Add action** (Target / About /
-  Action) or **Add move** (Room). Reorder with Up/Down and remove steps before
-  starting.
+  Action) or **Add move** (Room). Reorder by dragging a row with the mouse,
+  and remove steps before starting. **Force Action** / **Force Move** run the
+  current selection once, immediately, without touching the plan.
 - **Modes**
   - **Normal (character chooses)** — passive: the plan does nothing until the
     character herself starts walking toward the step's target; it then
@@ -154,12 +156,12 @@ in the same spirit as TAA2's Plan Multiple Action.
   It stores seats and parameters only (no pointers), so it survives class/scene
   reloads and moves with the folder. Load merges by seat, skips running plans,
   and does not auto-start anything.
-- **Live events** – the first log tab records per-seat state changes every
-  250 ms with the partner name. **Planner log** holds the runner trace.
-  Clear and Save Log act on the active tab. Both logs keep the newest 5,000
+- **Live events** – the first log tab records seat state changes as they
+  happen, with the partner name. **Planner log** holds the runner trace.
+  Clear and Save act on the active tab. Both logs keep the newest 5,000
   lines, drain in 100 ms batches, and auto-scroll only while the view is at
   the bottom.
-- **Planner hook** — explicit **Install hook** / **Uninstall hook** in Gameplay ? Planner.
+- **Planner hook** — explicit **Install hook** / **Uninstall hook** in Gameplay → Planner.
   Normal close restores the original game bytes; **Repair hook** recovers a
   patch left behind by a force-closed trainer. AAUnlimited is optional; plans
   use the game's planner entry either way.
@@ -270,7 +272,7 @@ caveat.
 - **Class data is not loaded** — load a save/class in AA2Play first.
 - **Action/Planner does nothing** — make sure you are in free roam, the actor is idle, and a valid target is selected. Check the planner log for the hook state.
 - **Build fails because the trainer is running** — `build.ps1` stops it automatically; `-KeepRunning` skips the stop, so close the trainer first.
-- **Names look outdated** — Option → Trainer → Name tables → **Update from XMLs...** with the folder containing the newer `clothes.xml`, `HEXAOC.xml`, or `personalities.xml`.
+- **Names look outdated** — Options → Trainer → Name tables → **Update from XMLs...** with the folder containing the newer `clothes.xml`, `HEXAOC.xml`, or `personalities.xml`.
 - **Restored save is not visible in AA2Play** — reload the class or restart AA2Play after restoring.
 - **Settings are not remembered** — the folder containing `AA2Trainer.exe` must be writable. Avoid running the portable build from a read-only folder such as Program Files.
 - **Restore does not list a backup** — only files named like `<name>.sav.YYYYMMDD-HHMMSS.bak` are shown. Backup and Import/Export create that format automatically.

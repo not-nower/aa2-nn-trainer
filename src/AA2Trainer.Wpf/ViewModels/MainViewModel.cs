@@ -996,6 +996,35 @@ namespace AA2Trainer.WpfPrototype
             if (session != null) session.RequestNamesReload();
         }
 
+        public bool CanResetNameOverlay
+        {
+            get { return NameOverlay.Exists; }
+        }
+
+        public void ResetNameOverlay()
+        {
+            if (!NameOverlay.Exists)
+            {
+                NameTableStatus = "No name overlay to reset.";
+                return;
+            }
+
+            try
+            {
+                NameOverlay.Clear();
+            }
+            catch (Exception ex)
+            {
+                NameTableStatus = "Could not delete the name overlay: " +
+                    ex.Message;
+                return;
+            }
+
+            OnPropertyChanged(nameof(CanResetNameOverlay));
+            NameTableStatus = "Name overlay deleted; reloading bundled names.";
+            if (session != null) session.RequestNamesReload();
+        }
+
         public void ImportNameTables(string folder)
         {
             if (session != null) session.RequestNamesImport(folder);
@@ -4007,6 +4036,7 @@ namespace AA2Trainer.WpfPrototype
                 PointerHealth = snapshot.PointerHealth;
                 NamesState = snapshot.NamesState;
                 NameTableStatus = snapshot.NameTableStatus;
+                OnPropertyChanged(nameof(CanResetNameOverlay));
                 WriteGate = snapshot.WriteGate;
                 UpdatedText = snapshot.UpdatedText;
                 SelectedCharacter = snapshot.Character;

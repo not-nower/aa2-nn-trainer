@@ -60,9 +60,10 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
   continuous seat state changes. Clear and Save act on the active tab.
 - **Planner:** install the planner hook from the toolbar, build steps from live
   targets/rooms/actions, choose mode and trigger, toggle Repeat/Shuffle, and
-  start/stop on the game thread. Plans can be copied, pasted, saved to, and
-  loaded from `PlanStore.DefaultPath`; step state and the planner log update
-  live.
+  start/stop on the game thread. Reorder steps by dragging a row; **Force
+  Action** / **Force Move** run the current selection once without changing the
+  plan. Plans can be copied, pasted, saved to, and loaded from
+  `PlanStore.DefaultPath`; step state and the planner log update live.
 - **Limits:** a checkable action list with Enable and Apply-to-PC; checked
   actions are cancelled by the `ActionLimiter`.
 - **Relationship:** incoming feelings table with inline counts/points/levels,
@@ -80,16 +81,21 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
   run right-to-left and top-to-bottom, with teacher seat **24 at the top-middle**.
   The Class seats rail is available here, starts collapsed, and lists only
   seats with characters; the character header and log drawer stay hidden so
-  the cards keep the height. Expand the rail from its top button when needed. Cards reserve a 68×80 portrait area with
-  a seat badge overlay and no reflow on resize. Seat status is a vertical bar at
-  the left of each row, so it stays visible when the rail is collapsed.
+  the cards keep the height. Expand the rail from its top button when needed.
+  Cards reserve a 68×80 portrait area with a seat badge overlay and no reflow
+  on resize. Each card shows the name, personality, location, action, target,
+  and live status; a 28 px circular portrait of the current target sits at the
+  bottom-right of the portrait, and the PC/teacher pills at the bottom-left.
+  Seat status is a vertical bar at the left of each row, so it stays visible
+  when the rail is collapsed.
 - **Roster menu:** right-click a card for Play this character, Open in Character,
   Set Lover/Break Up, Set Love/Like/Dislike/Hate, and Freeze Relationship. The
   header Play as button uses the same queued player-switch path.
 - **Teacher badge:** seat 24 carries a small `Teacher` pill (muted while the seat
-  is empty) in the roster card.
-- Empty seats are not selectable; arrow keys move by classroom position rather
-  than by seat number.
+  is empty); the player character carries a `PC` pill in the same corner.
+- Empty seats can be selected for inspection; character-only panels show
+  "Select a character in the roster." Arrow keys move by classroom position
+  rather than by seat number.
 - **Portraits** are read from live game memory for every character-data block
   (`+0x28/0x2C` thumbnail, `+0x30/0x34` full portrait), cached by pointer and
   address/size. The roster grid uses the live thumbnail and the Class seats rail
@@ -105,15 +111,13 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
 - Character Data now shows and edits live profile, attributes, academics, and
   status for the selected character. Apply/Revert are enabled only when the
   draft has changes.
-- Gameplay > Planner sample:
-  - plan list with On checkbox, state colors, skipped dimming;
-  - compact step editor;
-  - plan-level Repeat/Shuffle/Mode/Trigger on the plan bar;
-  - Live events / Planner log tabs.
 - **Options** reads all live game options through `OptionEditor` and groups
   them into System, Sound, Additional (1–3). Toggles, choices, and sliders
-  update `OptionSnapshot` values; Apply writes only changed fields on the poll
-  thread, and Revert restores the last live values.
+  update `OptionSnapshot` values; slider rows also have a numeric box with
+  clamped up/down steps. Apply writes only changed fields on the poll thread,
+  and Revert restores the last live values.
+- **Top bar context:** the live academy name and current `.sav` are shown next
+  to the clock. Pointer health moved to the status bar.
 - **Debug** is a read-only view of game memory only: module/global roots, class
   array bounds, selected CharacterInfo/characterData, status/activity, AI and
   movement descriptors, walk/stare targets, room/NPC pointers and targets,
@@ -121,8 +125,9 @@ For development, `dotnet build src\AA2Trainer.Wpf -c Release` writes the same
   status records, and schedule/save values. Trainer state is not shown. Text
   and type filters run over the live rows.
 - Custom compact scrollbars, tab strip, combo box, checkbox, and buttons.
-- Layout verified at **1180×760** and **1024×680** (125% DPI): the 5×5 roster
-  fits without a scrollbar at the minimum size.
+- Layout verified at **1180×760** and **1024×680** (125% DPI) in Light and Dark:
+  the 5×5 roster fits without a scrollbar at the minimum size, and the card
+  typography is compact enough not to clip inside a card.
 - Rail and log drawer collapse/expand; the log is visible on Gameplay only.
   Window bounds, maximized state, and rail/log collapse states persist. Restored
   bounds are checked against the connected desktop, so an unplugged monitor
@@ -134,11 +139,46 @@ exact stored name and only fills seats where the live portrait is unavailable.
 Character names are displayed exactly as the game stores them; no translation
 or romanization is applied.
 
-## Not implemented (next phases)
+## Parity checklist
 
-- M5: trainer settings/backups/name-table wiring; focus/accessibility/
-  performance pass; full keyboard navigation deferred.
-- M6: cutover to `AA2Trainer.exe`.
+Every WinForms surface has a WPF equivalent.
+
+| WinForms surface | WPF location | Status |
+|---|---|---|
+| Top summary, schedule, freeze | Top bar + schedule popup | Done — academy/save context added; pointer health in the status bar |
+| Class seats, hover portrait, play-as | Seat rail + character header | Done |
+| Roster cards and filters | Roster | Done — personality/location/action/target, target portrait, PC/teacher pills |
+| Character Data (profile, attributes, academics, status, H History, AAU modules) | Character > Data | Done |
+| Traits, risk schedule | Character > Traits | Done |
+| Body, Face, Hair, Outfits | Character sub-tabs | Done |
+| Import/Export, card export | Character > Import/Export | Done |
+| Action/Planner | Gameplay > Planner | Done — drag reorder, Force one-shots |
+| Limits | Gameplay > Limits | Done |
+| Relationship | Gameplay > Relationship | Done — freeze + context menu |
+| Behavior History | Gameplay > Behavior | Done — search/highlight intentionally removed |
+| Lover | Gameplay > Lover | Done — filter intentionally removed |
+| Promises | Gameplay > Promises | Done (read-only) |
+| Options, backups, name tables | Options | Done — AAU sidecar, restore picker, slider inputs, reset overlay |
+| Debug field grid | Debug | Done as a full memory browser; Status Preview deferred |
+| Live events / planner log | Gameplay log drawer | Done — continuous stream, Clear/Save |
+
+### Intentional deviations
+
+- Gameplay > Statuses removed.
+- Behavior search/highlight and the Lover filter removed.
+- Planner Up/Down replaced by mouse drag; Force Action/Move added.
+- Options backups follow the loaded class save automatically; the old manual
+  "Select save..." picker is replaced by Import/Export for arbitrary saves.
+- Roster group-by-room deferred (it would break the fixed classroom grid).
+- Debug Status Preview deferred.
+- Full keyboard-only navigation deferred; Ctrl+1..5, Ctrl+Tab/Ctrl+Shift+Tab,
+  and F5 remain.
+
+### Known limitations
+
+- DPI verified at 125%; 150/200% is still untested.
+- At 1024×680 with the roster rail expanded, card text truncates with ellipses
+  (tooltips show full values). The default collapsed rail is comfortable.
 
 ## Design notes
 

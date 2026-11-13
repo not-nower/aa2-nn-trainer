@@ -131,5 +131,19 @@ namespace AA2Trainer.WpfPrototype.Views
         {
             if (ViewModel != null) ViewModel.ReloadNameTables();
         }
+
+        private void ResetNames_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel viewModel = ViewModel;
+            if (viewModel == null || !viewModel.CanResetNameOverlay) return;
+
+            MessageBoxResult confirm = MessageBox.Show(
+                "Delete " + NameOverlay.FileName +
+                " and return to the bundled name tables?",
+                "Reset name overlay", MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+            viewModel.ResetNameOverlay();
+        }
     }
 }
