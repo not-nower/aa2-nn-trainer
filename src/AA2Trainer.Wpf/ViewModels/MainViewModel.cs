@@ -4752,8 +4752,6 @@ namespace AA2Trainer.WpfPrototype
         {
             LiveLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
                 "AA2 Trainer ready. Attach to AA2Play to begin."));
-            PlannerLines.Add(new LogLine(DateTime.Now.ToString("HH:mm:ss.fff"),
-                "Planner log is wired in M3."));
         }
 
         public void LogSession(string text, string level = "Info")
