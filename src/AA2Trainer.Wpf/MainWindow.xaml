@@ -236,33 +236,41 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal"
-                            VerticalAlignment="Center" ClipToBounds="True">
-                    <TextBlock Text="AA2 Trainer" FontSize="14" FontWeight="SemiBold"
-                               Margin="0,0,10,0" />
-                    <Ellipse Width="8" Height="8"
-                             Margin="0,0,6,0" VerticalAlignment="Center">
-                        <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="{DynamicResource Success}" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsAttached}" Value="False">
-                                        <Setter Property="Fill" Value="{DynamicResource Danger}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Ellipse.Style>
-                    </Ellipse>
-                    <TextBlock Text="{Binding AttachState}"
-                               ToolTip="{Binding AttachState}"
-                               VerticalAlignment="Center" />
-                    <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
-                    <Button x:Name="ScheduleButton"
-                            Content="{Binding GameTime}"
-                            Style="{StaticResource ToolbarButton}"
-                            Padding="6,2"
-                            Click="ScheduleButton_Click"
-                            ToolTip="Edit the class schedule or freeze time" />
+                <Grid Grid.Column="0" VerticalAlignment="Center" ClipToBounds="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="AA2 Trainer" FontSize="14" FontWeight="SemiBold"
+                                   Margin="0,0,10,0" />
+                        <Ellipse Width="8" Height="8"
+                                 Margin="0,0,6,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{DynamicResource Success}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAttached}" Value="False">
+                                            <Setter Property="Fill" Value="{DynamicResource Danger}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding AttachState}"
+                                   ToolTip="{Binding AttachState}"
+                                   VerticalAlignment="Center" />
+                        <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
+                        <Button x:Name="ScheduleButton"
+                                Content="{Binding GameTime}"
+                                Style="{StaticResource ToolbarButton}"
+                                Padding="6,2"
+                                Click="ScheduleButton_Click"
+                                ToolTip="Edit the class schedule or freeze time" />
+                        <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
+                    </StackPanel>
+
                     <Popup x:Name="SchedulePopup"
                            Placement="Bottom"
                            PlacementTarget="{Binding ElementName=ScheduleButton}"
@@ -412,14 +420,13 @@
                             </StackPanel>
                         </Border>
                     </Popup>
-                    <Border Width="1" Height="16" Background="{DynamicResource Border}" Margin="10,0" />
-                    <TextBlock Text="{Binding SaveContextText}"
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding SaveContextText}"
                                ToolTip="{Binding SaveContextToolTip}"
                                Style="{StaticResource CaptionText}"
                                TextTrimming="CharacterEllipsis"
-                               MaxWidth="420"
                                VerticalAlignment="Center" />
-                </StackPanel>
+                </Grid>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal"
                             HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -538,11 +545,23 @@
 
                         <StackPanel Grid.Column="1" Margin="10,0,0,0"
                                     VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding SelectedSeat.Name}"
-                                           FontSize="16" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding SelectedSeat.HeaderPersonality}"
-                                           Margin="10,0,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding SelectedSeat.Name}"
+                                           FontSize="16" FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding SelectedSeat.Name}" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding SelectedSeat.HeaderPersonality}"
+                                           Margin="10,0,0,0"
+                                           MaxWidth="240"
+                                           TextTrimming="CharacterEllipsis">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock"
                                                BasedOn="{StaticResource CaptionText}">
@@ -556,11 +575,11 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <TextBlock Text="Seat " Style="{StaticResource CaptionText}"
+                                <TextBlock Grid.Column="2" Text="Seat " Style="{StaticResource CaptionText}"
                                            Margin="10,0,2,0" />
-                                <TextBlock Text="{Binding SelectedSeat.Seat}"
+                                <TextBlock Grid.Column="3" Text="{Binding SelectedSeat.Seat}"
                                            Style="{StaticResource CaptionText}" />
-                            </StackPanel>
+                            </Grid>
                             <TextBlock Text="{Binding SelectedSeat.RoomAction}"
                                        Style="{StaticResource CaptionText}" />
                         </StackPanel>

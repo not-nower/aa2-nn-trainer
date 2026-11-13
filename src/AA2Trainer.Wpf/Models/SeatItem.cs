@@ -308,7 +308,8 @@ namespace AA2Trainer.WpfPrototype
             get
             {
                 string place = string.IsNullOrEmpty(location) ? room : location;
-                return "Personality: " +
+                return "Name: " + Name +
+                    "\nPersonality: " +
                     (string.IsNullOrEmpty(personality) ? "-" : personality) +
                     "\nAction: " + (string.IsNullOrEmpty(action) ? "-" : action) +
                     "\nTarget: " + (string.IsNullOrEmpty(target) ? "-" : target) +

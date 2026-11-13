@@ -46,8 +46,8 @@
                     <Border x:Name="CardBorder"
                             Style="{StaticResource Card}"
                             Margin="3"
-                            MinHeight="92"
-                            Padding="6"
+                            MinHeight="84"
+                            Padding="4"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
                             ToolTip="{Binding DetailTooltip}">
@@ -107,7 +107,7 @@
                             <Border Grid.Column="0"
                                     Width="68"
                                     Height="80"
-                                    Margin="0,0,8,0"
+                                    Margin="0,0,6,0"
                                     CornerRadius="3"
                                     Background="{DynamicResource AccentSoft}"
                                     ClipToBounds="True"
@@ -204,25 +204,30 @@
                             <StackPanel Grid.Column="1"
                                         VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Name}"
-                                           FontSize="13"
+                                           FontSize="12"
                                            FontWeight="SemiBold"
-                                           TextTrimming="CharacterEllipsis" />
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Name}" />
                                 <StackPanel x:Name="DetailFields"
                                             Margin="0,1,0,0">
                                     <TextBlock Text="{Binding Personality}"
                                                Style="{StaticResource CaptionText}"
+                                               FontSize="10"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="{Binding Location}"
                                                Style="{StaticResource CaptionText}"
+                                               FontSize="10"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="{Binding Action}"
                                                Style="{StaticResource CaptionText}"
+                                               FontSize="10"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="{Binding Target}"
                                                Style="{StaticResource CaptionText}"
+                                               FontSize="10"
                                                TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <Grid Margin="0,5,0,0">
+                                <Grid Margin="0,4,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -230,17 +235,19 @@
                                     <StackPanel Grid.Column="0"
                                                 Orientation="Horizontal">
                                         <Ellipse x:Name="StatusDot"
-                                                 Width="7" Height="7"
+                                                 Width="6" Height="6"
                                                  Fill="{DynamicResource Success}"
-                                                 Margin="0,0,5,0"
+                                                 Margin="0,0,4,0"
                                                  VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding Status}"
-                                                   Style="{StaticResource CaptionText}" />
+                                                   Style="{StaticResource CaptionText}"
+                                                   FontSize="10" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Relationship}"
                                                Style="{StaticResource CaptionText}"
-                                               Margin="8,0,0,0"
+                                               FontSize="10"
+                                               Margin="6,0,0,0"
                                                TextTrimming="CharacterEllipsis" />
                                 </Grid>
                             </StackPanel>
