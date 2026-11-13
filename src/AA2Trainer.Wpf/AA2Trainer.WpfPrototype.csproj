@@ -8,15 +8,20 @@
     <Prefer32Bit>true</Prefer32Bit>
     <AssemblyName>AA2Trainer</AssemblyName>
     <RootNamespace>AA2Trainer.WpfPrototype</RootNamespace>
-    <Version>0.7.1</Version>
+    <Version>0.7.2</Version>
     <OutputPath>..\..\bin\WPF\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies"
