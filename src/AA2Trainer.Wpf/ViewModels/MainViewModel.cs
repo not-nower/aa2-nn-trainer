@@ -1598,8 +1598,15 @@ namespace AA2Trainer.WpfPrototype
             if (index < 0) return null;
             GameOptionItem item = new GameOptionItem(index,
                 OptionEditor.Fields[index], OnGameOptionEdited);
+            item.Hint = OptionHint(name);
             gameOptionItems[index] = item;
             return item;
+        }
+
+        private static string OptionHint(string name)
+        {
+            if (name == "BGExternal") return "AA2/data/CustomBgm";
+            return "";
         }
 
         public ICollectionView DebugFieldsView

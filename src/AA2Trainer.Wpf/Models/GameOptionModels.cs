@@ -38,6 +38,14 @@ namespace AA2Trainer.WpfPrototype
         public int DecimalPlaces { get; private set; }
         public string[] Choices { get; private set; }
 
+        /// <summary>Optional gray hint shown next to the toggle.</summary>
+        public string Hint { get; set; } = "";
+
+        public bool HasHint
+        {
+            get { return !string.IsNullOrEmpty(Hint); }
+        }
+
         public bool IsToggle
         {
             get
@@ -78,22 +86,39 @@ namespace AA2Trainer.WpfPrototype
         }
 
         /// <summary>
-        /// Numeric-box text for slider fields. Typed input is clamped to the
-        /// field range so an out-of-range entry can never reach Apply.
+        /// Numeric-box text for slider fields. Percent/byte sliders show a
+        /// plain integer; DirectFloat fields show their scaled value. Typed
+        /// input is clamped to the field range so an out-of-range entry can
+        /// never reach Apply.
         /// </summary>
         public string ValueText
         {
-            get { return value.ToString(); }
+            get
+            {
+                if (Kind == OptionKind.DirectFloat && DecimalPlaces > 0)
+                {
+                    double divisor = Math.Pow(10, DecimalPlaces);
+                    return (value / divisor).ToString("F" + DecimalPlaces);
+                }
+                return value.ToString();
+            }
             set
             {
-                int parsed;
-                if (!int.TryParse(value, out parsed)) return;
+                string text = (value ?? "").Trim();
+                if (text.Length == 0) return;
+
+                double parsed;
+                if (!double.TryParse(text, out parsed)) return;
+
+                double divisor = Kind == OptionKind.DirectFloat &&
+                    DecimalPlaces > 0 ? Math.Pow(10, DecimalPlaces) : 1;
+                int raw = (int)Math.Round(parsed * divisor);
                 if (IsSlider)
                 {
-                    if (parsed < Min) parsed = Min;
-                    if (parsed > Max) parsed = Max;
+                    if (raw < Min) raw = Min;
+                    if (raw > Max) raw = Max;
                 }
-                Value = parsed;
+                Value = raw;
             }
         }
 

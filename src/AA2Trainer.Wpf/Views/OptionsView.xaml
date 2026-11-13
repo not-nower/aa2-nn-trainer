@@ -25,10 +25,17 @@
                                                TextTrimming="CharacterEllipsis"
                                                ToolTip="{Binding Name}" />
 
-                                    <CheckBox Grid.Column="1"
-                                              IsChecked="{Binding ToggleValue, Mode=TwoWay}"
-                                              VerticalAlignment="Center"
-                                              Visibility="{Binding IsToggle, Converter={StaticResource BoolToVis}}" />
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                Visibility="{Binding IsToggle, Converter={StaticResource BoolToVis}}">
+                                        <CheckBox IsChecked="{Binding ToggleValue, Mode=TwoWay}"
+                                                  VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Hint}"
+                                                   Style="{StaticResource CaptionText}"
+                                                   Margin="10,0,0,0"
+                                                   Visibility="{Binding HasHint, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
 
                                     <ComboBox Grid.Column="1"
                                               ItemsSource="{Binding Choices}"
@@ -40,7 +47,7 @@
                                                 Orientation="Horizontal"
                                                 VerticalAlignment="Center"
                                                 Visibility="{Binding IsSlider, Converter={StaticResource BoolToVis}}">
-                                        <Slider Width="156"
+                                        <Slider Width="148"
                                                 Minimum="{Binding Min}"
                                                 Maximum="{Binding Max}"
                                                 Value="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -48,11 +55,44 @@
                                                 TickFrequency="1"
                                                 SmallChange="1"
                                                 VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding DisplayValue}"
-                                                   Width="60"
-                                                   Margin="8,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextMuted}" />
+
+                                        <Grid Width="64" Height="26" Margin="8,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="18" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding ValueText, Mode=TwoWay}"
+                                                     TextAlignment="Center"
+                                                     Padding="2,0"
+                                                     MinHeight="26" />
+
+                                            <Grid Grid.Column="1">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <Button Grid.Row="0"
+                                                        Content="▲"
+                                                        FontSize="6"
+                                                        Padding="0"
+                                                        MinWidth="0"
+                                                        MinHeight="0"
+                                                        Focusable="False"
+                                                        ToolTip="Increase"
+                                                        Click="OptionUp_Click" />
+                                                <Button Grid.Row="1"
+                                                        Content="▼"
+                                                        FontSize="6"
+                                                        Padding="0"
+                                                        MinWidth="0"
+                                                        MinHeight="0"
+                                                        Focusable="False"
+                                                        ToolTip="Decrease"
+                                                        Click="OptionDown_Click" />
+                                            </Grid>
+                                        </Grid>
                                     </StackPanel>
 
                                     <TextBlock Grid.Column="2"
@@ -245,7 +285,7 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBox Grid.Column="0"
-                                                         Text="{Binding Level.ValueText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Text="{Binding Level.ValueText, Mode=TwoWay}"
                                                          TextAlignment="Center"
                                                          Padding="2,0"
                                                          MinHeight="26" />

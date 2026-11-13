@@ -45,6 +45,29 @@ namespace AA2Trainer.WpfPrototype.Views
             NudgeSound(sender, -1);
         }
 
+        private void OptionUp_Click(object sender, RoutedEventArgs e)
+        {
+            NudgeOption(sender, 1);
+        }
+
+        private void OptionDown_Click(object sender, RoutedEventArgs e)
+        {
+            NudgeOption(sender, -1);
+        }
+
+        private static void NudgeOption(object sender, int delta)
+        {
+            FrameworkElement element = sender as FrameworkElement;
+            GameOptionItem item = element == null
+                ? null : element.DataContext as GameOptionItem;
+            if (item == null) return;
+
+            int value = item.Value + delta;
+            if (value < item.Min) value = item.Min;
+            if (value > item.Max) value = item.Max;
+            item.Value = value;
+        }
+
         private static void NudgeSound(object sender, int delta)
         {
             FrameworkElement element = sender as FrameworkElement;
