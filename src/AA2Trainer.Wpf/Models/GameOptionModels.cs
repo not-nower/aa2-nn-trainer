@@ -72,7 +72,6 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref this.value, value)) return;
                 OnPropertyChanged(nameof(ToggleValue));
-                OnPropertyChanged(nameof(DisplayValue));
                 OnPropertyChanged(nameof(ValueText));
                 OnPropertyChanged(nameof(IsDirty));
                 if (edited != null) edited(this);
@@ -132,36 +131,6 @@ namespace AA2Trainer.WpfPrototype
             get { return value != liveValue; }
         }
 
-        public string DisplayValue
-        {
-            get
-            {
-                switch (Kind)
-                {
-                    case OptionKind.Toggle:
-                    case OptionKind.InvertedToggle:
-                        return value != 0 ? "On" : "Off";
-                    case OptionKind.VolumeSlider:
-                    case OptionKind.PercentFloat:
-                        return value + "%";
-                    case OptionKind.Choice:
-                        return Choices != null && value >= 0 &&
-                            value < Choices.Length
-                            ? Choices[value] : value.ToString();
-                    case OptionKind.DirectFloat:
-                        if (DecimalPlaces > 0)
-                        {
-                            double divisor = Math.Pow(10, DecimalPlaces);
-                            return (value / divisor).ToString(
-                                "F" + DecimalPlaces);
-                        }
-                        return value.ToString();
-                    default:
-                        return value.ToString();
-                }
-            }
-        }
-
         public string RangeText
         {
             get
@@ -190,7 +159,6 @@ namespace AA2Trainer.WpfPrototype
             value = live;
             if (changed) OnPropertyChanged(nameof(Value));
             OnPropertyChanged(nameof(ToggleValue));
-            OnPropertyChanged(nameof(DisplayValue));
             OnPropertyChanged(nameof(ValueText));
             OnPropertyChanged(nameof(IsDirty));
         }

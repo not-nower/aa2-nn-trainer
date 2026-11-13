@@ -182,9 +182,6 @@ namespace AA2Trainer.WpfPrototype
         public RelationshipFeelingValue Dislike { get; private set; }
         public RelationshipFeelingValue Hate { get; private set; }
 
-        public string[] LatestChoices { get { return GameplayLabels.FeelingNames; } }
-        public bool HasHistory { get { return hasHistory; } }
-
         public event Action Changed;
         public event Action<RelationshipRowItem, bool> FrozenChanged;
 
@@ -277,7 +274,6 @@ namespace AA2Trainer.WpfPrototype
                 Like.SetLive(record.Counts[1], record.Points[1], record.Levels[1]);
                 Dislike.SetLive(record.Counts[2], record.Points[2], record.Levels[2]);
                 Hate.SetLive(record.Counts[3], record.Points[3], record.Levels[3]);
-                OnPropertyChanged(nameof(HasHistory));
                 OnPropertyChanged(nameof(LatestIndex));
                 OnPropertyChanged(nameof(IsDirty));
             }
@@ -381,11 +377,8 @@ namespace AA2Trainer.WpfPrototype
             {
                 int next = Math.Max(0, Math.Min(3, value));
                 if (!Set(ref feeling, next)) return;
-                OnPropertyChanged(nameof(FeelingText));
             }
         }
-
-        public string FeelingText { get { return GameplayLabels.Feeling(feeling); } }
     }
 
     public sealed class BehaviorDraft : ObservableObject

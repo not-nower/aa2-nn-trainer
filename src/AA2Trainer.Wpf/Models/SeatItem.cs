@@ -6,7 +6,6 @@ namespace AA2Trainer.WpfPrototype
     {
         private string firstName;
         private string lastName;
-        private string nickname;
         private string profile;
         private string room;
         private string action;
@@ -138,12 +137,6 @@ namespace AA2Trainer.WpfPrototype
                 if (string.IsNullOrEmpty(text)) return "";
                 return text.Substring(0, 1).ToUpperInvariant();
             }
-        }
-
-        public string Nickname
-        {
-            get { return nickname; }
-            set { Set(ref nickname, value); }
         }
 
         public string Profile

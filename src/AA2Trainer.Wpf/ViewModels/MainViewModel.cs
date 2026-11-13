@@ -43,7 +43,6 @@ namespace AA2Trainer.WpfPrototype
         private bool disposed;
 
         private SeatItem selectedSeat;
-        private CharacterDetail selectedCharacter;
         private CharacterDraft characterDraft;
         private TraitDraft traitDraft;
         private BodyDraft bodyDraft;
@@ -172,7 +171,6 @@ namespace AA2Trainer.WpfPrototype
         public MainViewModel()
         {
             Seats = new ObservableCollection<SeatItem>();
-            PlanSteps = new ObservableCollection<PlanStepItem>();
             PlannerSteps = new ObservableCollection<PlannerStepItem>();
             PlannerTargetOptions = new ObservableCollection<PlannerSeatOption>();
             PlannerAboutOptions = new ObservableCollection<PlannerSeatOption>();
@@ -251,7 +249,6 @@ namespace AA2Trainer.WpfPrototype
                     (namedSeatCount == 1 ? " seat | live" : " seats | live");
             }
         }
-        public ObservableCollection<PlanStepItem> PlanSteps { get; private set; }
         public ObservableCollection<PlannerStepItem> PlannerSteps { get; private set; }
         public ObservableCollection<PlannerSeatOption> PlannerTargetOptions { get; private set; }
         public ObservableCollection<PlannerSeatOption> PlannerAboutOptions { get; private set; }
@@ -299,12 +296,6 @@ namespace AA2Trainer.WpfPrototype
         {
             get { return railCollapsed; }
             set { Set(ref railCollapsed, value); }
-        }
-
-        public CharacterDetail SelectedCharacter
-        {
-            get { return selectedCharacter; }
-            private set { Set(ref selectedCharacter, value); }
         }
 
         public CharacterDraft CharacterDraft
@@ -1086,9 +1077,6 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
-        public string HookState { get { return plannerHookState; } }
-        public string PlanStatus { get { return plannerStatus; } }
-
         public string PlannerStatus
         {
             get { return plannerStatus; }
@@ -1416,11 +1404,6 @@ namespace AA2Trainer.WpfPrototype
             private set { Set(ref gameOptionsStatus, value); }
         }
 
-        public bool IsGameOptionsBusy
-        {
-            get { return gameOptionsBusy; }
-        }
-
         public bool CanApplyOptions
         {
             get
@@ -1495,7 +1478,6 @@ namespace AA2Trainer.WpfPrototype
 
         private void NotifyOptionButtons()
         {
-            OnPropertyChanged(nameof(IsGameOptionsBusy));
             OnPropertyChanged(nameof(CanApplyOptions));
             OnPropertyChanged(nameof(CanRevertOptions));
         }
@@ -2019,11 +2001,6 @@ namespace AA2Trainer.WpfPrototype
             }
         }
 
-        public bool IsGameplayWriteBusy
-        {
-            get { return gameplayWriteBusy; }
-        }
-
         public string RelationshipEditStatus
         {
             get { return relationshipEditStatus; }
@@ -2390,7 +2367,6 @@ namespace AA2Trainer.WpfPrototype
 
         private void NotifyGameplayButtons()
         {
-            OnPropertyChanged(nameof(IsGameplayWriteBusy));
             OnPropertyChanged(nameof(CanApplyRelationship));
             OnPropertyChanged(nameof(CanRevertRelationship));
             OnPropertyChanged(nameof(CanApplyBehavior));
@@ -4038,7 +4014,6 @@ namespace AA2Trainer.WpfPrototype
                 OnPropertyChanged(nameof(CanResetNameOverlay));
                 WriteGate = snapshot.WriteGate;
                 UpdatedText = snapshot.UpdatedText;
-                SelectedCharacter = snapshot.Character;
                 if (snapshot.Options != null) CharacterOptions = snapshot.Options;
                 UpdateCharacterDraft(snapshot);
                 UpdateAauModules(snapshot);
