@@ -270,6 +270,17 @@ namespace AA2Trainer
             return true;
         }
 
+        public bool MoveTo(int from, int to)
+        {
+            if (from < 0 || from >= Steps.Count) return false;
+            if (to < 0 || to >= Steps.Count) return false;
+            if (from == to) return false;
+            PlanStep step = Steps[from];
+            Steps.RemoveAt(from);
+            Steps.Insert(to, step);
+            return true;
+        }
+
         public void ClearSteps()
         {
             Steps.Clear();

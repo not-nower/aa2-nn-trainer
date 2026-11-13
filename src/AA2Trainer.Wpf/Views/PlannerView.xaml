@@ -8,13 +8,18 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <WrapPanel Grid.Column="0">
             <ComboBox Width="118" Margin="0,0,6,0"
                       SelectedIndex="{Binding PlannerModeIndex, Mode=TwoWay}"
                       SelectionChanged="PlannerSetting_Changed"
                       ToolTip="Plan mode">
                 <ComboBoxItem Content="Normal" />
-                <ComboBoxItem Content="Forced" />
+                <ComboBoxItem Content="Forced Interaction" />
                 <ComboBoxItem Content="Forced perform" />
                 <ComboBoxItem Content="Ignore" />
             </ComboBox>
@@ -52,7 +57,64 @@
             <TextBlock Text="{Binding PlannerHookState}"
                        Style="{StaticResource CaptionText}"
                        VerticalAlignment="Center" />
-        </WrapPanel>
+            </WrapPanel>
+
+            <Button x:Name="ModeHelpButton"
+                    Grid.Column="1"
+                    Content="?"
+                    Width="26" Height="26"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Top"
+                    Style="{StaticResource ToolbarButton}"
+                    ToolTip="Plan mode help"
+                    Click="ModeHelp_Click" />
+
+            <Popup x:Name="ModeHelpPopup"
+                   PlacementTarget="{Binding ElementName=ModeHelpButton}"
+                   Placement="Bottom"
+                   HorizontalOffset="-390"
+                   VerticalOffset="4"
+                   StaysOpen="False"
+                   AllowsTransparency="True">
+                <Border Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Border}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="12"
+                        Width="430">
+                    <StackPanel>
+                        <TextBlock Text="Plan modes"
+                                   Style="{StaticResource SectionHeader}"
+                                   Margin="0,0,0,8" />
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,6">
+                            <Run FontWeight="SemiBold" Text="Normal" /><Run Text=" — waits for the character to start the interaction; the plan only follows." />
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,6">
+                            <Run FontWeight="SemiBold" Text="Forced Interaction" /><Run Text=" — arms once the character is already approaching or interacting; it does not force from idle." />
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,6">
+                            <Run FontWeight="SemiBold" Text="Forced perform" /><Run Text=" — arms immediately even while busy, skips the walk-in, and may use the in-place fallback." />
+                        </TextBlock>
+
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
+                            <Run FontWeight="SemiBold" Text="Ignore" /><Run Text=" — cancels the current action, then arms the step." />
+                        </TextBlock>
+
+                        <TextBlock Text="Trigger (Actor / Target / Either) applies to Normal mode."
+                                   Style="{StaticResource CaptionText}"
+                                   TextWrapping="Wrap" />
+
+                        <TextBlock Text="Drag a step row with the mouse to reorder the plan."
+                                   Style="{StaticResource CaptionText}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+        </Grid>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -62,7 +124,7 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
-            <DataGrid
+            <DataGrid x:Name="PlannerGrid"
                       ItemsSource="{Binding PlannerSteps}"
                       SelectedIndex="{Binding SelectedPlannerStepIndex, Mode=TwoWay}"
                       IsReadOnly="{Binding PlannerRunning}"
@@ -71,6 +133,11 @@
                       CanUserDeleteRows="False"
                       HeadersVisibility="Column"
                       GridLinesVisibility="Horizontal"
+                      AllowDrop="True"
+                      PreviewMouseLeftButtonDown="PlannerGrid_PreviewMouseLeftButtonDown"
+                      PreviewMouseMove="PlannerGrid_PreviewMouseMove"
+                      DragOver="PlannerGrid_DragOver"
+                      Drop="PlannerGrid_Drop"
                       Margin="0,0,0,8">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="On"
@@ -149,7 +216,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="6">
-                    <TextBlock Text="New step"
+                    <TextBlock Text="Action Panel"
                                Style="{StaticResource SectionHeader}"
                                Margin="0,0,0,6" />
 
@@ -213,30 +280,34 @@
                                 Click="AddMove_Click" />
                     </Grid>
 
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Force Action"
+                                IsEnabled="{Binding CanForcePlanner}"
+                                ToolTip="Perform this action now, even if the character is busy"
+                                Click="ForceAction_Click" />
+                        <Button Grid.Column="2" Content="Force Move"
+                                IsEnabled="{Binding CanForcePlanner}"
+                                ToolTip="Perform this move now, even if the character is busy"
+                                Click="ForceMove_Click" />
+                    </Grid>
+
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Button Grid.Row="0" Grid.Column="0" Content="Remove"
-                                Margin="0,0,0,4"
+                        <Button Grid.Column="0" Content="Remove"
                                 IsEnabled="{Binding CanRemovePlannerStep}"
                                 Click="RemoveStep_Click" />
-                        <Button Grid.Row="0" Grid.Column="2" Content="Clear"
-                                Margin="0,0,0,4"
+                        <Button Grid.Column="2" Content="Clear"
                                 IsEnabled="{Binding CanEditPlanner}"
                                 Click="Clear_Click" />
-                        <Button Grid.Row="1" Grid.Column="0" Content="Up"
-                                IsEnabled="{Binding CanMovePlannerStep}"
-                                Click="MoveUp_Click" />
-                        <Button Grid.Row="1" Grid.Column="2" Content="Down"
-                                IsEnabled="{Binding CanMovePlannerStep}"
-                                Click="MoveDown_Click" />
                     </Grid>
                 </StackPanel>
                 </ScrollViewer>

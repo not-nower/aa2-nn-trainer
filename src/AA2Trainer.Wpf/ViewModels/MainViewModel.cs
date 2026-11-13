@@ -1118,7 +1118,6 @@ namespace AA2Trainer.WpfPrototype
             {
                 if (!Set(ref selectedPlannerStepIndex, value)) return;
                 OnPropertyChanged(nameof(CanRemovePlannerStep));
-                OnPropertyChanged(nameof(CanMovePlannerStep));
                 OnPropertyChanged(nameof(CanCopyPlanner));
             }
         }
@@ -1134,6 +1133,15 @@ namespace AA2Trainer.WpfPrototype
             {
                 return !plannerRunning && plannerHookInstalled &&
                     !plannerObserveOnly && PlannerSteps.Count > 0;
+            }
+        }
+
+        public bool CanForcePlanner
+        {
+            get
+            {
+                return !plannerRunning && plannerHookInstalled &&
+                    !plannerObserveOnly;
             }
         }
 
@@ -1154,11 +1162,6 @@ namespace AA2Trainer.WpfPrototype
                 return !plannerRunning && selectedPlannerStepIndex >= 0 &&
                     selectedPlannerStepIndex < PlannerSteps.Count;
             }
-        }
-
-        public bool CanMovePlannerStep
-        {
-            get { return CanRemovePlannerStep; }
         }
 
         public bool CanCopyPlanner
@@ -2892,6 +2895,61 @@ namespace AA2Trainer.WpfPrototype
             RefreshPlannerNow();
         }
 
+        public void ForcePlannerAction()
+        {
+            if (session == null || PlannerSeat < 0) return;
+            if (plannerRunning)
+            {
+                RosterStatus = "Stop the plan before forcing a step.";
+                return;
+            }
+            if (selectedPlannerAction == null ||
+                selectedPlannerTarget == null || selectedPlannerTarget.Seat < 0)
+            {
+                RosterStatus = "Choose an action and a target first.";
+                return;
+            }
+
+            LogPlannerRoomWarning(selectedPlannerTarget);
+            string message;
+            bool ok = session.Planner.ForceAction(PlannerSeat, PlannerActorName,
+                selectedPlannerTarget.Seat, selectedPlannerTarget.Text,
+                selectedPlannerAbout == null ? -1 : selectedPlannerAbout.Seat,
+                selectedPlannerAbout == null ? "" : selectedPlannerAbout.Text,
+                selectedPlannerAction.Value, selectedPlannerAction.Text,
+                out message);
+            RosterStatus = ok
+                ? "Forcing action " + selectedPlannerAction.Text + "."
+                : (message ?? "The action could not be forced.");
+            if (!ok) LogPlanner(RosterStatus);
+            RefreshPlannerNow();
+        }
+
+        public void ForcePlannerMove()
+        {
+            if (session == null || PlannerSeat < 0) return;
+            if (plannerRunning)
+            {
+                RosterStatus = "Stop the plan before forcing a step.";
+                return;
+            }
+            if (selectedPlannerRoom == null || selectedPlannerRoom.Value < 0)
+            {
+                RosterStatus = "Choose a room first.";
+                return;
+            }
+
+            string message;
+            bool ok = session.Planner.ForceMove(PlannerSeat, PlannerActorName,
+                selectedPlannerRoom.Value, selectedPlannerRoom.Text,
+                out message);
+            RosterStatus = ok
+                ? "Forcing move to " + selectedPlannerRoom.Text + "."
+                : (message ?? "The move could not be forced.");
+            if (!ok) LogPlanner(RosterStatus);
+            RefreshPlannerNow();
+        }
+
         public void RemovePlannerStep()
         {
             if (session == null || PlannerSeat < 0 || plannerRunning) return;
@@ -2900,15 +2958,19 @@ namespace AA2Trainer.WpfPrototype
             RefreshPlannerNow();
         }
 
-        public void MovePlannerStep(int delta)
+        public void MovePlannerStepTo(int from, int targetIndex)
         {
             if (session == null || PlannerSeat < 0 || plannerRunning) return;
-            int index = selectedPlannerStepIndex;
-            if (session.Planner.MoveStep(PlannerSeat, PlannerActorName,
-                index, delta))
+            int count = PlannerSteps.Count;
+            if (from < 0 || from >= count || targetIndex < 0) return;
+
+            if (targetIndex >= count) targetIndex = count - 1;
+            if (targetIndex == from) return;
+
+            if (session.Planner.MoveStepTo(PlannerSeat, PlannerActorName,
+                from, targetIndex))
             {
-                selectedPlannerStepIndex = Math.Max(0,
-                    Math.Min(PlannerSteps.Count - 1, index + delta));
+                selectedPlannerStepIndex = targetIndex;
                 OnPropertyChanged(nameof(SelectedPlannerStepIndex));
             }
             RefreshPlannerNow();
@@ -3222,9 +3284,9 @@ namespace AA2Trainer.WpfPrototype
             }
 
             OnPropertyChanged(nameof(CanStartPlanner));
+            OnPropertyChanged(nameof(CanForcePlanner));
             OnPropertyChanged(nameof(CanEditPlanner));
             OnPropertyChanged(nameof(CanRemovePlannerStep));
-            OnPropertyChanged(nameof(CanMovePlannerStep));
             OnPropertyChanged(nameof(CanCopyPlanner));
             OnPropertyChanged(nameof(CanPastePlanner));
             OnPropertyChanged(nameof(PlannerStopEnabled));

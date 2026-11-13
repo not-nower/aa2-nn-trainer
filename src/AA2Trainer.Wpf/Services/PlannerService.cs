@@ -20,6 +20,7 @@ namespace AA2Trainer.WpfPrototype
             new Dictionary<int, PlanQueue>();
         private readonly object sync = new object();
         private PlanQueue clipboard;
+        private PlanQueue forcedPlan;
         private bool disposed;
 
         public PlannerService(GameMemory memory, Dispatcher dispatcher)
@@ -49,7 +50,7 @@ namespace AA2Trainer.WpfPrototype
                     {
                         if (plan != null && plan.Started) return true;
                     }
-                    return false;
+                    return forcedPlan != null && forcedPlan.Started;
                 }
             }
         }
@@ -251,6 +252,73 @@ namespace AA2Trainer.WpfPrototype
             return true;
         }
 
+        public bool ForceAction(int seat, string name, int targetSeat,
+            string targetName, int aboutSeat, string aboutName, int actionId,
+            string actionLabel, out string message)
+        {
+            message = null;
+            ActionParams parameters = ActionParams.TargetAction(actionId, 0);
+            string label = "Force action " + actionLabel + " -> " +
+                (string.IsNullOrEmpty(targetName) ? "?" : targetName);
+            if (aboutSeat >= 0 && !string.IsNullOrEmpty(aboutName))
+                label += " about " + aboutName;
+
+            PlanStep step = new PlanStep(parameters, label);
+            step.TargetSeat = targetSeat;
+            step.AboutSeat = aboutSeat;
+            return StartForced(seat, name, step, out message);
+        }
+
+        public bool ForceMove(int seat, string name, int roomId,
+            string roomLabel, out string message)
+        {
+            message = null;
+            string label = "Force move to room " + roomId + " (" + roomLabel + ")";
+            return StartForced(seat, name,
+                new PlanStep(ActionParams.MoveToRoom(roomId), label),
+                out message);
+        }
+
+        /// <summary>
+        /// Runs one step immediately as its own throwaway plan in ForcedPerform
+        /// mode. The character's editable plan is left untouched.
+        /// </summary>
+        private bool StartForced(int seat, string name, PlanStep step,
+            out string message)
+        {
+            message = null;
+            PlanQueue plan = new PlanQueue();
+            plan.Seat = seat;
+            plan.CharacterName = name ?? "";
+            plan.Mode = PlanMode.ForcedPerform;
+            plan.Trigger = PlanTrigger.Actor;
+            plan.Add(step);
+
+            PlanQueue previous;
+            lock (sync)
+            {
+                previous = forcedPlan;
+                forcedPlan = plan;
+            }
+            if (previous != null) runner.StopPlan(previous, true);
+
+            if (!runner.StartPlan(plan, out message))
+            {
+                lock (sync)
+                {
+                    if (forcedPlan == plan) forcedPlan = null;
+                }
+                PublishLog("Force step failed: " +
+                    (message ?? "unknown error"));
+                RaiseState();
+                return false;
+            }
+
+            PublishLog("Force step started: " + step.Describe());
+            RaiseState();
+            return true;
+        }
+
         public bool RemoveStep(int seat, string name, int index)
         {
             PlanQueue plan = GetPlan(seat, name);
@@ -261,14 +329,11 @@ namespace AA2Trainer.WpfPrototype
             return true;
         }
 
-        public bool MoveStep(int seat, string name, int index, int delta)
+        public bool MoveStepTo(int seat, string name, int from, int to)
         {
             PlanQueue plan = GetPlan(seat, name);
             if (plan.Started) return false;
-            if (index < 0 || index >= plan.Steps.Count) return false;
-            if (delta < 0) plan.MoveUp(index);
-            else if (delta > 0) plan.MoveDown(index);
-            else return false;
+            if (!plan.MoveTo(from, to)) return false;
             RaiseState();
             return true;
         }
@@ -294,6 +359,16 @@ namespace AA2Trainer.WpfPrototype
         {
             PlanQueue plan = GetPlan(seat, name);
             runner.StopPlan(plan, false);
+
+            PlanQueue forced;
+            lock (sync)
+            {
+                forced = forcedPlan;
+                if (forced != null && forced.Seat == seat) forcedPlan = null;
+            }
+            if (forced != null && forced.Seat == seat)
+                runner.StopPlan(forced, true);
+
             RaiseState();
         }
 
@@ -394,6 +469,10 @@ namespace AA2Trainer.WpfPrototype
 
         private void OnPlanFinished(PlanQueue plan)
         {
+            lock (sync)
+            {
+                if (forcedPlan == plan) forcedPlan = null;
+            }
             PublishLog("Plan finished for " +
                 (plan == null ? "?" : plan.CharacterName) + ".");
             RaiseState();
