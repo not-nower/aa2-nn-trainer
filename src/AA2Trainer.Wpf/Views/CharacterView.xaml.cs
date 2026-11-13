@@ -2,6 +2,8 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
+using AA2Trainer.WpfPrototype.Controls;
 
 namespace AA2Trainer.WpfPrototype.Views
 {
@@ -23,7 +25,26 @@ namespace AA2Trainer.WpfPrototype.Views
                 if (parent != null)
                     popup = parent.FindName("ColorPopup") as Popup;
             }
-            if (popup != null) popup.IsOpen = true;
+            if (popup == null) return;
+
+            ContentControl host = popup.Child as ContentControl;
+            if (host == null && popup.Child is Border)
+                host = ((Border)popup.Child).Child as ContentControl;
+
+            if (host != null && host.Content == null &&
+                button.DataContext != null)
+            {
+                ColorPicker picker = new ColorPicker();
+                picker.SetBinding(ColorPicker.ValueProperty,
+                    new Binding("Value")
+                    {
+                        Source = button.DataContext,
+                        Mode = BindingMode.TwoWay
+                    });
+                host.Content = picker;
+            }
+
+            popup.IsOpen = true;
         }
 
         private void Apply_Click(object sender, RoutedEventArgs e)

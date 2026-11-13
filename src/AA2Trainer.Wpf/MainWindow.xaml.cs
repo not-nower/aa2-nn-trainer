@@ -45,6 +45,7 @@ namespace AA2Trainer.WpfPrototype
         public MainWindow()
         {
             InitializeComponent();
+            Title = "AA2 Trainer v" + AppInfo.Version;
             viewModel = new MainViewModel();
             DataContext = viewModel;
 

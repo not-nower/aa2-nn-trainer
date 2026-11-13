@@ -25,13 +25,21 @@ namespace AA2Trainer.WpfPrototype.Controls
         private double hue;
         private double saturation = 100;
         private double lightness = 50;
+        private int spectrumHue = -999;
 
         public ColorPicker()
         {
             InitializeComponent();
             Loaded += delegate
             {
-                ReadValue();
+                // Build the spectrum once. Re-adding the picker to the tree
+                // (tab switches) must not rebuild the bitmap.
+                if (SpectrumImage != null && SpectrumImage.Source == null)
+                    ReadValue();
+            };
+            IsVisibleChanged += delegate
+            {
+                if (!IsVisible) return;
                 UpdateSpectrum();
                 UpdateMarkers();
             };
@@ -169,6 +177,11 @@ namespace AA2Trainer.WpfPrototype.Controls
         private void UpdateSpectrum()
         {
             if (SpectrumImage == null) return;
+            if (!IsVisible) return;
+
+            int key = (int)Math.Round(hue) % 360;
+            if (SpectrumImage.Source != null && key == spectrumHue) return;
+            spectrumHue = key;
 
             byte[] pixels = new byte[SpectrumWidth * SpectrumHeight * 4];
             for (int y = 0; y < SpectrumHeight; y++)

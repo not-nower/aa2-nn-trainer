@@ -34,7 +34,14 @@ namespace AA2Trainer.WpfPrototype
         }
         public bool IsTeacher { get; set; }
         public bool HasRelationship { get; set; }
-        public bool IsLover { get; set; }
+
+        private bool isLover;
+        public bool IsLover
+        {
+            get { return isLover; }
+            set { Set(ref isLover, value); }
+        }
+
         public bool OtherIsLover { get; set; }
         public bool IsFrozen { get; set; }
 

@@ -29,7 +29,8 @@
                  SelectedItem="{Binding SelectedSeat, Mode=TwoWay}"
                  ItemContainerStyle="{StaticResource CardItemStyle}"
                  VerticalContentAlignment="Stretch"
-                 MouseDoubleClick="RosterList_MouseDoubleClick">
+                 MouseDoubleClick="RosterList_MouseDoubleClick"
+                 PreviewMouseRightButtonDown="RosterList_PreviewMouseRightButtonDown">
             <ListBox.Template>
                 <ControlTemplate TargetType="ListBox">
                     <ItemsPresenter />
@@ -124,6 +125,22 @@
                                             <ImageBrush ImageSource="{Binding RosterImage}"
                                                         Stretch="UniformToFill" />
                                         </Border.Background>
+                                    </Border>
+                                    <Border x:Name="LoverBadge"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Background="{DynamicResource Surface}"
+                                            BorderBrush="{DynamicResource Border}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="3,2"
+                                            Margin="3"
+                                            Visibility="Collapsed"
+                                            ToolTip="Lover">
+                                        <Path Width="10" Height="9"
+                                              Stretch="Fill"
+                                              Fill="#FF5C8A"
+                                              Data="M 6,11 C 6,11 0,7.2 0,3.6 C 0,1.6 1.5,0 3.4,0 C 4.6,0 5.5,0.7 6,1.5 C 6.5,0.7 7.4,0 8.6,0 C 10.5,0 12,1.6 12,3.6 C 12,7.2 6,11 6,11 Z" />
                                     </Border>
                                     <Border HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
@@ -260,6 +277,9 @@
                         </DataTrigger>
                         <DataTrigger Binding="{Binding HasTargetSeatItem}" Value="True">
                             <Setter TargetName="TargetMini" Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsLover}" Value="True">
+                            <Setter TargetName="LoverBadge" Property="Visibility" Value="Visible" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
                                      Value="True">

@@ -8,7 +8,7 @@
     <Prefer32Bit>true</Prefer32Bit>
     <AssemblyName>AA2Trainer</AssemblyName>
     <RootNamespace>AA2Trainer.WpfPrototype</RootNamespace>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <OutputPath>..\..\bin\WPF\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>

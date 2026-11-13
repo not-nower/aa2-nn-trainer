@@ -3508,7 +3508,6 @@ namespace AA2Trainer.WpfPrototype
         private static string RelationLabel(RelationshipSnapshot relation)
         {
             if (relation == null) return "-";
-            if (relation.IsLover) return "Lover";
             if (relation.LoveCount > 0) return "Love";
             if (relation.LikeCount > 0) return "Like";
             if (relation.DislikeCount > 0) return "Dislike";

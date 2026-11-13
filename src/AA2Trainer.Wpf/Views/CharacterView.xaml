@@ -120,7 +120,7 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Padding="8">
-                            <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
+                            <ContentControl x:Name="ColorHost" />
                         </Border>
                     </Popup>
                 </Grid>
@@ -316,7 +316,7 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Padding="8">
-                            <controls:ColorPicker Value="{Binding Value, Mode=TwoWay}" />
+                            <ContentControl x:Name="ColorHost" />
                         </Border>
                     </Popup>
                 </Grid>

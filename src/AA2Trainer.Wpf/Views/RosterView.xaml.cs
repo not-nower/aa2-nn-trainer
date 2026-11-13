@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -26,6 +27,42 @@ namespace AA2Trainer.WpfPrototype.Views
 
             e.Handled = true;
             viewModel.OpenInCharacter(seat);
+        }
+
+        private void RosterList_PreviewMouseRightButtonDown(object sender,
+            MouseButtonEventArgs e)
+        {
+            DependencyObject source = e.OriginalSource as DependencyObject;
+            ListBoxItem item = ItemsControl.ContainerFromElement(
+                RosterList, source) as ListBoxItem;
+            if (item == null) return;
+
+            SeatItem seat = item.DataContext as SeatItem;
+            if (seat == null || !seat.HasName) return;
+
+            Border card = FindCardBorder(item);
+            if (card == null || card.ContextMenu == null) return;
+
+            card.ContextMenu.PlacementTarget = card;
+            card.ContextMenu.Placement = PlacementMode.MousePoint;
+            card.ContextMenu.IsOpen = true;
+            e.Handled = true;
+        }
+
+        private static Border FindCardBorder(DependencyObject root)
+        {
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(root, i);
+                Border border = child as Border;
+                if (border != null && border.ContextMenu != null)
+                    return border;
+
+                Border nested = FindCardBorder(child);
+                if (nested != null) return nested;
+            }
+            return null;
         }
 
         private static SeatItem SeatFromSource(DependencyObject source)
