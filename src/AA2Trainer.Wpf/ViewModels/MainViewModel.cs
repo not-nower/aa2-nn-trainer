@@ -186,7 +186,7 @@ namespace AA2Trainer.WpfPrototype
             LoverRows = new ObservableCollection<LoverRowItem>();
             PromiseRows = new ObservableCollection<PromiseRowItem>();
             SystemOptionSections = new ObservableCollection<GameOptionSection>();
-            SoundOptionSections = new ObservableCollection<GameOptionSection>();
+            SoundChannels = new ObservableCollection<SoundChannelItem>();
             Additional1OptionSections = new ObservableCollection<GameOptionSection>();
             Additional2OptionSections = new ObservableCollection<GameOptionSection>();
             Additional3OptionSections = new ObservableCollection<GameOptionSection>();
@@ -260,7 +260,7 @@ namespace AA2Trainer.WpfPrototype
         public ObservableCollection<CharacterOption> PlannerRooms { get; private set; }
         public ObservableCollection<LimitActionItem> LimitActions { get; private set; }
         public ObservableCollection<GameOptionSection> SystemOptionSections { get; private set; }
-        public ObservableCollection<GameOptionSection> SoundOptionSections { get; private set; }
+        public ObservableCollection<SoundChannelItem> SoundChannels { get; private set; }
         public ObservableCollection<GameOptionSection> Additional1OptionSections { get; private set; }
         public ObservableCollection<GameOptionSection> Additional2OptionSections { get; private set; }
         public ObservableCollection<GameOptionSection> Additional3OptionSections { get; private set; }
@@ -1523,9 +1523,10 @@ namespace AA2Trainer.WpfPrototype
                 "MonoMan", "MonoManOpa", "MonoManRed", "MonoManGreen",
                 "MonoManBlue");
 
-            AddOptionSection(SoundOptionSections, "General",
-                "BGM", "BGMVal", "Sound", "SoundVal", "Voice", "VoiceVal",
-                "HSound", "HSoundVal");
+            AddSoundChannel("Background Music", "BGM", "BGMVal");
+            AddSoundChannel("Sound Effect", "Sound", "SoundVal");
+            AddSoundChannel("Voice", "Voice", "VoiceVal");
+            AddSoundChannel("H-Sound", "HSound", "HSoundVal");
 
             AddOptionSection(Additional1OptionSections, "Misc",
                 "NPCConversion", "NPCConversionVal", "BGExternal",
@@ -1576,15 +1577,29 @@ namespace AA2Trainer.WpfPrototype
             GameOptionSection section = new GameOptionSection { Title = title };
             foreach (string name in names)
             {
-                int index = OptionEditor.IndexOf(name);
-                if (index < 0) continue;
-                OptionFieldDef definition = OptionEditor.Fields[index];
-                GameOptionItem item = new GameOptionItem(index, definition,
-                    OnGameOptionEdited);
-                section.Items.Add(item);
-                gameOptionItems[index] = item;
+                GameOptionItem item = CreateOptionItem(name);
+                if (item != null) section.Items.Add(item);
             }
             if (section.Items.Count > 0) sections.Add(section);
+        }
+
+        private void AddSoundChannel(string label, string toggleName,
+            string levelName)
+        {
+            GameOptionItem toggle = CreateOptionItem(toggleName);
+            GameOptionItem level = CreateOptionItem(levelName);
+            if (toggle == null || level == null) return;
+            SoundChannels.Add(new SoundChannelItem(label, toggle, level));
+        }
+
+        private GameOptionItem CreateOptionItem(string name)
+        {
+            int index = OptionEditor.IndexOf(name);
+            if (index < 0) return null;
+            GameOptionItem item = new GameOptionItem(index,
+                OptionEditor.Fields[index], OnGameOptionEdited);
+            gameOptionItems[index] = item;
+            return item;
         }
 
         public ICollectionView DebugFieldsView

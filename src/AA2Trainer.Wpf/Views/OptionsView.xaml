@@ -207,9 +207,86 @@
             </TabItem>
             <TabItem Header="Sound">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding SoundOptionSections}"
-                                  ItemTemplate="{StaticResource OptionSectionTemplate}"
-                                  Margin="0,8,0,0" />
+                    <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+                        <StackPanel Margin="12,10">
+                            <TextBlock Text="General"
+                                       Style="{StaticResource SectionHeader}"
+                                       Margin="0,0,0,8" />
+
+                            <ItemsControl ItemsSource="{Binding SoundChannels}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="190" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="86" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <CheckBox Content="{Binding Label}"
+                                                      IsChecked="{Binding Toggle.ToggleValue, Mode=TwoWay}"
+                                                      VerticalAlignment="Center" />
+
+                                            <Slider Grid.Column="1"
+                                                    Margin="16,0,16,0"
+                                                    Minimum="{Binding Level.Min}"
+                                                    Maximum="{Binding Level.Max}"
+                                                    Value="{Binding Level.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsSnapToTickEnabled="True"
+                                                    TickFrequency="1"
+                                                    SmallChange="1"
+                                                    VerticalAlignment="Center" />
+
+                                            <Grid Grid.Column="2" Width="64" Height="26">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="18" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding Level.ValueText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         TextAlignment="Center"
+                                                         Padding="2,0"
+                                                         MinHeight="26" />
+
+                                                <Grid Grid.Column="1">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="*" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <Button Grid.Row="0"
+                                                            Content="▲"
+                                                            FontSize="6"
+                                                            Padding="0"
+                                                            MinWidth="0"
+                                                            MinHeight="0"
+                                                            Focusable="False"
+                                                            ToolTip="Increase"
+                                                            Click="SoundUp_Click" />
+                                                    <Button Grid.Row="1"
+                                                            Content="▼"
+                                                            FontSize="6"
+                                                            Padding="0"
+                                                            MinWidth="0"
+                                                            MinHeight="0"
+                                                            Focusable="False"
+                                                            ToolTip="Decrease"
+                                                            Click="SoundDown_Click" />
+                                                </Grid>
+                                            </Grid>
+
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding Level.RangeText}"
+                                                       Style="{StaticResource CaptionText}"
+                                                       HorizontalAlignment="Right"
+                                                       Margin="10,0,0,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Additional (1)">

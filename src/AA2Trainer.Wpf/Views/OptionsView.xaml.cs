@@ -35,6 +35,29 @@ namespace AA2Trainer.WpfPrototype.Views
                 ViewModel.SetPlannerObserve(box.IsChecked == true);
         }
 
+        private void SoundUp_Click(object sender, RoutedEventArgs e)
+        {
+            NudgeSound(sender, 1);
+        }
+
+        private void SoundDown_Click(object sender, RoutedEventArgs e)
+        {
+            NudgeSound(sender, -1);
+        }
+
+        private static void NudgeSound(object sender, int delta)
+        {
+            FrameworkElement element = sender as FrameworkElement;
+            SoundChannelItem channel = element == null
+                ? null : element.DataContext as SoundChannelItem;
+            if (channel == null || channel.Level == null) return;
+
+            int value = channel.Level.Value + delta;
+            if (value < channel.Level.Min) value = channel.Level.Min;
+            if (value > channel.Level.Max) value = channel.Level.Max;
+            channel.Level.Value = value;
+        }
+
         private void Backup_Click(object sender, RoutedEventArgs e)
         {
             if (ViewModel != null) ViewModel.BackupCurrentSave();

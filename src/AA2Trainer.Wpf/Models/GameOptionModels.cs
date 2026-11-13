@@ -65,6 +65,7 @@ namespace AA2Trainer.WpfPrototype
                 if (!Set(ref this.value, value)) return;
                 OnPropertyChanged(nameof(ToggleValue));
                 OnPropertyChanged(nameof(DisplayValue));
+                OnPropertyChanged(nameof(ValueText));
                 OnPropertyChanged(nameof(IsDirty));
                 if (edited != null) edited(this);
             }
@@ -74,6 +75,26 @@ namespace AA2Trainer.WpfPrototype
         {
             get { return value != 0; }
             set { Value = value ? 1 : 0; }
+        }
+
+        /// <summary>
+        /// Numeric-box text for slider fields. Typed input is clamped to the
+        /// field range so an out-of-range entry can never reach Apply.
+        /// </summary>
+        public string ValueText
+        {
+            get { return value.ToString(); }
+            set
+            {
+                int parsed;
+                if (!int.TryParse(value, out parsed)) return;
+                if (IsSlider)
+                {
+                    if (parsed < Min) parsed = Min;
+                    if (parsed > Max) parsed = Max;
+                }
+                Value = parsed;
+            }
         }
 
         public int LiveValue
@@ -145,6 +166,7 @@ namespace AA2Trainer.WpfPrototype
             if (changed) OnPropertyChanged(nameof(Value));
             OnPropertyChanged(nameof(ToggleValue));
             OnPropertyChanged(nameof(DisplayValue));
+            OnPropertyChanged(nameof(ValueText));
             OnPropertyChanged(nameof(IsDirty));
         }
 
@@ -164,5 +186,24 @@ namespace AA2Trainer.WpfPrototype
         public string Title { get; set; } = "";
         public ObservableCollection<GameOptionItem> Items { get; private set; } =
             new ObservableCollection<GameOptionItem>();
+    }
+
+    /// <summary>
+    /// One sound channel: its on/off toggle and its volume slider, shown on a
+    /// single row (checkbox | slider | value | range).
+    /// </summary>
+    public sealed class SoundChannelItem
+    {
+        public SoundChannelItem(string label, GameOptionItem toggle,
+            GameOptionItem level)
+        {
+            Label = label ?? "";
+            Toggle = toggle;
+            Level = level;
+        }
+
+        public string Label { get; private set; }
+        public GameOptionItem Toggle { get; private set; }
+        public GameOptionItem Level { get; private set; }
     }
 }
